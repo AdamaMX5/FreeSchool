@@ -1,3 +1,0 @@
-ALTER TABLE users ADD COLUMN telegram_code VARCHAR(10);
-ALTER TABLE users ADD COLUMN telegram_chat_Id BIGINT NOT NULL DEFAULT 0;
-ALTER TABLE users ADD COLUMN two_factor_code VARCHAR(5);

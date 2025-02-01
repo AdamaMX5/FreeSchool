@@ -5,7 +5,8 @@ import org.flywaydb.core.api.migration.Context;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
-public class V002__AccountSpecialFlag extends BaseJavaMigration {
+// Namingconvention: V002__Category
+public class Example extends BaseJavaMigration {
 
     @Override
     public void migrate(Context context) {
