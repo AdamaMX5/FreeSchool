@@ -13,8 +13,7 @@ ENV HUSKY=0
 
 # 4. Pakete installieren
 COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps --no-optional || \
-    (echo "Fallback zu npm install..." && npm install --legacy-peer-deps --no-optional)
+RUN npm ci --legacy-peer-deps --no-optional --ignore-scripts
 
 # 5. Rest kopieren und builden
 COPY . .
