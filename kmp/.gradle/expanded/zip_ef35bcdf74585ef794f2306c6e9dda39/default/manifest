@@ -1,9 +1,0 @@
-unique_name=org.jetbrains.kotlin\:kotlinx-atomicfu-runtime
-depends=kotlin
-metadata_version=1.4.1
-serializedKlibFingerprint=2554942mgvv2e.icq8m0odrwoe
-builtins_platform=JS
-compiler_version=1.9.0-dev-6976
-serializedIrFileFingerprints=1aymn90n23cee.3k1gxwf3xei47
-abi_version=1.8.0
-jsOutputName=kotlin-kotlinx-atomicfu-runtime

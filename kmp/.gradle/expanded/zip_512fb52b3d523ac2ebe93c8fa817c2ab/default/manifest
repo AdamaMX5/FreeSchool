@@ -1,9 +1,0 @@
-builtins_platform=JS
-unique_name=io.ktor\:ktor-websockets
-compiler_version=1.9.10
-depends=io.ktor\:ktor-http io.ktor\:ktor-utils io.ktor\:ktor-io org.jetbrains.kotlinx\:kotlinx-coroutines-core org.jetbrains.kotlin\:kotlinx-atomicfu-runtime org.jetbrains.kotlinx\:atomicfu org.jetbrains.kotlin\:kotlin-dom-api-compat kotlin
-serializedKlibFingerprint=513um614ufbj.257t1tud9k9l3
-serializedIrFileFingerprints=13dy8nslhpct4.1ewx1rivz79yd 14rmrgv5iu3u4.20c3bn677lhr8 6wb7amjtysdf.1ci9wm3m80el8 1cwzi72cvi7qc.203qz4tzbvcq8 mbzetbsnjily.1rbomeusqlera 1rwvgfrhq02s2.knoenwadr79u 3o2s2jd3wybgp.3s9hs0j6qnl29 28ka41a2bac3s.13q085nqjb999 kdj25ix0clcu.2y5eb861pwupd 3k6dm49vs9k7j.333akfz6pc9ym 28dbrvdcjpw2d.2p5apcir3iv1g 2192476z22pkq.1u736cb7orw1e 23b0di8ftk036.13jmi44y3l2t1 1eitjg8wq4ynk.2fld9rionbs3u 2acuwhu4t4hgd.302rsxamwk29i
-jsOutputName=ktor-ktor-shared-ktor-websockets
-abi_version=1.8.0
-metadata_version=1.4.1
