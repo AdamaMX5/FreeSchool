@@ -1,4 +1,4 @@
-FROM node:18-alpine as builder
+FROM node:23-alpine as builder
 
 # 1. Git und Python für node-gyp installieren
 RUN apk add --no-cache git python3 make g++
@@ -8,12 +8,15 @@ WORKDIR /app
 # 2. Temporär auf npm registry wechseln (falls GitHub Probleme macht)
 RUN npm config set registry https://registry.npmjs.org/
 
-# 3. Pakete installieren
+# 3. Husky im Container deaktivieren (keine Git-Hooks im Build nötig)
+ENV HUSKY=0
+
+# 4. Pakete installieren
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps --no-optional || \
     (echo "Fallback zu npm install..." && npm install --legacy-peer-deps --no-optional)
 
-# 4. Rest kopieren und builden
+# 5. Rest kopieren und builden
 COPY . .
 RUN npm run build
 
