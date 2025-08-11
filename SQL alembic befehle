@@ -1,0 +1,11 @@
+// Setup
+
+// update Datei erzeugen
+alembic revision --autogenerate -m "Beschreibung_der_Aenderung"   //Prüfe die generierte Datei in alembic/versions/
+
+// SQL DB updaten
+alembic upgrade head
+
+// Falls ein Rollback nötig ist:
+alembic downgrade base  # Zurück zum Anfang (leere DB)
+alembic downgrade -1   # Eine Migration zurück

@@ -1,0 +1,9 @@
+builtins_platform=JS
+unique_name=io.ktor\:ktor-client-content-negotiation
+compiler_version=1.9.10
+depends=io.ktor\:ktor-client-core io.ktor\:ktor-websocket-serialization io.ktor\:ktor-serialization io.ktor\:ktor-events io.ktor\:ktor-websockets io.ktor\:ktor-http io.ktor\:ktor-utils io.ktor\:ktor-io org.jetbrains.kotlinx\:kotlinx-coroutines-core org.jetbrains.kotlin\:kotlinx-atomicfu-runtime org.jetbrains.kotlinx\:atomicfu org.jetbrains.kotlin\:kotlin-dom-api-compat kotlin
+serializedKlibFingerprint=9acu8yr161en.19yds73521zyt
+serializedIrFileFingerprints=1nnehxjkfjdfy.etfhdipl7a34 10zsjhkdynlsg.3ebf0pkmqgjwd utq1xg9ihz9j.fvezhj4xbdol
+jsOutputName=ktor-ktor-client-ktor-client-plugins-ktor-client-content-negotiation
+abi_version=1.8.0
+metadata_version=1.4.1

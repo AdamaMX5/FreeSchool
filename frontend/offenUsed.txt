@@ -1,0 +1,70 @@
+
+HTTP Calls:
+GET:
+export async function loadLessons() {
+    if (!currentCategory?.id) return;
+
+    try {
+        isLoading = true;
+        error = null;
+        const headers = {};
+        if ($user?.jwt) {
+            headers['Authorization'] = `Bearer ${$user.jwt}`;
+        }
+        
+        const response = await fetch(
+            `${API_BASE_URL}/lesson/by_category/${currentCategory.id}/`,
+            {
+                headers: headers
+            }
+        );
+
+        if (!response.ok) throw new Error(`HTTP-Fehler: ${response.status}`);
+
+        lessons = await response.json();
+    } catch (err) {
+        error = "Fehler beim Laden der Lektionen";
+        console.error("API Fehler:", err);
+    } finally {
+        isLoading = false;
+    }
+}
+
+
+POST / PUT:
+  async function updateLessonPosition({ id, x, y }) {
+    const lessonToUpdate = lessons.find((l) => l.id === id);
+    if (!lessonToUpdate) return;
+
+    const headers = {};
+    headers['Content-Type'] = `application/json`;
+    if ($user?.jwt) {
+        headers['Authorization'] = `Bearer ${$user.jwt}`;
+    }
+
+    const payload = {
+      id,
+      category_id: lessonToUpdate.category_id,
+      name: lessonToUpdate.name,
+      description: lessonToUpdate.description,
+      order: lessonToUpdate.order,
+      position_x: x,
+      position_y: y,
+      contents: lessonToUpdate.contents?.map((c) => c.id ?? c) ?? [],
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/lesson/${id}`, {
+        method: "PUT",
+        headers:  headers,
+        body: JSON.stringify(payload),
+      });
+      $user.jwt;
+
+      if (!response.ok)
+        throw new Error(`Fehler beim Aktualisieren: ${response.status}`);
+      loadLessons();
+    } catch (err) {
+      console.error("Fehler beim Speichern der Position:", err);
+    }
+  }

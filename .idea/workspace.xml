@@ -4,707 +4,94 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e1c21526-8755-490c-9123-a5ebf3058883" name="Changes" comment="setup a clean REST Server with Usermanagement">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/java/db/migration/V002__AccountSpecialFlag.java" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/main/java/db/migration/Example.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/java/db/migration/V003__CreateAppSettingTable.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/java/db/migration/V004__UserLockedUntil.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/resources/db/migration/V001__Initial.sql" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/main/resources/db/migration/V001__Initial.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/resources/db/migration/V005__AddDateToSigningKeys.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/resources/db/migration/V006__SigningKeyColumnBigger.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/resources/db/migration/V007__UserTelegram.sql" beforeDir="false" />
-    </list>
+    <list default="true" id="db41dbd0-8f20-413a-ba36-ea544cd44b52" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExternalProjectsData">
-    <projectState path="$PROJECT_DIR$/api">
-      <ProjectState />
-    </projectState>
-  </component>
-  <component name="ExternalProjectsManager">
-    <system id="GRADLE">
-      <state>
-        <task path="$PROJECT_DIR$/api">
-          <activation />
-        </task>
-        <projects_view>
-          <tree_state>
-            <expand>
-              <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="api" type="f1a62948:ProjectNode" />
-              </path>
-            </expand>
-            <select />
-          </tree_state>
-        </projects_view>
-      </state>
-    </system>
-  </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
+        <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
-  <component name="FormatOnSaveOptions">
-    <option name="myRunOnSave" value="true" />
-    <option name="myAllFileTypesSelected" value="false" />
-    <option name="mySelectedFileTypes">
-      <set>
-        <option value="JAVA" />
-      </set>
-    </option>
-  </component>
-  <component name="Git.Rebase.Settings">
-    <option name="NEW_BASE" value="master" />
-  </component>
-  <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;AdamaMX5&quot;
-  }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/AdamaMX5/FreeSchool.git&quot;,
-    &quot;accountId&quot;: &quot;dabcca5c-9225-4877-91b3-12e1d888c688&quot;
-  }
-}</component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
-  </component>
   <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 4
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 1
 }</component>
-  <component name="ProjectId" id="2P1JvQAJimeDz4NsfXgct8FLW5v" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
-    <OptionsSetting value="false" id="Update" />
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+  <component name="ProjectId" id="2tRx2QCkfBtOA3n1Y9DxFwYIKSN" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.api [:de.flussmark.api.FreeSchoolApiApplication.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.api [:de.freeschool.api.FreeSchoolApiApplication.main()].executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.All in FlussMark.executor&quot;: &quot;Run&quot;,
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Kurt/git/Freischule&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.40689656&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Kurt/Python/FreeSchool/frontend/public/ressources/background&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.sourceCode.Other File Types&quot;
   }
 }</component>
   <component name="RecentsManager">
-    <key name="CreateClassDialog.RecentsKey">
-      <recent name="de.flussmark.api.exception" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\Kurt\git\FlussMark\api\src\main\resources\db\migration" />
-      <recent name="C:\Users\Kurt\git\FlussMark\api\apispec" />
-      <recent name="C:\Users\Kurt\git\FlussMark\api\src\main\resources" />
-      <recent name="C:\Users\Kurt\git\FlussMark\ui\flussmark\src\views" />
-      <recent name="C:\Users\Kurt\git\FlussMark\ui\flussmark\src\routes" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\public\ressources\background" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\src\archiv" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\src" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\public" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\src\lib\kmp" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Kurt\git\FlussMark\api\src\main\resources\db\migration" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\public\ressources\background" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\src\stores" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\src\views" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\src\archiv" />
+      <recent name="C:\Users\Kurt\Python\FreeSchool\frontend\public" />
     </key>
-    <key name="CopyClassDialog.RECENTS_KEY">
-      <recent name="db.migration" />
-      <recent name="de.flussmark.api.engine" />
-      <recent name="de.flussmark.api.telegram.models" />
-      <recent name="de.flussmark.api.db.migration" />
-      <recent name="de.flussmark.api.manager" />
-    </key>
-  </component>
-  <component name="RunDashboard">
-    <option name="configurationTypes">
-      <set>
-        <option value="GradleRunConfiguration" />
-      </set>
-    </option>
-  </component>
-  <component name="RunManager" selected="Application.de.freeschool.api.FreeSchoolApiApplication">
-    <configuration name="AuthControllerVerificationTest.authForgetAndSelectNewPassword" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/api" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;de.flussmark.api.controller.AuthControllerVerificationTest.authForgetAndSelectNewPassword&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="AuthControllerVerificationTest.authRegisterUserWithVerification" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/api" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;de.flussmark.api.controller.AuthControllerVerificationTest.authRegisterUserWithVerification&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="BiPortionControllerTest.testNoChangingBiOfOtherUsers" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/api" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;de.flussmark.api.controller.BiPortionControllerTest.testNoChangingBiOfOtherUsers&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="api [repairFlyway]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/api" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value="repairFlyway" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>false</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="All in FlussMark" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="FlussMark" />
-      <option name="PACKAGE_NAME" value="" />
-      <option name="TEST_OBJECT" value="package" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <list>
-      <item itemvalue="Application.de.freeschool.api.FreeSchoolApiApplication" />
-      <item itemvalue="Gradle.api [build]" />
-      <item itemvalue="Gradle.api [openApiGenerate]" />
-      <item itemvalue="Gradle.api [test]" />
-      <item itemvalue="Gradle.api [repairFlyway]" />
-      <item itemvalue="Gradle.AuthControllerVerificationTest.authForgetAndSelectNewPassword" />
-      <item itemvalue="Gradle.AuthControllerVerificationTest.authRegisterUserWithVerification" />
-      <item itemvalue="Gradle.BiPortionControllerTest.testNoChangingBiOfOtherUsers" />
-      <item itemvalue="JUnit.All in FlussMark" />
-    </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="JUnit.All in FlussMark" />
-        <item itemvalue="Gradle.BiPortionControllerTest.testNoChangingBiOfOtherUsers" />
-        <item itemvalue="Gradle.AuthControllerVerificationTest.authForgetAndSelectNewPassword" />
-        <item itemvalue="Gradle.AuthControllerVerificationTest.authRegisterUserWithVerification" />
-        <item itemvalue="Gradle.api [repairFlyway]" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="e1c21526-8755-490c-9123-a5ebf3058883" name="Changes" comment="" />
-      <created>1682618885168</created>
+      <changelist id="db41dbd0-8f20-413a-ba36-ea544cd44b52" name="Changes" comment="" />
+      <created>1740328481235</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1682618885168</updated>
+      <updated>1740328481235</updated>
     </task>
-    <task id="LOCAL-00023" summary="#5 test fix">
-      <created>1684847096773</created>
-      <option name="number" value="00023" />
-      <option name="presentableId" value="LOCAL-00023" />
-      <option name="project" value="LOCAL" />
-      <updated>1684847096773</updated>
-    </task>
-    <task id="LOCAL-00024" summary="#5 all tests fixed, restructure ApiTestBase">
-      <created>1684850655689</created>
-      <option name="number" value="00024" />
-      <option name="presentableId" value="LOCAL-00024" />
-      <option name="project" value="LOCAL" />
-      <updated>1684850655689</updated>
-    </task>
-    <task id="LOCAL-00025" summary="#5 TransactionController creates Submitted TX">
-      <created>1685280765506</created>
-      <option name="number" value="00025" />
-      <option name="presentableId" value="LOCAL-00025" />
-      <option name="project" value="LOCAL" />
-      <updated>1685280765506</updated>
-    </task>
-    <task id="LOCAL-00026" summary="#5 TransactionStatus fix for Tests">
-      <created>1685282099754</created>
-      <option name="number" value="00026" />
-      <option name="presentableId" value="LOCAL-00026" />
-      <option name="project" value="LOCAL" />
-      <updated>1685282099754</updated>
-    </task>
-    <task id="LOCAL-00027" summary="#5 fix TxEngineTests">
-      <created>1685292263551</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1685292263551</updated>
-    </task>
-    <task id="LOCAL-00028" summary="#4 BookingEngine works + test">
-      <created>1685361478130</created>
-      <option name="number" value="00028" />
-      <option name="presentableId" value="LOCAL-00028" />
-      <option name="project" value="LOCAL" />
-      <updated>1685361478130</updated>
-    </task>
-    <task id="LOCAL-00029" summary="#9 little changes">
-      <created>1685428749208</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1685428749208</updated>
-    </task>
-    <task id="LOCAL-00030" summary="#9 little changes">
-      <created>1685429469719</created>
-      <option name="number" value="00030" />
-      <option name="presentableId" value="LOCAL-00030" />
-      <option name="project" value="LOCAL" />
-      <updated>1685429469719</updated>
-    </task>
-    <task id="LOCAL-00031" summary="#3 Your yaml changes was lost">
-      <created>1685430000138</created>
-      <option name="number" value="00031" />
-      <option name="presentableId" value="LOCAL-00031" />
-      <option name="project" value="LOCAL" />
-      <updated>1685430000138</updated>
-    </task>
-    <task id="LOCAL-00032" summary="#4 Jörgs TxEngeine and Kurts Booking Engine is now working every 10 Secounds">
-      <created>1686721402675</created>
-      <option name="number" value="00032" />
-      <option name="presentableId" value="LOCAL-00032" />
-      <option name="project" value="LOCAL" />
-      <updated>1686721402675</updated>
-    </task>
-    <task id="LOCAL-00033" summary="#4 Jörgs TxEngeine transactionSave">
-      <created>1686727048354</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1686727048354</updated>
-    </task>
-    <task id="LOCAL-00034" summary="#5 TransactionUI: added reciver Name and BankURL, i do not see it...&#10;&#10;Aounts with , are now handle&#10;UserCreation without BankURL ist not possible.">
-      <created>1687228000488</created>
-      <option name="number" value="00034" />
-      <option name="presentableId" value="LOCAL-00034" />
-      <option name="project" value="LOCAL" />
-      <updated>1687228000488</updated>
-    </task>
-    <task id="LOCAL-00035" summary="#3 UserCreation without BankURL ist not possible.">
-      <created>1687228041704</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1687228041704</updated>
-    </task>
-    <task id="LOCAL-00036" summary="#3 Transaction Name will be set only when ist has informations">
-      <created>1687285768026</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1687285768026</updated>
-    </task>
-    <task id="LOCAL-00037" summary="#3 Ui should send txName to api">
-      <created>1687327511745</created>
-      <option name="number" value="00037" />
-      <option name="presentableId" value="LOCAL-00037" />
-      <option name="project" value="LOCAL" />
-      <updated>1687327511745</updated>
-    </task>
-    <task id="LOCAL-00038" summary="#3 Ui should send txName to api fix">
-      <created>1687327600308</created>
-      <option name="number" value="00038" />
-      <option name="presentableId" value="LOCAL-00038" />
-      <option name="project" value="LOCAL" />
-      <updated>1687327600308</updated>
-    </task>
-    <task id="LOCAL-00039" summary="#3 Ui complete Registration should be shown">
-      <created>1687329129540</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1687329129540</updated>
-    </task>
-    <task id="LOCAL-00040" summary="#15 add Mail Dependencies, reorganize imports of openAPI">
-      <created>1687331572887</created>
-      <option name="number" value="00040" />
-      <option name="presentableId" value="LOCAL-00040" />
-      <option name="project" value="LOCAL" />
-      <updated>1687331572887</updated>
-    </task>
-    <task id="LOCAL-00041" summary="#15 Registration Email added. problem with connection to EmailServer">
-      <created>1687336269539</created>
-      <option name="number" value="00041" />
-      <option name="presentableId" value="LOCAL-00041" />
-      <option name="project" value="LOCAL" />
-      <updated>1687336269539</updated>
-    </task>
-    <task id="LOCAL-00042" summary="#15 Email with html">
-      <created>1687534470733</created>
-      <option name="number" value="00042" />
-      <option name="presentableId" value="LOCAL-00042" />
-      <option name="project" value="LOCAL" />
-      <updated>1687534470733</updated>
-    </task>
-    <task id="LOCAL-00043" summary="#15 Email with html and Demurage engine">
-      <created>1687534667253</created>
-      <option name="number" value="00043" />
-      <option name="presentableId" value="LOCAL-00043" />
-      <option name="project" value="LOCAL" />
-      <updated>1687534667253</updated>
-    </task>
-    <task id="LOCAL-00044" summary="#15 logger fix in messaging">
-      <created>1687536343773</created>
-      <option name="number" value="00044" />
-      <option name="presentableId" value="LOCAL-00044" />
-      <option name="project" value="LOCAL" />
-      <updated>1687536343773</updated>
-    </task>
-    <task id="LOCAL-00045" summary="#15 emailservice deleted">
-      <created>1687537453282</created>
-      <option name="number" value="00045" />
-      <option name="presentableId" value="LOCAL-00045" />
-      <option name="project" value="LOCAL" />
-      <updated>1687537453282</updated>
-    </task>
-    <task id="LOCAL-00046" summary="#16 Demurage Cron every hour is now working">
-      <created>1687539069698</created>
-      <option name="number" value="00046" />
-      <option name="presentableId" value="LOCAL-00046" />
-      <option name="project" value="LOCAL" />
-      <updated>1687539069698</updated>
-    </task>
-    <task id="LOCAL-00047" summary="# 17 Refactor Manager and DTO to models">
-      <created>1687614279001</created>
-      <option name="number" value="00047" />
-      <option name="presentableId" value="LOCAL-00047" />
-      <option name="project" value="LOCAL" />
-      <updated>1687614279001</updated>
-    </task>
-    <task id="LOCAL-00048" summary="# 17 TxBuilder added, demurage ready">
-      <created>1687802817879</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1687802817879</updated>
-    </task>
-    <task id="LOCAL-00049" summary="# 17 AccountType as enum">
-      <created>1687845060554</created>
-      <option name="number" value="00049" />
-      <option name="presentableId" value="LOCAL-00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1687845060554</updated>
-    </task>
-    <task id="LOCAL-00050" summary="# 18 enums will now saved in DB as String&#10;&#10;anstatt mit der Position im Quellcode">
-      <created>1687847132098</created>
-      <option name="number" value="00050" />
-      <option name="presentableId" value="LOCAL-00050" />
-      <option name="project" value="LOCAL" />
-      <updated>1687847132098</updated>
-    </task>
-    <task id="LOCAL-00051" summary="# 16 totalDemurrageAmound will be counted">
-      <created>1687848829548</created>
-      <option name="number" value="00051" />
-      <option name="presentableId" value="LOCAL-00051" />
-      <option name="project" value="LOCAL" />
-      <updated>1687848829548</updated>
-    </task>
-    <task id="LOCAL-00052" summary="# 5 Blocks have now the DateTime">
-      <created>1687848930659</created>
-      <option name="number" value="00052" />
-      <option name="presentableId" value="LOCAL-00052" />
-      <option name="project" value="LOCAL" />
-      <updated>1687848930659</updated>
-    </task>
-    <task id="LOCAL-00053" summary="# 18 one closing bracket to much">
-      <created>1687849003252</created>
-      <option name="number" value="00053" />
-      <option name="presentableId" value="LOCAL-00053" />
-      <option name="project" value="LOCAL" />
-      <updated>1687849003252</updated>
-    </task>
-    <task id="LOCAL-00054" summary="# 16 Demuraged Money send to BasicIncomePool">
-      <created>1687856036603</created>
-      <option name="number" value="00054" />
-      <option name="presentableId" value="LOCAL-00054" />
-      <option name="project" value="LOCAL" />
-      <updated>1687856036603</updated>
-    </task>
-    <task id="LOCAL-00055" summary="# 11 PayMentnote from Language">
-      <created>1687858894658</created>
-      <option name="number" value="00055" />
-      <option name="presentableId" value="LOCAL-00055" />
-      <option name="project" value="LOCAL" />
-      <updated>1687858894659</updated>
-    </task>
-    <task id="LOCAL-00056" summary="# 18 test fix">
-      <created>1687859985034</created>
-      <option name="number" value="00056" />
-      <option name="presentableId" value="LOCAL-00056" />
-      <option name="project" value="LOCAL" />
-      <updated>1687859985034</updated>
-    </task>
-    <task id="LOCAL-00057" summary="# 17 refactor UserBuilder">
-      <created>1688019711739</created>
-      <option name="number" value="00057" />
-      <option name="presentableId" value="LOCAL-00057" />
-      <option name="project" value="LOCAL" />
-      <updated>1688019711739</updated>
-    </task>
-    <task id="LOCAL-00058" summary="# 5 TxEngineTest fix">
-      <created>1688034953318</created>
-      <option name="number" value="00058" />
-      <option name="presentableId" value="LOCAL-00058" />
-      <option name="project" value="LOCAL" />
-      <updated>1688034953318</updated>
-    </task>
-    <task id="LOCAL-00059" summary="# 19 BasicIncomePortion is now saving&#10;&#10;portion was SQL-reserved (cost me a hole day^^)">
-      <created>1688659923872</created>
-      <option name="number" value="00059" />
-      <option name="presentableId" value="LOCAL-00059" />
-      <option name="project" value="LOCAL" />
-      <updated>1688659923873</updated>
-    </task>
-    <task id="LOCAL-00060" summary="# 18 Fixing Model problems">
-      <created>1689253810159</created>
-      <option name="number" value="00060" />
-      <option name="presentableId" value="LOCAL-00060" />
-      <option name="project" value="LOCAL" />
-      <updated>1689253810160</updated>
-    </task>
-    <task id="LOCAL-00061" summary="# 19 BGE is now paid unregulary">
-      <created>1689259568972</created>
-      <option name="number" value="00061" />
-      <option name="presentableId" value="LOCAL-00061" />
-      <option name="project" value="LOCAL" />
-      <updated>1689259568972</updated>
-    </task>
-    <task id="LOCAL-00062" summary="# 16 Engine uses now a Status Object">
-      <created>1689685993008</created>
-      <option name="number" value="00062" />
-      <option name="presentableId" value="LOCAL-00062" />
-      <option name="project" value="LOCAL" />
-      <updated>1689685993008</updated>
-    </task>
-    <task id="LOCAL-00063" summary="# 18 Demurrage Money gets now the rest Money from BasicIncome Account.&#10;&#10;Fast UserRegist create not any more multipl UserObjects.">
-      <created>1690206120352</created>
-      <option name="number" value="00063" />
-      <option name="presentableId" value="LOCAL-00063" />
-      <option name="project" value="LOCAL" />
-      <updated>1690206120352</updated>
-    </task>
-    <task id="LOCAL-00064" summary="# 18 Tests fixed">
-      <created>1690214870276</created>
-      <option name="number" value="00064" />
-      <option name="presentableId" value="LOCAL-00064" />
-      <option name="project" value="LOCAL" />
-      <updated>1690214870277</updated>
-    </task>
-    <task id="LOCAL-00065" summary="# 19 BiPortionController added">
-      <created>1690223012598</created>
-      <option name="number" value="00065" />
-      <option name="presentableId" value="LOCAL-00065" />
-      <option name="project" value="LOCAL" />
-      <updated>1690223012598</updated>
-    </task>
-    <task id="LOCAL-00066" summary="# 18 Bugfix Bi Portion autoadd after new Account">
-      <created>1691219183776</created>
-      <option name="number" value="00066" />
-      <option name="presentableId" value="LOCAL-00066" />
-      <option name="project" value="LOCAL" />
-      <updated>1691219183777</updated>
-    </task>
-    <task id="LOCAL-00067" summary="# 18 Bugfix Bi Portion Comments of Methods">
-      <created>1692352961866</created>
-      <option name="number" value="00067" />
-      <option name="presentableId" value="LOCAL-00067" />
-      <option name="project" value="LOCAL" />
-      <updated>1692352961866</updated>
-    </task>
-    <task id="LOCAL-00068" summary="# 18 Bugfix Bi Portion Again Programmed that the User gets only Bi-Portions until his maxBI">
-      <created>1692355178590</created>
-      <option name="number" value="00068" />
-      <option name="presentableId" value="LOCAL-00068" />
-      <option name="project" value="LOCAL" />
-      <updated>1692355178590</updated>
-    </task>
-    <task id="LOCAL-00069" summary="# 14 refreshToken implemented">
-      <created>1692367610151</created>
-      <option name="number" value="00069" />
-      <option name="presentableId" value="LOCAL-00069" />
-      <option name="project" value="LOCAL" />
-      <updated>1692367610151</updated>
-    </task>
-    <task id="LOCAL-00070" summary="# 14 Logout implemented with jwt blacklist">
-      <created>1692377200858</created>
-      <option name="number" value="00070" />
-      <option name="presentableId" value="LOCAL-00070" />
-      <option name="project" value="LOCAL" />
-      <updated>1692377200859</updated>
-    </task>
-    <task id="LOCAL-00071" summary="# 14 Logout RefreshToken invalidate old token">
-      <created>1692460874803</created>
-      <option name="number" value="00071" />
-      <option name="presentableId" value="LOCAL-00071" />
-      <option name="project" value="LOCAL" />
-      <updated>1692460874803</updated>
-    </task>
-    <option name="localTasksCounter" value="127" />
     <servers />
-  </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State>
-              <option name="FILTERS">
-                <map>
-                  <entry key="branch">
-                    <value>
-                      <list>
-                        <option value="master" />
-                      </list>
-                    </value>
-                  </entry>
-                </map>
-              </option>
-            </State>
-          </value>
-        </entry>
-      </map>
-    </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="#27 hotfix incompatible AdminUserDetailsData" />
-    <MESSAGE value="#27 UpdateUserDetails is working again" />
-    <MESSAGE value="#35 Login only with Verified Email, sends a new Verify Email. AdminUser is verified now." />
-    <MESSAGE value="#36 ForgotPassword is sending Email, Link is &quot;working&quot; ResetPassword needs an UI" />
-    <MESSAGE value="#35 Testing without Verification" />
-    <MESSAGE value="#36 Testimplementation API needs a Post with new Password" />
-    <MESSAGE value="#36 API has Post with resetcode and new Password" />
-    <MESSAGE value="#36 fix test" />
-    <MESSAGE value="#38 FlyWayMigration 004 against bruteforce. more special Chars" />
-    <MESSAGE value="#38 User locked for 30 Seconds" />
-    <MESSAGE value="#17 positive VerificationMessage" />
-    <MESSAGE value="#40 Setup Telegram Chatbot" />
-    <MESSAGE value="#40 add GenerateCodeAPI + Read Code via TelegramEngine" />
-    <MESSAGE value="#40 yaml prepare for secoundAuthRequest" />
-    <MESSAGE value="#40 fix yaml syntax" />
-    <MESSAGE value="#40 fix and refactor yaml syntax" />
-    <MESSAGE value="#40 fix yaml syntax ;-)" />
-    <MESSAGE value="#40 LoginPost with 2FA Check and possibility to enter Code." />
-    <MESSAGE value="#42 testExceedBiPortionAllowance is now implemented" />
-    <MESSAGE value="#25 prevent ArithmeticException with dividing two double" />
-    <MESSAGE value="#43 No negative and smaller biPortion than 0.01 are possible" />
-    <MESSAGE value="#42 Fail messages return when the Account or Portion is not yours" />
-    <MESSAGE value="#3 reversfix api account/all to account/getAccountsOfUser" />
-    <MESSAGE value="CleanUp everything from FlussMark and OpenAPI.&#10;&#10;We have now a clean REST Server with Usermanagement" />
-    <MESSAGE value="setup a clean REST Server with Usermanagement" />
-    <option name="LAST_COMMIT_MESSAGE" value="setup a clean REST Server with Usermanagement" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <breakpoint type="java-exception">
-          <properties class="org.springframework.beans.factory.UnsatisfiedDependencyException" package="org.springframework.beans.factory" />
-          <option name="timeStamp" value="11" />
-        </breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/security/auth.py</url>
+          <line>46</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/security/auth.py</url>
+          <line>53</line>
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/security/auth.py</url>
+          <line>60</line>
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
-    <pin-to-top-manager>
-      <pinned-members>
-        <PinnedItemInfo parentTag="java.util.LinkedHashMap$Entry" memberName="value" />
-        <PinnedItemInfo parentTag="de.flussmark.api.telegram.models.TelegramUpdate" memberName="result" />
-        <PinnedItemInfo parentTag="java.util.LinkedHashMap$Entry" memberName="key" />
-      </pinned-members>
-    </pin-to-top-manager>
-    <watches-manager>
-      <configuration name="GradleRunConfiguration">
-        <watch expression="account.transactionName" />
-      </configuration>
-    </watches-manager>
-  </component>
-  <component name="XSLT-Support.FileAssociations.UIState">
-    <expand />
-    <select />
-  </component>
-  <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/FlussMark$DemurrageEngineTest_testExecute.ic" NAME="DemurrageEngineTest.testExecute Coverage Results" MODIFIED="1692353265480" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
-    <SUITE FILE_PATH="coverage/FlussMark$api__openApiGenerate_.ic" NAME="api [openApiGenerate] Coverage Results" MODIFIED="1692624308927" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
-    <SUITE FILE_PATH="coverage/FlussMark$FlussMarkApiApplication.ic" NAME="FlussMarkApiApplication Coverage Results" MODIFIED="1701938143663" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
-      <FILTER>de.flussmark.api.builder.*</FILTER>
-    </SUITE>
   </component>
 </project>

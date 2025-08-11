@@ -1,0 +1,23 @@
+jetzt müssen wir die Anmeldung machen. Ich habe noch kein User Model in FastAPI.
+Lass uns eins erstellen.
+Wir haben mehrere Rollen für die User:
+Schüler <- standard Rolle. Lehrer haben auch diese Rolle und können auch ihren Progress von den Lessons erhöhen (müssen sie natürlich nicht)
+Begleiter <- Begleiter sind Erwachsene, aber keine Lehrer, manchmal sogar Spezialisten ihres Faches, wie Ingenieure. Sie unterstützen einzelne Schüler in den Lernbüros.
+Lehrer <- er kann neuen Content für bestehende Lessons erstellen. Er repräsentiert einen Teacher Model.
+Projektleiter <- Jede Schule wird ein schwarzes Brett haben, wo Projekte gestartet werden können. Schüler wie Begleiter können die Projekte unterstützen. Ein Projekt kann aber auch mehrere Projektleiter haben. Dieses Schwarze Brett werden wir irgendwann später implementieren.
+Direktor <- leitet eine reale Schule und bekommt die Kontrolle eines Schul Objektes oder bekommt ein neues Objekt (bei Neugründung) Sinnvoll ist auch die Möglichkeit mehrere Direktoren für eine Schule zu haben.
+Moderator <- Mods können neue Lernbüros, Kategorien und Lessions anlegen. Ebenso können sie Content von Beispielsweise YoutubeLehrern erstellen, damit ihre Lessions gefüllt sind.
+Admins <- die können Rollen vergeben, sodass ein Schüler nach seiner Ausbildung Lehrer wird und zusätzlich Mod werden kann.
+Ein User kann also mehrere Rollen haben.
+
+Ein Lehrer kann auch Verantwortung für einzelne Schüler bekommen.
+In der Realen Freischule wird anfangs jedem Kind ein Tutor (Vertrauensperson) zugeordnet.
+Der Schüler kann sich später eine andere Vertrauensperson aussuchen und wechseln.
+Jeder Begleiter kann eine Vertrauensperson werden.
+Der Fortschritt der Schüler soll auch von mehreren Begleitern (ohne Vertrauensperson status) eingesehen werden können.
+
+Am Schwarzen Brett gibt es unterschiedliche Rubriken. Neben Projekten, werden auch Kleinanzeigen aufgehangen wie Veranstaltungen oder Suche/Biete. Vielleicht auch eine Datingrubrik mit er sucht sie, sie sucht ihn, er sucht ihn und sie sucht sie.
+
+Jeder Schüler wird eine Projektmappe pflegen in die jedes Projekt dokumentiert und präsentiert wird, damit die späteren Arbeitgeber die Fähigkeiten des Schülers einschätzen können. Werden wir auch später implementieren.
+
+Jeder User bekommt auch noch ein Profil, was er mit allen möglichen Informationen und einem Bild füllen kann. Macht es Sinn, das User Objekt und das Profil zu trennen? Denn das Profil Objekt kann dann immer weiter ausgebaut werden und das UserObjekt ist nur zuständig für die Anmeldung und für das JWT und was dir noch so einfällt.

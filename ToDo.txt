@@ -1,0 +1,23 @@
+
+Frontend:
+     Beim Login werden die Rollen mitgegeben und gespeichert
+
+Backend:
+    Progress Speichern
+    JWT-Blacklist (durch Logout)
+    Letzten Path speichern
+    Rollen anlegen
+    beim LoginResponse die Rolle mitgeben
+
+
+Ideen:
+    Lehrer bekommen eine Connection zu einer Kategory, wenn sie dort eine Lesson erstellt haben.
+    In der Lehrerauswahl beim Erstellen eines neuen Contents sind oben die Lehrer mit einer Kategory Connection. Daruter sind alle Lehrer.
+    beim Erstellen eines neuen Kontents:
+      - Das LehrerFeld kann mit Text gefüllt werden, damit die Lange Liste gefiltert wird.
+    Die Navigationsleiste bekommt einen Button für eine LehrerView.
+      - Dort werden die Lehrer mit der Kategory Connection angezeigt und die Anzahl ihrer Inhalte hier.
+      - Ein Lehrer kann vom Schüler geliked oder disliked werden. (eine Reihenfolge wird vergeben)
+      - Die Inhalte der gelikten Lehrer werden als erstes angezeigt. und disliked Lehrer werden ausgeblendet
+      - anhand der Anzahl der Likes, wird dieser Lehrer neuen Schülern angezeigt
+      - Lehrer können Zusatzinhalte in eine Kategory einfügen.

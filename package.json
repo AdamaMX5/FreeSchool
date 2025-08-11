@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "lucide-svelte": "^0.501.0",
+    "marked": "^15.0.8"
+  }
+}

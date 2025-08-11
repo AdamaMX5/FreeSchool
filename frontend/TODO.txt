@@ -1,0 +1,4 @@
+Neue Lesson -> Mode -> Courser ist + -> Position des Klicks
+Lesson löschen -> refresh Lessons
+Lesson Move -> refresh Lesson
+Bearbeitungsbutton für den COntent unter dem Video über dem Markdown

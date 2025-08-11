@@ -1,0 +1,9 @@
+builtins_platform=JS
+unique_name=io.ktor\:ktor-client-json
+compiler_version=1.9.10
+depends=io.ktor\:ktor-client-core io.ktor\:ktor-events io.ktor\:ktor-websocket-serialization io.ktor\:ktor-serialization io.ktor\:ktor-websockets io.ktor\:ktor-http io.ktor\:ktor-utils io.ktor\:ktor-io org.jetbrains.kotlinx\:kotlinx-coroutines-core org.jetbrains.kotlin\:kotlinx-atomicfu-runtime org.jetbrains.kotlinx\:atomicfu org.jetbrains.kotlin\:kotlin-dom-api-compat kotlin
+serializedKlibFingerprint=1qsqiapkmjta6.2o082xwifewfa
+serializedIrFileFingerprints=2qebes2tlxub0.56sjivdjlbvu 1kkc8in1ppv3z.2bblh2q4zx449 1a1v1vlwcs97b.1wyg8tah2fpgm 1p8zpayjm15gv.30q719lkx53kt 2rogp2w9tyfka.2156o0luv7r5x
+jsOutputName=ktor-ktor-client-ktor-client-plugins-ktor-client-json
+abi_version=1.8.0
+metadata_version=1.4.1
