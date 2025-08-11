@@ -27,7 +27,7 @@ app.add_middleware(
 
 @app.get("/")
 def home():
-    return {"Hallo Welt! FreeSchool is important!"}
+    return {"Hallo Welt! FreeSchool is important!<br> in Git we trust!"}
 
 
 if __name__ == "__main__":

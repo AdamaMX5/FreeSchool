@@ -27,6 +27,10 @@ class UserLoginResponse(BaseModel):
     status: str
     roles: List[str]
 
+@router.get("/helloworld", response_model=str)
+def hello_world():
+    return "Hello World from User Router in Gitrepository!"
+
 
 @router.post("/login", status_code=status.HTTP_201_CREATED)
 def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
