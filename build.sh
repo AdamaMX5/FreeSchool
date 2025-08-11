@@ -1,14 +1,14 @@
-@echo off
-REM ===== BACKEND =====
+#!/bin/bash
+# ===== BACKEND =====
 cd backend
-python -m venv venv
-call venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000 --daemon
 deactivate
 cd ..
 
-REM ===== FRONTEND =====
+# ===== FRONTEND =====
 cd frontend
 npm install
 npm run build
