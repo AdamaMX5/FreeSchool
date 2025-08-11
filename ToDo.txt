@@ -1,3 +1,9 @@
+Server integration
+1. [ ] Nginx SSL mit Let's Encrypt einrichten
+2. [ ] Systemd-Service für Gunicorn erstellen
+3. [ ] CI/CD Pipeline (GitHub Actions)
+4. [ ] Datenbank-Backups automatisieren
+
 
 Frontend:
      Beim Login werden die Rollen mitgegeben und gespeichert
