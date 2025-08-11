@@ -1,7 +1,7 @@
 from sqlmodel import create_engine, SQLModel, Session
 
 # Verbindungsaufbau zur MariaDB-Datenbank
-DATABASE_URL = "mysql+pymysql://root:root@localhost:3306/FreeSchool"
+DATABASE_URL = "postgresql+asyncpg://freeschool:sicher123@db:5432/freeschool"
 
 engine = create_engine(DATABASE_URL, echo=True)
 
