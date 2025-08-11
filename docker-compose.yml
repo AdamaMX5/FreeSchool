@@ -3,26 +3,33 @@ version: '3.8'
 services:
   db:
     image: postgres:15
+    container_name: freeschool_db
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: freeschool
+      POSTGRES_PASSWORD: sicher123
       POSTGRES_DB: freeschool
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freeschool"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql://user:password@db:5432/freeschool
+      DATABASE_URL: "postgresql://freeschool:sicher123@db:5432/freeschool"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
     ports:
       - "80:80"
-    environment:
-      VITE_API_BASE_URL: /api
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

@@ -9,24 +9,22 @@ Our goal is to make high-quality education accessible to everyone, regardless of
 ## Git installieren und projekt klonen:
 
 ```bash
-sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx
+sudo apt update && sudo apt install -y docker.io docker-compose git python3 python3-pip nodejs npm nginx
+sudo usermod -aG docker $USER && newgrp docker
+
 git clone https://github.com/AdamaMX5/FreeSchool.git
 cd FreeSchool
+
+oder wenn schon geklont:
+cd FreeSchool
+git pull
 ```
 
----
-
-## Installation
-
-To install FreeSchool, download the latest version from our website or GitHub and install the required dependencies:
-
-```bash
-pip install fastapi[all]
-```
 
 ---
 
 ## Umgebungsvariablen setzen
+nano .env
 
 # Backend
 DATABASE_URL=postgresql://user:password@db:5432/freeschool
