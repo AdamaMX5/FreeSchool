@@ -1,15 +1,23 @@
 FROM python:3.11-slim
 
+# Systemabhängigkeiten
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc python3-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Benutzer erstellen
+RUN useradd -m appuser && \
+    mkdir /app && \
+    chown appuser:appuser /app
+
 WORKDIR /app
+USER appuser
 
-# Zuerst Abhängigkeiten installieren (für Caching)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Abhängigkeiten installieren
+COPY --chown=appuser:appuser requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Dann den Rest kopieren
-COPY . .
+# App kopieren
+COPY --chown=appuser:appuser . .
 
-# Alembic Migration
-RUN alembic upgrade head
-
-CMD ["gunicorn", "-w 4", "-k uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]
