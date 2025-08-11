@@ -11,7 +11,7 @@
     "docker:build": "docker build -t freeschool-frontend ."
   },
   "dependencies": {
-    "lucide-svelte": "^0.310.0",
+    "lucide-svelte": "github:lucide-icons/lucide#main",
     "svelte-routing": "^1.8.0"
   },
   "devDependencies": {
