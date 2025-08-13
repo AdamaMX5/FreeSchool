@@ -62,6 +62,11 @@ else
     echo "External database configuration detected - no local database setup needed"
 fi
 
+# Clean up previous builds
+echo "Cleaning up previous builds..."
+docker-compose rm -f frontend backend
+docker volume prune -f
+
 # ===== BUILD AND START =====
 echo "Building and starting containers..."
 docker-compose up -d --build

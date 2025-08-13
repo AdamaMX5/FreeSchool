@@ -9,10 +9,12 @@ Our goal is to make high-quality education accessible to everyone, regardless of
 ## Git installieren und projekt klonen:
 
 ```bash
-sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx
+sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx docker.io docker-compose curl
+
 git clone https://github.com/AdamaMX5/FreeSchool.git
 cd FreeSchool
 chmod +x build.sh
+./build.sh
 
 ```
 

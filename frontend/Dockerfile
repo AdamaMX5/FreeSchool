@@ -1,24 +1,33 @@
 FROM node:23-alpine as builder
 
-# 1. Git und Python für node-gyp installieren
+# Install dependencies
 RUN apk add --no-cache git python3 make g++
 
 WORKDIR /app
 
-# 2. Temporär auf npm registry wechseln (falls GitHub Probleme macht)
+# Configure npm
 RUN npm config set registry https://registry.npmjs.org/
-
-# 3. Husky im Container deaktivieren (keine Git-Hooks im Build nötig)
 ENV HUSKY=0
 
-# 4. Pakete installieren
+# Pakete installieren
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps --no-optional --ignore-scripts
 
-# 5. Rest kopieren und builden
+# Rest kopieren
 COPY . .
+
+# Build the app with production mode
+ENV NODE_ENV=production
 RUN npm run build
 
 FROM nginx:alpine
-COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built files from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Ensure nginx can access the files
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /usr/share/nginx/html
