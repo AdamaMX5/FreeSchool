@@ -18,6 +18,8 @@ services:
 
   backend:
     build: ./backend
+    ports:
+      - "8000:8000"  # Wichtig: Port-Mapping hinzufügen
     environment:
       DATABASE_URL: "postgresql://freeschool:sicher123@db:5432/freeschool"
     depends_on:

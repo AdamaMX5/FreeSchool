@@ -4,6 +4,8 @@ Server integration
 3. [ ] CI/CD Pipeline (GitHub Actions)
 4. [ ] Datenbank-Backups automatisieren
 
+.env
+	allow_origins = "http://v3264.1blu.de" # für das Backend zum einstellen
 
 Frontend:
      Beim Login werden die Rollen mitgegeben und gespeichert
