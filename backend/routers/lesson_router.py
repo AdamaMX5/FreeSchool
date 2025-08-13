@@ -1,17 +1,16 @@
-# this is the Router for the Lesson model
-# you can create a new one, change one, delete one or get one
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlalchemy.orm import Session
-from database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from database import get_async_db
 
 from models.lesson import Lesson
 from models.content import Content
 from models.user import User, UserLessonLink
 
-from security.auth import get_current_user, get_current_user_optional
+from security.auth import get_current_user_optional, get_current_user
 from security.auth import required_roles
 
 router = APIRouter(prefix="/lesson", tags=["Lessons"])
@@ -26,10 +25,13 @@ class LessonDto(BaseModel):
     position_x: int
     position_y: int
     contents: List[int] = []
-    progress: int
+    progress: Optional[int] = 0  # Jetzt optional mit Default-Wert 0
 
 
-def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
+async def wrap(lesson: Lesson, db: AsyncSession, progress: int = 0) -> LessonDto:
+    # Inhalte sind bereits durch Eager Loading geladen
+    content_ids = [content.id for content in lesson.contents]
+
     return LessonDto(
         id=lesson.id,
         category_id=lesson.category_id,
@@ -38,19 +40,14 @@ def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
         order=lesson.order,
         position_x=lesson.position_x,
         position_y=lesson.position_y,
-        contents=[c.id for c in lesson.contents],
-        progress = progress
+        contents=content_ids,
+        progress=progress
     )
 
 
-def wrap_list(lessons: List[Lesson]) -> List[LessonDto]:
-    return [wrap(lesson) for lesson in lessons]
-
-
 @router.post("/", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
-async def new_lesson(dto: LessonDto, db: Session = Depends(get_db)):
+async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
     try:
-        # 1. Erstelle Lesson-Instanz
         lesson = Lesson(
             category_id=dto.category_id,
             name=dto.name,
@@ -60,104 +57,171 @@ async def new_lesson(dto: LessonDto, db: Session = Depends(get_db)):
             position_y=dto.position_y,
         )
 
-        # 2. Optional: Inhalte zuweisen, falls contents eine M:N-Beziehung ist
-        if dto.contents:
-            lesson.contents = db.query(Content).filter(Content.id.in_(dto.contents)).all()
-
-        # 3. Speichern
         db.add(lesson)
-        db.commit()
-        db.refresh(lesson)
-        return wrap(lesson)
-    except HTTPException:
-        raise
+        await db.commit()
+        await db.refresh(lesson)
+
+        # Inhalte verknüpfen
+        if dto.contents:
+            result = await db.execute(
+                select(Content)
+                .where(Content.id.in_(dto.contents))
+                .options(selectinload(Content.lessons))
+            )
+            contents = result.scalars().all()
+            lesson.contents = contents
+            await db.commit()
+            await db.refresh(lesson)
+
+        return await wrap(lesson, db)
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{lesson_id}")
-async def get_lesson(lesson_id: int, db: Session = Depends(get_db)):
-    l = db.get(Lesson, lesson_id)
-    if l is None:
-        raise HTTPException(status_code=404, detail="Category not found")
-    else:
-        return wrap(l)
+async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
+    stmt = (
+        select(Lesson)
+        .where(Lesson.id == lesson_id)
+        .options(selectinload(Lesson.contents))
+    )
+    result = await db.execute(stmt)
+    lesson = result.scalars().first()
+
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    return await wrap(lesson, db)
 
 
 @router.get("/by_category/{category_id}")
 async def get_lessons_by_category(
         category_id: int,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_async_db),
         current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    lessons = db.query(Lesson).filter(Lesson.category_id == category_id).filter(Lesson.is_deleted == False).all()
+    # Lessons mit Eager Loading abfragen
+    stmt = (
+        select(Lesson)
+        .where(Lesson.category_id == category_id)
+        .where(Lesson.is_deleted == False)
+        .options(selectinload(Lesson.contents))
+        .order_by(Lesson.order)
+    )
+    result = await db.execute(stmt)
+    lessons = result.scalars().all()
+
+    # Keine 404 mehr bei leeren Listen, sondern 200 mit []
     if not lessons:
-        raise HTTPException(status_code=404, detail="No Lessons found")
+        return []
 
-    # 2. Wenn User angemeldet ist, Fortschritte laden
+    # Fortschritte laden falls User eingeloggt
+    progress_dict = {}
     if current_user:
-        # Alle Fortschritte des Users für diese Kategorie in einem Query laden
-        progresses = db.query(UserLessonLink).filter(
-            UserLessonLink.user_id == current_user.id,
-            UserLessonLink.lesson_id.in_([l.id for l in lessons])
-        ).all()
+        progress_result = await db.execute(
+            select(UserLessonLink)
+            .where(UserLessonLink.user_id == current_user.id)
+            .where(UserLessonLink.lesson_id.in_([l.id for l in lessons]))
+        )
+        progress_dict = {p.lesson_id: p.progress for p in progress_result.scalars()}
 
-        # Dictionary für schnellen Zugriff erstellen
-        progress_dict = {p.lesson_id: p.progress for p in progresses}
-
-        # Lektionen mit Fortschritt zurückgeben
-        return [
-            wrap(
-                lesson=lesson,
-                progress=progress_dict.get(lesson.id, 0)  # 0 wenn kein Eintrag existiert
-            )
-            for lesson in lessons
-        ]
-    else:
-        return wrap_list(lessons)
-
-
-@router.get("/all/")
-async def get_lessons(db: Session = Depends(get_db)):
-    return wrap_list(db.query(Lesson).filter(Lesson.is_deleted == False).all())
+    return [
+        LessonDto(
+            id=lesson.id,
+            category_id=lesson.category_id,
+            name=lesson.name,
+            description=lesson.description,
+            order=lesson.order,
+            position_x=lesson.position_x,
+            position_y=lesson.position_y,
+            contents=[content.id for content in lesson.contents],
+            progress=progress_dict.get(lesson.id, 0)
+        )
+        for lesson in lessons
+    ]
 
 
 @router.put("/{lesson_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
-async def update_lesson(lesson_id: int, data: LessonDto, db: Session = Depends(get_db)):
+async def update_lesson(
+        lesson_id: int,
+        data: LessonDto,
+        db: AsyncSession = Depends(get_async_db)
+):
     try:
-        l = db.get(Lesson, lesson_id)
-        if l is None:
+        # Lektion mit Inhalten laden
+        stmt = (
+            select(Lesson)
+            .where(Lesson.id == lesson_id)
+            .options(selectinload(Lesson.contents))
+        )
+        result = await db.execute(stmt)
+        lesson = result.scalars().first()
+
+        if not lesson:
             raise HTTPException(status_code=404, detail="Lesson not found")
 
-        l.name = data.name
-        l.description = data.description
-        l.order = data.order
-        l.position_x = data.position_x
-        l.position_y = data.position_y
+        # Basisdaten aktualisieren
+        lesson.name = data.name
+        lesson.description = data.description
+        lesson.order = data.order
+        lesson.position_x = data.position_x
+        lesson.position_y = data.position_y
 
-        db.commit()
-        db.refresh(l)
-        return wrap(l)
-    except HTTPException:
-        raise
+        # Inhalte aktualisieren (nur wenn geändert)
+        if data.contents is not None:
+            # Neue Inhalte laden
+            result = await db.execute(
+                select(Content)
+                .where(Content.id.in_(data.contents))
+            )
+            new_contents = result.scalars().all()
+
+            # Aktuelle Inhalte löschen
+            lesson.contents.clear()
+
+            # Neue Inhalte hinzufügen
+            lesson.contents.extend(new_contents)
+
+        await db.commit()
+        await db.refresh(lesson)
+
+        # Response mit geladenen Inhalten erstellen
+        return LessonDto(
+            id=lesson.id,
+            category_id=lesson.category_id,
+            name=lesson.name,
+            description=lesson.description,
+            order=lesson.order,
+            position_x=lesson.position_x,
+            position_y=lesson.position_y,
+            contents=[c.id for c in lesson.contents],
+            progress=data.progress if hasattr(data, 'progress') else 0
+        )
     except Exception as e:
+        await db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.delete("/{lesson_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
-async def delete_lesson(lesson_id: int, db: Session = Depends(get_db)):
+async def delete_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        l = db.get(Lesson, lesson_id)
-        if not l or l.is_deleted:
+        stmt = (
+            select(Lesson)
+            .where(Lesson.id == lesson_id)
+            .options(selectinload(Lesson.contents))
+        )
+        result = await db.execute(stmt)
+        lesson = result.scalars().first()
+
+        if not lesson or lesson.is_deleted:
             raise HTTPException(status_code=404, detail="Lesson not found")
-        else:
-            l.is_deleted = True
-            db.commit()
-            return {"detail": "Lesson wurde als gelöscht markiert"}
-    except HTTPException:
-        raise
+
+        lesson.is_deleted = True
+        await db.commit()
+        return {"detail": "Lesson wurde als gelöscht markiert"}
     except Exception as e:
+        await db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -169,8 +233,8 @@ class ProgressUpdateDto(BaseModel):
 @router.post("/progress", response_model=UserLessonLink)
 async def update_lesson_progress(
         dto: ProgressUpdateDto,
-        db: Session = Depends(get_db),
-        current_user: User = Depends(get_current_user)  # Angenommen, du hast diese Dependency
+        db: AsyncSession = Depends(get_async_db),
+        current_user: User = Depends(get_current_user)
 ):
     """
     Update or create the progress of a student for a specific lesson.
@@ -178,18 +242,25 @@ async def update_lesson_progress(
     """
     try:
         # Prüfe ob die Lektion existiert
-        lesson = db.get(Lesson, dto.lesson_id)
-        if not lesson or lesson.is_deleted:
+        result = await db.execute(
+            select(Lesson)
+            .where(Lesson.id == dto.lesson_id)
+            .where(Lesson.is_deleted == False)
+        )
+        lesson = result.scalars().first()
+        if not lesson:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Lesson not found"
             )
 
         # Hole oder erstelle den Fortschrittseintrag
-        progress = db.query(UserLessonLink).filter(
-            UserLessonLink.user_id == current_user.id,
-            UserLessonLink.lesson_id == dto.lesson_id
-        ).first()
+        result = await db.execute(
+            select(UserLessonLink)
+            .where(UserLessonLink.user_id == current_user.id)
+            .where(UserLessonLink.lesson_id == dto.lesson_id)
+        )
+        progress = result.scalars().first()
 
         if progress:
             # Update existing progress
@@ -203,14 +274,13 @@ async def update_lesson_progress(
             )
             db.add(progress)
 
-        db.commit()
-        db.refresh(progress)
+        await db.commit()
+        await db.refresh(progress)
         return progress
-
     except HTTPException:
         raise
     except Exception as e:
-        db.rollback()
+        await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Could not update progress: {str(e)}"
@@ -220,7 +290,7 @@ async def update_lesson_progress(
 @router.get("/progress/{lesson_id}", response_model=Optional[UserLessonLink])
 async def get_lesson_progress(
         lesson_id: int,
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_async_db),
         current_user: User = Depends(get_current_user)
 ):
     """
@@ -228,13 +298,13 @@ async def get_lesson_progress(
     Returns None if no progress has been recorded yet.
     """
     try:
-        progress = db.query(UserLessonLink).filter(
-            UserLessonLink.user_id == current_user.id,
-            UserLessonLink.lesson_id == lesson_id
-        ).first()
-
+        result = await db.execute(
+            select(UserLessonLink)
+            .where(UserLessonLink.user_id == current_user.id)
+            .where(UserLessonLink.lesson_id == lesson_id)
+        )
+        progress = result.scalars().first()
         return progress
-
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -244,17 +314,19 @@ async def get_lesson_progress(
 
 @router.get("/progress/all", response_model=List[UserLessonLink])
 async def get_all_progress(
-        db: Session = Depends(get_db),
+        db: AsyncSession = Depends(get_async_db),
         current_user: User = Depends(get_current_user)
 ):
     """
     Get all progress records for the current user.
     """
     try:
-        return db.query(UserLessonLink).filter(
-            UserLessonLink.user_id == current_user.id
-        ).all()
-
+        result = await db.execute(
+            select(UserLessonLink)
+            .where(UserLessonLink.user_id == current_user.id)
+            .options(selectinload(UserLessonLink.lesson))
+        )
+        return result.scalars().all()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from typing import Optional, Union, Any, List
 from jose import jwt, JWTError, ExpiredSignatureError
 from jose.exceptions import JWTClaimsError
-from sqlalchemy.orm import Session  # oder SQLModel Session, je nach Setup
-from database import get_db  # Deine Funktion, um eine DB-Session zu erhalten
-from models.user import User  # Dein User ORM-Modell
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from database import get_async_db
+from models.user import User, Role, UserRoleLink
 from passlib.context import CryptContext
 import random
 import string
@@ -14,7 +15,7 @@ import string
 # Diese Werte solltest du in einer Umgebungsvariable speichern oder konfigurieren!
 SECRET_KEY = "geheimer_schluessel_123"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60*12
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 12
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -41,23 +42,20 @@ def create_jwt(data: dict, expires_delta: Optional[timedelta] = None) -> str:
 def verify_jwt(token: str) -> Union[dict, None]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload  # Hier kannst du z.B. auch user_id extrahieren
+        return payload
     except ExpiredSignatureError:
-        # Speziell für abgelaufene Tokens
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token ist abgelaufen",
             headers={"WWW-Authenticate": "Bearer"}
         )
     except JWTClaimsError as e:
-        # Für ungültige Claims (z.B. falsche Audience, Issuer etc.)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Ungültige Token-Claims: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"}
         )
     except JWTError as e:
-        # Allgemeine JWT-Fehler (z.B. falsche Signatur, falsches Format)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Ungültiges Token: {str(e)}",
@@ -65,7 +63,7 @@ def verify_jwt(token: str) -> Union[dict, None]:
         )
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)) -> User:
     payload = verify_jwt(token)
     if payload is None:
         raise HTTPException(
@@ -80,7 +78,10 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             detail="Ungültige Authentifizierungsdaten (Email ist nicht im Token enthalten)",
             headers={"WWW-Authenticate": "Bearer"}
         )
-    user = db.query(User).filter(User.email == email).first()
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalars().first()
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -90,22 +91,24 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 
-async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[User]:
+async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme),
+                                    db: AsyncSession = Depends(get_async_db)) -> Optional[User]:
     if not token:
         return None
     try:
-        # Direkte JWT-Verifikation statt get_current_user-Aufruf
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email = payload.get("sub")
         if not email:
             return None
-        return db.query(User).filter(User.email == email).first()
+
+        result = await db.execute(select(User).where(User.email == email))
+        return result.scalars().first()
     except (JWTError, ExpiredSignatureError, HTTPException) as e:
         print(f"Token-Verifikation fehlgeschlagen: {str(e)}")
         return None
 
 
-def get_current_user_by_id(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+async def get_current_user_by_id(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)) -> User:
     payload = verify_jwt(token)
     if payload is None:
         raise HTTPException(
@@ -117,7 +120,9 @@ def get_current_user_by_id(token: str = Depends(oauth2_scheme), db: Session = De
     if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token enthält keine User-ID")
 
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -132,14 +137,23 @@ def create_email_verify_token() -> str:
     return ''.join(random.choice(chars) for _ in range(32))
 
 
+async def get_user_roles(user: User, db: AsyncSession) -> List[str]:
+    result = await db.execute(
+        select(Role.name)
+        .join(UserRoleLink, UserRoleLink.role_id == Role.id)
+        .where(UserRoleLink.user_id == user.id)
+    )
+    return result.scalars().all()
+
+
 def required_roles(required_roles: List[str]):
-    def role_checker(current_user: User = Depends(get_current_user)):
-        user_roles = [role.name for role in current_user.roles]
-        # Überprüfen, ob der Benutzer mindestens eine der erforderlichen Rollen hat
+    async def role_checker(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
+        user_roles = await get_user_roles(current_user, db)
         if not any(role in user_roles for role in required_roles):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Operation not permitted"
             )
         return current_user
+
     return role_checker

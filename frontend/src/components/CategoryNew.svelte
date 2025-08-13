@@ -1,4 +1,5 @@
 <script>
+  
   import { PlusCircle } from 'lucide-svelte';
   import CreateCategoryDialog from '../dialogs/CreateCategoryDialog.svelte';
 

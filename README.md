@@ -9,35 +9,22 @@ Our goal is to make high-quality education accessible to everyone, regardless of
 ## Git installieren und projekt klonen:
 
 ```bash
-sudo apt update && sudo apt install -y docker.io docker-compose git python3 python3-pip nodejs npm nginx
-sudo usermod -aG docker $USER && newgrp docker
-
+sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx
 git clone https://github.com/AdamaMX5/FreeSchool.git
 cd FreeSchool
+chmod +x build.sh
 
-oder wenn schon geklont:
-cd FreeSchool
-git pull
 ```
-
 
 ---
 
-## Umgebungsvariablen setzen
-nano .env
+## Installation
 
-# Backend
-DATABASE_URL=postgresql://user:password@db:5432/freeschool
-SECRET_KEY=your-super-secret-key
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=1440
+To install FreeSchool, download the latest version from our website or GitHub and install the required dependencies:
 
-# Frontend (wird via docker-compose.yml injiziert)
-VITE_API_BASE_URL=/api
-VITE_APP_NAME=FreeSchool
-
-# Nginx (optional)
-NGINX_PORT=80
+```bash
+pip install fastapi[all]
+```
 
 ---
 

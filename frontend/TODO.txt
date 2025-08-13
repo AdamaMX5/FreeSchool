@@ -1,3 +1,4 @@
+Fortschrittsbalken in der lessonview wird links farbig gefüllt bis zum Kreis.
 Neue Lesson -> Mode -> Courser ist + -> Position des Klicks
 Lesson löschen -> refresh Lessons
 Lesson Move -> refresh Lesson

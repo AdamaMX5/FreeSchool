@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
-from sqlmodel import Session, select
+from sqlalchemy.future import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from models.user import User
 from models.user import Profile
 from models.user import Role, UserRoleLink
-from database import get_db
+from database import get_async_db
 
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
 from security.email import EmailService
@@ -28,15 +29,15 @@ class UserLoginResponse(BaseModel):
     roles: List[str]
 
 @router.get("/helloworld", response_model=str)
-def hello_world():
+async def hello_world():
     return "Hello World from User Router in Gitrepository!"
 
 
 @router.post("/login", status_code=status.HTTP_201_CREATED)
-def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
+async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob ein User mit der Email existiert:
-    statement = select(User).where(User.email == user_in.email)
-    existing_user = db.exec(statement).first()
+    result = await db.execute(select(User).where(User.email == user_in.email))
+    existing_user = result.scalars().first()
     if existing_user:
         if existing_user.is_deleted:
             raise HTTPException(status_code=400, detail="User is deleted call support")
@@ -44,7 +45,7 @@ def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
             return UserLoginResponse(
                 id=existing_user.id,
                 email=existing_user.email,
-                roles=get_role_names(existing_user),
+                roles=await get_role_names(existing_user, db),
                 jwt="",
                 status="register"
             )
@@ -52,10 +53,11 @@ def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
         if not verify_password(user_in.password, existing_user.hashed_password):
             raise HTTPException(status_code=400, detail="Invalid password")
         existing_user.jwt = create_jwt(data={"sub": existing_user.email, "subid": existing_user.id})  # JWT-Token erstellen
+        await db.commit()
         return UserLoginResponse(
             id=existing_user.id,
             email=existing_user.email,
-            roles=get_role_names(existing_user),
+            roles=await get_role_names(existing_user, db),
             jwt=existing_user.jwt,
             status="login"
         )
@@ -67,8 +69,8 @@ def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
         new_user.passwordVerify = False  # Passwort-Hash erstellen
         new_user.emailVerify = False
         db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
+        await db.commit()
+        await db.refresh(new_user)
         return UserLoginResponse(
             id=new_user.id,
             email=new_user.email,
@@ -78,8 +80,15 @@ def login_user(user_in: UserLogin, db: Session = Depends(get_db)):
         )
 
 
-def get_role_names(user: User) -> List[str]:
-    return [role.name for role in user.roles]
+async def get_role_names(user: User, db: AsyncSession) -> List[str]:
+    # Explizit die Rollen laden
+    result = await db.execute(
+        select(Role)
+        .join(UserRoleLink, UserRoleLink.role_id == Role.id)
+        .where(UserRoleLink.user_id == user.id)
+    )
+    roles = result.scalars().all()
+    return [role.name for role in roles]
 
 
 class UserRegister(BaseModel):
@@ -88,14 +97,15 @@ class UserRegister(BaseModel):
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register_user(user_in: UserRegister, db: Session = Depends(get_db)):
+async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob ein User mit der gleichen Email bereits existiert:
-    statement = select(User).where(User.id == user_in.id)
+    result = await db.execute(select(User).where(User.id == user_in.id))
     print("User ID: ", user_in.id)
-    existing_user = db.exec(statement).first()
+    existing_user = result.scalars().first()
     if existing_user:
         if not verify_password(user_in.repassword, existing_user.hashed_password):
-            db.delete(existing_user)
+            await db.delete(existing_user)
+            await db.commit()
             raise HTTPException(status_code=400, detail="Secound Passwort is not the same as the first")
         else:
             existing_user.jwt = create_jwt(data={"sub": existing_user.email})  # JWT-Token erstellen
@@ -103,21 +113,21 @@ def register_user(user_in: UserRegister, db: Session = Depends(get_db)):
             existing_user.emailVerifyToken = create_email_verify_token()
             existing_user.emailVerify = False
             existing_user.lastLogin = timestamp()  # Letzter Login
-            db.commit()
-            db.refresh(existing_user)
-            send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
+            await db.commit()
+            await db.refresh(existing_user)
+            await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
     else:
         raise HTTPException(status_code=404, detail="User not found")
     return UserLoginResponse(
         id=existing_user.id,
         email=existing_user.email,
-        roles=get_role_names(existing_user),
+        roles=await get_role_names(existing_user, db),
         jwt=existing_user.jwt,
         status="verify_email_sended"
     )
 
 
-def send_email_verification(user: User):
+async def send_email_verification(user: User):
     # verify E-Mail erzeugen
     htmlText = "Wir begrüßen dich bei der Freischule."
     htmlText += "<br><br>"
@@ -126,7 +136,7 @@ def send_email_verification(user: User):
     htmlText += "<br><br>"
     htmlText += "Vielen Dank für alles und liebe Grüße<br><br>Euer Kurt"
 
-    EmailService.send_email(
+    await EmailService.send_email(
         to_email=user.email,
         subject="Verifizierung deiner E-Mail-Adresse",
         from_email="registration@flussmark.de",
@@ -136,18 +146,18 @@ def send_email_verification(user: User):
 
 
 @router.get("/verify")
-def verify_email(token: str, email: str, db: Session = Depends(get_db)):
+async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob der Token gültig ist:
-    statement = select(User).where(User.email == email)
-    existing_user = db.exec(statement).first()
+    result = await db.execute(select(User).where(User.email == email))
+    existing_user = result.scalars().first()
     if existing_user:
         if existing_user.emailVerify:
             return {"Deine E-Mail-Adresse ist bereits verifiziert.<br>Du kannst dich jetzt einloggen."}
         if existing_user.emailVerifyToken == token:
             existing_user.emailVerify = True
             existing_user.emailVerifyToken = None
-            db.commit()
-            db.refresh(existing_user)
+            await db.commit()
+            await db.refresh(existing_user)
             return {"Vielen Dank, deine Email-Adresse wurde erfolgreich verifiziert.<br>Du kannst dich jetzt einloggen."}
         else:
             raise HTTPException(status_code=400, detail="Invalid token")
@@ -156,9 +166,7 @@ def verify_email(token: str, email: str, db: Session = Depends(get_db)):
 
 
 @router.post("/logout")
-def logout(user: User = Depends(get_current_user)):
+async def logout(user: User = Depends(get_current_user)):
     # Hier wäre z.B. ein Token-Blacklist-Eintrag möglich (wenn du sowas hast)
     # Oder einfach nur Logging
     return {"status": "logout", "user_id": user.id}
-
-
