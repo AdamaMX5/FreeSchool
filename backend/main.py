@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.staticfiles import StaticFiles  # Favicon
+from fastapi.responses import FileResponse  # Favicon
 from fastapi.middleware.cors import CORSMiddleware
 from routers.user_router import router as UserRouter
 from routers.category_router import router as CategoryRouter
@@ -13,6 +15,9 @@ import uvicorn
 from typing import Dict, Any
 
 app = FastAPI()
+
+# Statische Dateien servieren
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(UserRouter)
 app.include_router(CategoryRouter)
@@ -61,6 +66,12 @@ async def check_database_health(db: AsyncSession) -> Dict[str, Any]:
         health_status["error"] = str(e)
 
     return health_status
+
+
+# Favicon-Endpunkt hinzufügen
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("static/favicon.ico")
 
 
 @app.get("/")
