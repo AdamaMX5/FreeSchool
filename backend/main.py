@@ -74,30 +74,46 @@ async def favicon():
     return FileResponse("static/favicon.ico")
 
 
-@app.get("/")
-async def home(db: AsyncSession = Depends(get_async_db)):
+@app.get("/", status_code=200)
+async def home(db: AsyncSession = Depends(get_async_db)) -> Dict[str, Any]:
+    response = {
+        "message": "Hello World, in git we trust",
+        "database": {
+            "connection": False,
+            "tables": {}
+        }
+    }
+
     try:
+        # Check database health
         db_health = await check_database_health(db)
+        response["database"]["connection"] = db_health["database_connection"]
 
-        if not db_health["database_connection"]:
-            raise HTTPException(status_code=500, detail="Database connection failed")
-
-        message = "✅ FreeSchool Backend is running\n"
-        message += f"📊 Database status: {'Connected' if db_health['database_connection'] else 'Disconnected'}\n"
-
+        # Process table information
         for table, status in db_health["tables"].items():
-            if status["exists"]:
-                message += f"📦 Table {table}: {status['row_count']} rows\n"
-            else:
-                message += f"❌ Table {table}: Missing ({status.get('error', 'Unknown error')}\n"
+            table_info = {
+                "exists": status["exists"],
+                "rows": status.get("row_count", 0) if status["exists"] else None,
+                "error": status.get("error") if not status["exists"] else None
+            }
+            response["database"]["tables"][table] = table_info
 
-        return {"message": message, "details": db_health}
+        # Add success messages
+        if response["database"]["connection"]:
+            response["message"] += "\n✅ Database connection successful"
+            for table, info in response["database"]["tables"].items():
+                if info["exists"]:
+                    response["message"] += f"\n📊 Table {table}: {info['rows']} rows"
+                else:
+                    response["message"] += f"\n⚠️ Table {table}: missing"
+        else:
+            response["message"] += "\n❌ Database connection failed"
 
     except Exception as e:
-        return {
-            "error": str(e),
-            "message": "⚠️ FreeSchool Backend is running but database check failed"
-        }
+        response["message"] += f"\n⚠️ Database check failed: {str(e)}"
+        response["database"]["error"] = str(e)
+
+    return response
 
 
 if __name__ == "__main__":
