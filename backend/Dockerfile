@@ -14,10 +14,10 @@ RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir --system -r requirements.txt
 	
 # Benutzer erstellen
-RUN adduser --disabled-password --gecos "" appuser
+#RUN adduser --disabled-password --gecos "" appuser
 # Besitz ändern und zu Benutzer wechseln
-RUN chown -R appuser:appuser /app
-USER appuser
+#RUN chown -R appuser:appuser /app
+#USER appuser
 
 # App kopieren
 COPY --chown=appuser:appuser . .
