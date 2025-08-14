@@ -1,10 +1,21 @@
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
+from sqlalchemy import func, select
+import os
+from dotenv import load_dotenv
 
-# Async-PostgreSQL-Verbindung
-DATABASE_URL = "postgresql+asyncpg://freeschool:sicher123@localhost:5432/freeschool"
+# Lade Umgebungsvariablen aus .env
+load_dotenv()
+
+# Konstruiere DATABASE_URL aus Einzelvariablen
+DB_HOST = os.getenv("DB_HOST", "db")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_USER = os.getenv("DB_USER", "freeschool")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "sicher123")
+DB_NAME = os.getenv("DB_NAME", "freeschool")
+
+DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 # Async-Engine erstellen
 engine = create_async_engine(DATABASE_URL, echo=True)

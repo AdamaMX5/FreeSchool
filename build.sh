@@ -13,31 +13,45 @@
 # ===== INITIAL SETUP =====
 echo "=== Starting FreeSchool Deployment ==="
 
-# Stop and remove any existing containers
-echo "Stopping and removing any existing containers..."
-docker-compose down --remove-orphans
 
 # Check for .env file and create if missing
 if [ ! -f .env ]; then
     echo "Creating .env file with default values..."
     cat > .env <<EOL
-# Backend
-DATABASE_URL=postgresql://freeschool:sicher123@db:5432/freeschool
+# ===== DATABASE (PostgreSQL is supported) =====
+DB_HOST=db
+DB_PORT=5432
+DB_USER=freeschool
+DB_PASSWORD=sicher123
+DB_NAME=freeschool
+DATABASE_URL=postgresql+asyncpg://\${DB_USER}:\${DB_PASSWORD}@\${DB_HOST}:\${DB_PORT}/\${DB_NAME}
+
+# ===== AUTHENTICATION =====
 SECRET_KEY=$(openssl rand -hex 32)
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
 
-# Frontend
+# ===== FRONTEND =====
 VITE_API_BASE_URL=/api
 VITE_APP_NAME=FreeSchool
 
-# Nginx
-NGINX_PORT=80
+# ===== EMAIL =====
+SMTP_SERVER=smtp.strato.de
+SMTP_PORT=465
+SMTP_USERNAME=newsletter@flussmark.de
+SMTP_PASSWORD=your_password
+FROM_EMAIL=noreply@freeschool.de
+FROM_NAME=FreeSchool
 EOL
     echo ".env file created with default values"
 else
     echo "Using existing .env file"
 fi
+
+# Stop and remove any existing containers
+echo "Stopping and removing any existing containers..."
+docker-compose down --remove-orphans
+
 
 # Check if using local database
 DB_URL=$(grep DATABASE_URL .env | cut -d '=' -f2)

@@ -2,23 +2,27 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
+from dotenv import load_dotenv
 import ssl
-from pydantic_settings import BaseSettings
-from pydantic import Field
+import os
+
+# Lade Umgebungsvariablen aus .env
+load_dotenv()
 
 
-class EmailConfig(BaseSettings):
-    SMTP_SERVER: str = "smtp.strato.de"  # "ssl://" prefix entfernt, wird in SMTP_SSL behandelt
-    SMTP_PORT: int = 465
-    SMTP_USERNAME: str = "newsletter@flussmark.de"
-    SMTP_PASSWORD: str = "$@DwpWKVt77$Yvs"
-    USE_SSL: bool = True
-    SMTPAUTH: bool = True
-    FROM_EMAIL: str = "noreply@example.com"
-    FROM_NAME: str = "FlussMark"  # Neu: Absendername
-    DEFAULT_CHARSET: str = "utf-8"  # Neu: Standard-Charset
-    DEFAULT_ENCODING: str = "base64"  # Neu: Standard-Encoding
-    DISABLE_EMAILS: bool = False
+class EmailConfig:
+    def __init__(self):
+        self.SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.strato.de")
+        self.SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+        self.SMTP_USERNAME = os.getenv("SMTP_USERNAME", "newsletter@flussmark.de")
+        self.SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "$@DwpWKVt77$Yvs")
+        self.USE_SSL = os.getenv("USE_SSL", "True") == "True"
+        self.SMTPAUTH = os.getenv("SMTPAUTH", "True") == "True"
+        self.FROM_EMAIL = os.getenv("FROM_EMAIL", "freeschool@flussmark.de")
+        self.FROM_NAME = os.getenv("FROM_NAME", "FreeSchool")
+        self.DEFAULT_CHARSET = os.getenv("DEFAULT_CHARSET", "utf-8")
+        self.DEFAULT_ENCODING = os.getenv("DEFAULT_ENCODING", "base64")
+        self.DISABLE_EMAILS = os.getenv("DISABLE_EMAILS", "False") == "True"
 
 
 config = EmailConfig()

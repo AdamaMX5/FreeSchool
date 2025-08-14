@@ -9,13 +9,18 @@ from sqlalchemy.future import select
 from database import get_async_db
 from models.user import User, Role, UserRoleLink
 from passlib.context import CryptContext
+from dotenv import load_dotenv
 import random
 import string
+import os
+
+# Lade Umgebungsvariablen aus .env
+load_dotenv()
 
 # Diese Werte solltest du in einer Umgebungsvariable speichern oder konfigurieren!
-SECRET_KEY = "geheimer_schluessel_123"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 12
+SECRET_KEY = os.getenv("SECRET_KEY", "1234567890ABCDEF1234567890ABCDEF")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 1440 Minuten = 24 Stunden
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 

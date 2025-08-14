@@ -23,7 +23,7 @@ class UserLogin(BaseModel):
 
 class UserLoginResponse(BaseModel):
     id: int
-    email: str
+    email: EmailStr
     jwt: str
     status: str
     roles: List[str]
