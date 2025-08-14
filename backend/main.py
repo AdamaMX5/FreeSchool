@@ -8,6 +8,7 @@ from routers.lesson_router import router as LessonRouter
 from routers.content_router import router as ContentRouter
 from routers.teacher_router import router as TeacherRouter
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import inspect
 from database import get_async_db, engine, create_tables
 import uvicorn
 from typing import Dict, Any
@@ -45,31 +46,30 @@ async def check_database_health(db: AsyncSession) -> Dict[str, Any]:
             health_status["database_connection"] = True
 
         # 2. Vorhandene Tabellen in der Datenbank abfragen
-        result = await db.execute("""
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public'
-        """)
-        existing_tables = {row[0] for row in result.fetchall()}
+        async with engine.connect() as conn:
+            # Synchrone Tabellenabfrage mit run_sync
+            existing_tables = await conn.run_sync(
+                lambda sync_conn: inspect(sync_conn).get_table_names()
+            )
 
-        # 3. Zeilen zählen für vorhandene Tabellen
-        for table_name in existing_tables:
-            try:
-                # Tabellenname maskieren (für reservierte Wörter wie "user")
-                safe_table_name = f'"{table_name}"' if table_name.lower() == "user" else table_name
+            # 3. Zeilen zählen für vorhandene Tabellen
+            for table_name in existing_tables:
+                try:
+                    # Tabellenname maskieren (für reservierte Wörter wie "user")
+                    safe_table_name = f'"{table_name}"' if table_name.lower() == "user" else table_name
 
-                result = await db.execute(f"SELECT COUNT(*) FROM {safe_table_name}")
-                count = result.scalar()
-                health_status["tables"][table_name] = {
-                    "exists": True,
-                    "row_count": count
-                }
-            except Exception as e:
-                health_status["tables"][table_name] = {
-                    "exists": True,  # Tabelle existiert, aber Zählung fehlgeschlagen
-                    "row_count": None,
-                    "error": str(e)
-                }
+                    result = await db.execute(f"SELECT COUNT(*) FROM {safe_table_name}")
+                    count = result.scalar()
+                    health_status["tables"][table_name] = {
+                        "exists": True,
+                        "row_count": count
+                    }
+                except Exception as e:
+                    health_status["tables"][table_name] = {
+                        "exists": True,  # Tabelle existiert, aber Zählung fehlgeschlagen
+                        "row_count": None,
+                        "error": str(e)
+                    }
 
     except Exception as e:
         health_status["error"] = str(e)
