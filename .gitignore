@@ -1,5 +1,7 @@
 # .gitignore
 .env
 *.log
+.idea/
+.vscode/
 __pycache__
 *.py[cod]
