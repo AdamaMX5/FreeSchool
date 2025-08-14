@@ -11,12 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Abhängigkeiten installieren
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --system -r requirements.txt
 	
 # Benutzer erstellen
 RUN adduser --disabled-password --gecos "" appuser
-# PATH für Benutzer-binaries hinzufügen
-ENV PATH="/home/appuser/.local/bin:${PATH}"
 # Besitz ändern und zu Benutzer wechseln
 RUN chown -R appuser:appuser /app
 USER appuser
