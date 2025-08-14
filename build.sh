@@ -85,9 +85,13 @@ docker volume prune -f
 echo "Building and starting containers..."
 docker-compose up -d --build
 
+echo "Creating database tables..."
+docker exec freeschool_backend_1 python create_tables.py
+
 # ===== FINAL CHECKS =====
 echo "Checking container status..."
 docker-compose ps
 
 echo "=== Deployment completed successfully ==="
-echo "Application should be available at http://localhost"
+echo "Application should be available at http://localhost:8000"
+

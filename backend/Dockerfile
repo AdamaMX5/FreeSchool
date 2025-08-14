@@ -39,5 +39,4 @@ RUN echo "=== App copied ==="
 
 # Startbefehl
 RUN echo "=== gunicorn GO! ==="
-CMD ["sh", "-c", "python -c 'import asyncio; from database import create_tables; asyncio.run(create_tables())']
 CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]

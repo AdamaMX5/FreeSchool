@@ -125,11 +125,5 @@ async def home(db: AsyncSession = Depends(get_async_db)) -> Dict[str, Any]:
     return response
 
 
-@app.on_event("startup")
-async def startup_event():
-    await create_tables()
-    print("✅ Tabellen erfolgreich erstellt")
-
-
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

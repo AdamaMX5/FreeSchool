@@ -18,7 +18,7 @@ import os
 load_dotenv()
 
 # Diese Werte solltest du in einer Umgebungsvariable speichern oder konfigurieren!
-SECRET_KEY = os.getenv("SECRET_KEY", "1234567890ABCDEF1234567890ABCDEF")
+SECRET_KEY = os.getenv("SECRET_KEY", "1234567890abcdef1234567890abcdef")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 1440 Minuten = 24 Stunden
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
