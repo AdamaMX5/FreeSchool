@@ -86,7 +86,7 @@ echo "Building and starting containers..."
 docker-compose up -d --build
 
 echo "Creating database tables..."
-docker exec freeschool_backend_1 python create_tables.py
+docker exec freeschool_backend python create_tables.py
 
 # ===== FINAL CHECKS =====
 echo "Checking container status..."
