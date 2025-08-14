@@ -1,13 +1,18 @@
 FROM python:3.11-slim
 
-# Arbeitsverzeichnis erstellen
-WORKDIR /app
-
 # Systemabhängigkeiten
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 RUN echo "=== System packages installed ==="
+
+# Virtuelle Umgebung erstellen
+ENV VIRTUAL_ENV=/opt/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Arbeitsverzeichnis
+WORKDIR /app
 
 # Abhängigkeiten installieren
 COPY requirements.txt .
@@ -27,9 +32,6 @@ RUN echo "PATH: $PATH" && \
 RUN adduser --disabled-password --gecos "" appuser && \
     chown -R appuser:appuser /app
 USER appuser
-
-# Debug: User bestätigen
-RUN echo "=== Now running as appuser ==="
 
 # App kopieren
 COPY --chown=appuser:appuser . .
