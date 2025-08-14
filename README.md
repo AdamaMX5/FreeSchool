@@ -12,9 +12,10 @@ Our goal is to make high-quality education accessible to everyone, regardless of
 sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx docker.io docker-compose curl
 
 git clone https://github.com/AdamaMX5/FreeSchool.git
-cd FreeSchool
-chmod +x build.sh
+cd FreeSchool # && git pull
 ./build.sh
+
+docker logs freeschool_backend # ausgabe anzeigen
 
 ```
 

@@ -9,13 +9,16 @@ async def main():
 
     # Async-Inspektion mit run_sync
     async with engine.connect() as conn:
-        # Synchrone Tabellenprüfung
-        existing_tables = await conn.run_sync(
-            lambda sync_conn: inspect(sync_conn).get_table_names()
+        # 1. Tabellen im public-Schema auflisten
+        result = await conn.execute(
+            text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
         )
+        existing_tables = [row[0] for row in result.fetchall()]
+        print(f"🔍 Existing tables: {existing_tables}")
 
-        # Liste der erwarteten Tabellen
+        # 2. Erwartete Tabellen anzeigen
         expected_tables = list(SQLModel.metadata.tables.keys())
+        print(f"📋 Expected tables: {expected_tables}")
 
         if all(table in existing_tables for table in expected_tables):
             print("✅ All tables already exist")
