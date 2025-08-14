@@ -7,10 +7,8 @@ from routers.category_router import router as CategoryRouter
 from routers.lesson_router import router as LessonRouter
 from routers.content_router import router as ContentRouter
 from routers.teacher_router import router as TeacherRouter
-from sqlmodel import SQLModel, select
-from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_async_db, engine
+from database import get_async_db, engine, create_tables
 import uvicorn
 from typing import Dict, Any
 
@@ -46,11 +44,21 @@ async def check_database_health(db: AsyncSession) -> Dict[str, Any]:
         async with engine.connect() as conn:
             health_status["database_connection"] = True
 
-        # 2. Tabellen und Zeilen zählen
-        tables = SQLModel.metadata.tables
-        for table_name in tables:
+        # 2. Vorhandene Tabellen in der Datenbank abfragen
+        result = await db.execute("""
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public'
+        """)
+        existing_tables = {row[0] for row in result.fetchall()}
+
+        # 3. Zeilen zählen für vorhandene Tabellen
+        for table_name in existing_tables:
             try:
-                result = await db.execute(select(func.count()).select_from(tables[table_name]))
+                # Tabellenname maskieren (für reservierte Wörter wie "user")
+                safe_table_name = f'"{table_name}"' if table_name.lower() == "user" else table_name
+
+                result = await db.execute(f"SELECT COUNT(*) FROM {safe_table_name}")
                 count = result.scalar()
                 health_status["tables"][table_name] = {
                     "exists": True,
@@ -58,7 +66,8 @@ async def check_database_health(db: AsyncSession) -> Dict[str, Any]:
                 }
             except Exception as e:
                 health_status["tables"][table_name] = {
-                    "exists": False,
+                    "exists": True,  # Tabelle existiert, aber Zählung fehlgeschlagen
+                    "row_count": None,
                     "error": str(e)
                 }
 
@@ -114,6 +123,12 @@ async def home(db: AsyncSession = Depends(get_async_db)) -> Dict[str, Any]:
         response["database"]["error"] = str(e)
 
     return response
+
+
+#@app.on_event("startup")
+#async def startup_event():
+#    await create_tables()
+#    print("✅ Tabellen erfolgreich erstellt")
 
 
 if __name__ == "__main__":
