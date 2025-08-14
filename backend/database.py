@@ -38,26 +38,28 @@ async def get_db():
     get_async_db()
 
 
-# Tabellen erstellen (async)
 async def create_tables():
-    # Prüfen ob Tabellen bereits existieren
-    existing_tables = await conn.run_sync(
-        lambda sync_conn: inspect(sync_conn).get_table_names()
-    )
+    async with engine.begin() as conn:
+        # Synchrone Inspektion mit run_sync
+        existing_tables = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
 
-    # Nur nicht-existente Tabellen erstellen
-    tables_to_create = [
-        t for t in SQLModel.metadata.tables.values()
-        if t.name not in existing_tables
-    ]
+        # Nur nicht-existente Tabellen erstellen
+        tables_to_create = [
+            t for t in SQLModel.metadata.tables.values()
+            if t.name not in existing_tables
+        ]
 
-    if not tables_to_create:
-        print("All tables already exist")
-        return
+        if not tables_to_create:
+            print("All tables already exist")
+            return
 
-    print(f"Creating {len(tables_to_create)} tables...")
-    await conn.run_sync(SQLModel.metadata.create_all, tables=tables_to_create)
-    print("Tables created")
+        print(f"Creating {len(tables_to_create)} tables...")
+        await conn.run_sync(
+            lambda sync_conn: SQLModel.metadata.create_all(bind=sync_conn, tables=tables_to_create)
+        )
+        print("Tables created")
 
 
 async def test_connection():

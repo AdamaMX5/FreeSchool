@@ -1,17 +1,18 @@
 # create_tables.py
 import asyncio
-from database import create_tables, engine
+from database import create_tables, engine, SQLModel
 from sqlalchemy import inspect
-from sqlmodel import SQLModel
 
 
 async def main():
     print("⏳ Checking database tables...")
 
-    # Tabellen existieren bereits?
+    # Async-Inspektion mit run_sync
     async with engine.connect() as conn:
-        inspector = inspect(conn)
-        existing_tables = inspector.get_table_names()
+        # Synchrone Tabellenprüfung
+        existing_tables = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
 
         # Liste der erwarteten Tabellen
         expected_tables = list(SQLModel.metadata.tables.keys())
@@ -28,12 +29,13 @@ async def main():
         print("⏳ Creating tables...")
         await create_tables()
 
-        # Ergebnis prüfen
+        # Ergebnis erneut prüfen
         async with engine.connect() as conn:
-            inspector = inspect(conn)
-            new_tables = inspector.get_table_names()
-            created = set(new_tables) - set(existing_tables)
-            print(f"✅ Created {len(created)} tables: {', '.join(created)}")
+            new_tables = await conn.run_sync(
+                lambda sync_conn: inspect(sync_conn).get_table_names()
+            )
+            created_tables = set(new_tables) - set(existing_tables)
+            print(f"✅ Created {len(created_tables)} tables: {', '.join(created_tables)}")
 
 
 if __name__ == "__main__":
