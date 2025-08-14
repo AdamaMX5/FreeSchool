@@ -14,7 +14,7 @@ from typing import Dict, Any
 
 app = FastAPI()
 
-# Statische Dateien servieren
+# Statische Dateien verfügbar machen (z.B. für Favicon)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(UserRouter)
@@ -86,7 +86,7 @@ async def favicon():
 @app.get("/", status_code=200)
 async def home(db: AsyncSession = Depends(get_async_db)) -> Dict[str, Any]:
     response = {
-        "message": "Hello World, in git we trust",
+        "message": "Hello World, in GIT we trust",
         "database": {
             "connection": False,
             "tables": {}
