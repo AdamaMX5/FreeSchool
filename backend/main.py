@@ -125,10 +125,10 @@ async def home(db: AsyncSession = Depends(get_async_db)) -> Dict[str, Any]:
     return response
 
 
-#@app.on_event("startup")
-#async def startup_event():
-#    await create_tables()
-#    print("✅ Tabellen erfolgreich erstellt")
+@app.on_event("startup")
+async def startup_event():
+    await create_tables()
+    print("✅ Tabellen erfolgreich erstellt")
 
 
 if __name__ == "__main__":
