@@ -10,12 +10,12 @@ from sqlmodel import SQLModel, Field, Relationship
 from models import Base
 
 
-class CategoryCategory(SQLModel, table=True):
+class CategoryCategory(Base, table=True):
     parent_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
     child_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
 
 
-class Category(SQLModel, table=True):
+class Category(Base, table=True):
     id: Optional[int] = Field(primary_key=True, index=True)
     is_deleted: bool = Field(default=False)
     name: str

@@ -10,9 +10,10 @@
 from typing import Optional
 
 from sqlmodel import SQLModel, Field, Relationship
+from models import Base
 
 
-class Teacher(SQLModel, table=True):
+class Teacher(Base, table=True):
     id: Optional[int] = Field(primary_key=True, index=True)
     is_deleted: bool = Field(default=False)
     name: str

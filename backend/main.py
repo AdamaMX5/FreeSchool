@@ -12,6 +12,7 @@ from sqlalchemy import inspect
 from database import get_async_db, engine, create_tables
 import uvicorn
 from typing import Dict, Any
+from models import *
 
 app = FastAPI()
 

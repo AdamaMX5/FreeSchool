@@ -2,6 +2,7 @@ import asyncio
 from database import create_tables, engine, SQLModel
 from sqlalchemy import text, inspect  # text Import hinzugefügt
 import logging
+from models import *  # Alle Modelle importieren, um sie in SQLModel.metadata zu registrieren
 
 # Logging konfigurieren
 logging.basicConfig(level=logging.INFO)

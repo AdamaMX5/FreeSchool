@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, select
 import os
 from dotenv import load_dotenv
+from models import *
 
 # Lade Umgebungsvariablen aus .env
 load_dotenv()

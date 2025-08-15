@@ -4,6 +4,7 @@ from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.sql import expression
 from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
+from models import Base
 
 
 class RoleEnum(str, Enum):
@@ -19,7 +20,7 @@ class RoleEnum(str, Enum):
 # ─────────────────────────────
 # Many-to-Many Association Table
 # ─────────────────────────────
-class UserRoleLink(SQLModel, table=True):
+class UserRoleLink(Base, table=True):
     user_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
     role_id: Optional[int] = Field(default=None, foreign_key="role.id", primary_key=True)
 
@@ -27,7 +28,7 @@ class UserRoleLink(SQLModel, table=True):
 # ─────────────
 # Role-Modelle
 # ─────────────
-class Role(SQLModel, table=True):
+class Role(Base, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # z. B. "STUDENT", "TEACHER", "TUTOR", "PROJECTMANAGER", "SCHOOLDIRECTOR", "MODERATOR", "ADMIN"
     # Relationship zur Many-to-Many Verknüpfung:
@@ -37,7 +38,7 @@ class Role(SQLModel, table=True):
 # ─────────────
 # User-Modelle
 # ─────────────
-class User(SQLModel, table=True):
+class User(Base, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     is_deleted: bool = Field(default=False)
     email: str = Field(index=True, unique=True, title="E-Mail-Adresse",  min_length=5)
@@ -57,10 +58,11 @@ class User(SQLModel, table=True):
     # Beziehung zu Lektionen (1:n) - Fortschritt des Users in Lektionen
     lesson_progresses: List["UserLessonLink"] = Relationship(back_populates="user")
 
+
 # ─────────────
 # Profil-Modell (erweiterte Informationen)
 # ─────────────
-class Profile(SQLModel, table=True):
+class Profile(Base, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
@@ -71,8 +73,7 @@ class Profile(SQLModel, table=True):
     lastEditor: str = Field(default="automatic", title="Email vom letzten Bearbeiter")
 
 
-
-class UserLessonLink(SQLModel, table=True):
+class UserLessonLink(Base, table=True):
     """Tabelle zur Speicherung des Fortschritts eines Users in einer Lektion"""
     user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True))
     lesson_id: int = Field(sa_column=Column(Integer, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
