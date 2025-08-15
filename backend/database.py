@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func, select
+from sqlalchemy import func, select, inspect
 import os
 from dotenv import load_dotenv
 from models import *
