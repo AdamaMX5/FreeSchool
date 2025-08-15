@@ -37,10 +37,15 @@ services:
 
   frontend:
     build: ./frontend
+    env_file: .env
+    environment:
+      - VITE_API_BASE_URL=https://api.${DOMAIN}
     ports:
       - "8080:80"
     depends_on:
       - backend
+    networks:
+      - freeschool_network
 
 networks:
   freeschool_network:

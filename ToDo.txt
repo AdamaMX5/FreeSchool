@@ -29,3 +29,11 @@ Ideen:
       - Die Inhalte der gelikten Lehrer werden als erstes angezeigt. und disliked Lehrer werden ausgeblendet
       - anhand der Anzahl der Likes, wird dieser Lehrer neuen Schülern angezeigt
       - Lehrer können Zusatzinhalte in eine Kategory einfügen.
+
+Langfrist Ideen:
+    - Zentrale mit qualitätsgesicherten Inhalten (Kategorien, Lektionen, Lehrern).
+	- versioniert zum Updaten der Schulbackends.
+    - peer to peer Netzwerk der Schulcomuter, die die Videos lokal speichern und sich gegenseitig schicken. 
+        - Je mehr Schulcomputer, desto mehr Videos können vorgehalten werden und die Lastverteilung ist auch kein Problem. 
+        - Sollte auch von den Schülern von außen (gleiche Ortschaft) zugänglich sein? 
+        - Lastverteilung peer Schulserver, der weiß wo welches Video liegt und vielleicht haben mehrere Schulcomputer ein beliebtes Video (balancing wird möglich)

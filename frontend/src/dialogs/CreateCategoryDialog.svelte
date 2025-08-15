@@ -1,6 +1,8 @@
 <script lang="ts">
   import Dialog from './Dialog.svelte';
   import { user } from '../lib/global';
+
+  const API_BASE_URL = "/api";
   
   let { 
     parent, 
@@ -47,7 +49,7 @@
     };
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/category`, {
+      const res = await fetch(`${API_BASE_URL}/category`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

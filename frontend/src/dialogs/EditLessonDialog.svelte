@@ -2,6 +2,8 @@
   import Dialog from "./Dialog.svelte";
   import { user } from "../lib/global";
 
+  const API_BASE_URL = "/api";
+  
   let {
     lesson = null,
     onsuccess = () => {},
@@ -31,7 +33,7 @@
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/lesson/${lesson.id}`,
+        `${API_BASE_URL}/lesson/${lesson.id}`,
         {
           method: "PUT",
           headers: {

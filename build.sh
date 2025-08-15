@@ -18,30 +18,28 @@ echo "=== Starting FreeSchool Deployment ==="
 if [ ! -f .env ]; then
     echo "Creating .env file with default values..."
     cat > .env <<EOL
-# ===== DATABASE (PostgreSQL is supported) =====
+# ===== ALLGEMEINE KONFIGURATION =====
+APP_NAME=FreeSchool
+DOMAIN=meinedomain.de
+
+# ===== BACKEND-SPEZIFISCH =====
 DB_HOST=db
 DB_PORT=5432
 DB_USER=freeschool
 DB_PASSWORD=sicher123
 DB_NAME=freeschool
-DATABASE_URL=postgresql+asyncpg://\${DB_USER}:\${DB_PASSWORD}@\${DB_HOST}:\${DB_PORT}/\${DB_NAME}
-
-# ===== AUTHENTICATION =====
 SECRET_KEY=$(openssl rand -hex 32)
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
-
-# ===== FRONTEND =====
-VITE_API_BASE_URL=/api
-VITE_APP_NAME=FreeSchool
-
-# ===== EMAIL =====
 SMTP_SERVER=smtp.strato.de
 SMTP_PORT=465
 SMTP_USERNAME=newsletter@flussmark.de
 SMTP_PASSWORD=your_password
-FROM_EMAIL=noreply@freeschool.de
+FROM_EMAIL=freeschool@flussmark.de
 FROM_NAME=FreeSchool
+
+# ===== FRONTEND-SPEZIFISCH =====
+VITE_API_BASE_URL=https://api.${DOMAIN}
 EOL
     echo ".env file created with default values"
 else

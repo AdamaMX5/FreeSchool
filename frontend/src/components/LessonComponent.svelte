@@ -7,14 +7,14 @@
   import EditContentDialog from "../dialogs/EditContentDialog.svelte";
   import { user } from "../lib/global";
 
+  const API_BASE_URL = "/api";
+
   let isModerator = $state(false);
 
   user.subscribe((value) => {
     const roles = value.roles ?? [];
     isModerator = roles.includes("MODERATOR");
   });
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   let {
     isStudentLoggedIn,

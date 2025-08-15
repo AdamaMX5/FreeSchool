@@ -2,6 +2,8 @@
   import Dialog from './Dialog.svelte';
   import { user } from '../lib/global';
 
+  const API_BASE_URL = "/api";
+
   let {
     category = null,
     onsuccess = () => {},
@@ -49,7 +51,7 @@
     };
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/category/${category.id}`, {
+      const res = await fetch(`${API_BASE_URL}/category/${category.id}`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
@@ -73,7 +75,7 @@
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/category/${category.id}`, {
+      const res = await fetch(`${API_BASE_URL}/category/${category.id}`, {
         method: "DELETE"
       });
 

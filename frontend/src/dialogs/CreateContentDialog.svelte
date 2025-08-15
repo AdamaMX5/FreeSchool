@@ -3,6 +3,8 @@
   import { onMount } from "svelte";
   import { user } from "../lib/global";
 
+  const API_BASE_URL = "/api";
+
   let {
     lesson,
     oncancel = () => {},
@@ -21,7 +23,7 @@
   onMount(async () => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/teacher/all/`,
+        `${API_BASE_URL}/teacher/all/`,
       );
       const data = await res.json();
       if (res.ok) {

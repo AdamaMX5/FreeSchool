@@ -2,6 +2,8 @@
   import Dialog from "./Dialog.svelte";
   import { user } from "../lib/global";
 
+  const API_BASE_URL = "/api";
+
   let {
     content = null,
     onsuccess = () => {},
@@ -30,7 +32,7 @@
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/content/${content.id}`,
+        `${API_BASE_URL}/content/${content.id}`,
         {
           method: "PUT",
           headers: {
@@ -58,7 +60,7 @@
 
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/content/${content.id}`,
+        `${API_BASE_URL}/content/${content.id}`,
         {
           method: "DELETE",
           headers: {

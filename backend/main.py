@@ -26,9 +26,17 @@ app.include_router(ContentRouter)
 app.include_router(TeacherRouter)
 
 # CORS-Konfiguration
+origins = [
+    "http://localhost:8080",  # Frontend-URL
+    "http://localhost:8000",  # Für direkte API-Aufrufe
+    "http://127.0.0.1:8080",
+    "http://localhost:5173"   # Vite-Entwicklungsserver
+    f"https://{os.getenv('DOMAIN')}",
+    f"https://app.{os.getenv('DOMAIN')}"
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://v3264.1blu.de"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
