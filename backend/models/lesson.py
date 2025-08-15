@@ -7,7 +7,7 @@
 from typing import Optional
 
 from sqlmodel import SQLModel, Field, Relationship
-from models import Base
+from models.base import Base
 
 
 class Lesson(Base, table=True):

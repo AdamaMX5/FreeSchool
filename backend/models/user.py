@@ -4,7 +4,7 @@ from sqlalchemy import Column, ForeignKey, Integer
 from sqlalchemy.sql import expression
 from sqlmodel import SQLModel, Field, Relationship
 from enum import Enum
-from models import Base
+from models.base import Base
 
 
 class RoleEnum(str, Enum):
