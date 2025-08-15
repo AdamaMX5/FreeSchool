@@ -26,3 +26,15 @@ class Lesson(Base, table=True):
     contents: list["Content"] = Relationship(back_populates="lesson")
     # Beziehung für User-Fortschritte
     user_progresses: list["UserLessonLink"] = Relationship(back_populates="lesson")
+
+
+class UserLessonLink(Base, table=True):
+    """Tabelle zur Speicherung des Fortschritts eines Users in einer Lektion"""
+    user_id: int = Field(sa_column=Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True))
+    lesson_id: int = Field(sa_column=Column(Integer, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
+
+    progress: int = Field(default=0, ge=0, le=100, sa_column=Column(Integer, server_default="0", nullable=False))  # Wert zwischen 0 und 100
+
+    # Relationships
+    user: "User" = Relationship(back_populates="lesson_progresses")
+    lesson: "Lesson" = Relationship(back_populates="user_progresses")
