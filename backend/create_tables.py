@@ -26,10 +26,12 @@ async def main():
             logger.info(f"🔍 Database version: {db_version}")
 
             # 4. Vorhandene Tabellen im public-Schema auflisten
-            tables_result = await conn.execute(text(
-                "SELECT table_name FROM information_schema.tables "
-                "WHERE table_schema = 'public'"
-            ))
+            tables_result = await conn.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                  AND table_catalog = :dbname
+                """))
             existing_tables = [row[0] for row in tables_result.fetchall()]
             logger.info(f"📋 Existing tables: {existing_tables}")
 

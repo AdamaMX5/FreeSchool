@@ -79,7 +79,7 @@ fi
 # Clean up previous builds
 echo "Cleaning up previous builds..."
 docker-compose rm -f frontend backend
-docker volume prune -f
+#docker volume prune -f
 
 # ===== BUILD AND START =====
 echo "Building and starting containers..."
