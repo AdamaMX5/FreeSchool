@@ -5,7 +5,7 @@
 # it is a model for the database
 
 from typing import Optional
-
+from sqlalchemy import Column
 from sqlmodel import SQLModel, Field, Relationship
 from models.base import Base
 
