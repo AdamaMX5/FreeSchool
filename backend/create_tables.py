@@ -1,6 +1,6 @@
 import asyncio
 from database import create_tables, engine, SQLModel
-from sqlalchemy import text, inspect  # text Import hinzugefügt
+from sqlalchemy import text, inspect
 import logging
 from models import *  # Alle Modelle importieren, um sie in SQLModel.metadata zu registrieren
 
@@ -16,12 +16,15 @@ async def main():
         # 1. Engine-Informationen anzeigen
         logger.info(f"🔧 Using database URL: {engine.url}")
 
+        # Datenbanknamen aus der Engine-URL extrahieren
+        db_name = engine.url.database
+
         # 2. Verbindung testen
         async with engine.connect() as conn:
             logger.info("✅ Database connection successful")
 
             # 3. Version der PostgreSQL-Datenbank anzeigen
-            version_result = await conn.execute(text("SELECT version()"))  # text verwenden
+            version_result = await conn.execute(text("SELECT version()"))
             db_version = version_result.scalar()
             logger.info(f"🔍 Database version: {db_version}")
 
@@ -31,7 +34,8 @@ async def main():
                 FROM information_schema.tables 
                 WHERE table_schema = 'public' 
                   AND table_catalog = :dbname
-                """))
+                """), {"dbname": db_name})  # Parameter hinzufügen
+
             existing_tables = [row[0] for row in tables_result.fetchall()]
             logger.info(f"📋 Existing tables: {existing_tables}")
 
@@ -51,10 +55,13 @@ async def main():
                 return
 
             # 7. Nach Erstellung erneut prüfen
-            tables_result_after = await conn.execute(text(
-                "SELECT table_name FROM information_schema.tables "
-                "WHERE table_schema = 'public'"
-            ))
+            tables_result_after = await conn.execute(text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                  AND table_catalog = :dbname
+                """), {"dbname": db_name})  # Parameter hinzufügen
+
             new_tables = [row[0] for row in tables_result_after.fetchall()]
             created_tables = set(new_tables) - set(existing_tables)
 
