@@ -8,7 +8,7 @@ from database import get_db
 from pydantic import BaseModel
 from typing import Optional
 
-from models.teacher import Teacher
+from models import Teacher
 from security.auth import required_roles
 
 router = APIRouter(prefix="/teacher", tags=["Teachers"])

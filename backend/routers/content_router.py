@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from sqlmodel import select
 from database import get_async_db
 
-from models.content import Content
+from models import Content
 from pydantic import BaseModel
 from typing import Optional
 

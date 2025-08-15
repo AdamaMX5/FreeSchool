@@ -6,7 +6,7 @@ from sqlalchemy import not_, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_async_db
-from models.category import Category, CategoryCategory
+from models import Category, CategoryCategory
 from pydantic import BaseModel
 from typing import List, Optional
 from security.auth import required_roles

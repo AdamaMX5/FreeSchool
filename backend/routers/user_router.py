@@ -3,9 +3,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
-from models.user import User
-from models.user import Profile
-from models.user import Role, UserRoleLink
+from models import User, Profile, Role, UserRoleLink
 from database import get_async_db
 
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id

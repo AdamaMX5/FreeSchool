@@ -6,10 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from database import get_async_db
 
-from models.lesson import Lesson
-from models.content import Content
-from models.user import User, UserLessonLink
-
+from models import UserLessonLink, User, Content, Lesson
 from security.auth import get_current_user_optional, get_current_user
 from security.auth import required_roles
 
