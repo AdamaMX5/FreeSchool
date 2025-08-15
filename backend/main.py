@@ -1,3 +1,5 @@
+import uvicorn
+import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles  # Favicon
 from fastapi.responses import FileResponse  # Favicon
@@ -10,7 +12,6 @@ from routers.teacher_router import router as TeacherRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import inspect
 from database import get_async_db, engine, create_tables
-import uvicorn
 from typing import Dict, Any
 from models import *
 
