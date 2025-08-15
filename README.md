@@ -15,9 +15,9 @@ git clone https://github.com/AdamaMX5/FreeSchool.git
 cd FreeSchool # && git pull
 ./build.sh
 
-docker logs freeschool_backend # ausgabe anzeigen
-docker logs -f freeschool_backend         # Folgt den Logs in Echtzeit (wie tail -f)
-docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\dt"
+docker logs freeschool_backend 							# ausgabe anzeigen
+docker logs -f freeschool_backend        					# Folgt den Logs in Echtzeit (wie tail -f)
+docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\dt"		# Datenbank Tabellenausgabe
 ```
 
 ---
