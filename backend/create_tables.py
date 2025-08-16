@@ -5,6 +5,7 @@ import logging
 from models import *  # Alle Modelle importieren, um sie in SQLModel.metadata zu registrieren
 
 # Logging konfigurieren
+import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 

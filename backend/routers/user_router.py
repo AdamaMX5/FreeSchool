@@ -9,7 +9,10 @@ from database import get_async_db
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
 from security.email import EmailService
 from util.time_util import timestamp
-
+# Logging konfigurieren
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -94,7 +97,7 @@ class UserRegister(BaseModel):
 async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob ein User mit der gleichen Email bereits existiert:
     result = await db.execute(select(User).where(User.id == user_in.id))
-    print("User ID: ", user_in.id)
+    logger.info(f"User ID: {user_in.id}")
     existing_user = result.scalars().first()
     if existing_user:
         if not verify_password(user_in.repassword, existing_user.hashed_password):
@@ -112,11 +115,14 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
 
             # Adminrole for first User
             user_count = await db.scalar(select(func.count()).where(User.is_deleted == False))
+            logger.info(f"Total users: {user_count}")
+
             if user_count == 1:
+                logger.info("First user detected - assigning ADMIN role")
                 await initialize_roles(db)
                 admin_role = await db.scalar(select(Role).where(Role.name == RoleEnum.ADMIN.value))
                 if admin_role:
-                    # Prüfen ob Rolle bereits existiert
+                    logger.info(f"Found ADMIN role: ID {admin_role.id}")
                     exists = await db.scalar(select(UserRoleLink).where(
                         UserRoleLink.user_id == existing_user.id,
                         UserRoleLink.role_id == admin_role.id
@@ -125,6 +131,9 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
                         db.add(UserRoleLink(user_id=existing_user.id, role_id=admin_role.id))
                         await db.commit()
                         await db.refresh(existing_user)
+                        logger.info("First user gets ADMIN role, now")
+                else:
+                    logger.info("ADMIN role not found in database!")
 
             await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
 
