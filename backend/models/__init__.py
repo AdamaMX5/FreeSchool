@@ -8,8 +8,9 @@ from .teacher import Teacher
 # Explizit alle Modelle auflisten
 __all__ = [
     'User',
-    'UserRoleLink',
+    'RoleEnum',
     'Role',
+    'UserRoleLink',
     'Profile',
     'Lesson',
     'UserLessonLink',
