@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func
 from typing import List, Optional
-from models import User, Profile, Role, UserRoleLink
+from models import User, Profile, Role, UserRoleLink, RoleEnum
 from database import get_async_db
-
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
 from security.email import EmailService
 from util.time_util import timestamp
@@ -100,16 +100,34 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
         if not verify_password(user_in.repassword, existing_user.hashed_password):
             await db.delete(existing_user)
             await db.commit()
-            raise HTTPException(status_code=400, detail="Second Passwort is not the same, please try registration again.")
+            raise HTTPException(status_code=400, detail="Second Password is incorrect, please try registration again.")
         else:
             existing_user.jwt = create_jwt(data={"sub": existing_user.email})  # JWT-Token erstellen
             existing_user.passwordVerify = True  # Letzter Login
             existing_user.emailVerifyToken = create_email_verify_token()
             existing_user.emailVerify = False
-            existing_user.lastLogin = timestamp()  # Letzter Login
+            existing_user.lastLogin = timestamp()
             await db.commit()
             await db.refresh(existing_user)
+
+            # Adminrole for first User
+            user_count = await db.scalar(select(func.count()).where(User.is_deleted == False))
+            if user_count == 1:
+                admin_role = await db.scalar(select(Role).where(Role.name == RoleEnum.ADMIN.value))
+                if admin_role:
+                    # Prüfen ob Rolle bereits existiert
+                    exists = await db.scalar(select(UserRoleLink).where(
+                        UserRoleLink.user_id == existing_user.id,
+                        UserRoleLink.role_id == admin_role.id
+                    ).exists().select())
+                    if not exists:
+                        db.add(UserRoleLink(user_id=existing_user.id, role_id=admin_role.id))
+                        await db.commit()
+                        await db.refresh(existing_user)
+
             await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
+
+
     else:
         raise HTTPException(status_code=404, detail="User not found")
     return UserLoginResponse(
