@@ -26,12 +26,8 @@ class UserLoginResponse(BaseModel):
     status: str
     roles: List[str]
 
-@router.get("/helloworld", response_model=str)
-async def hello_world():
-    return "Hello World from User Router in Gitrepository!"
 
-
-@router.post("/login", status_code=status.HTTP_201_CREATED)
+@router.post("/login", status_code=status.HTTP_200_OK, response_model=UserLoginResponse)
 async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob ein User mit der Email existiert:
     result = await db.execute(select(User).where(User.email == user_in.email))
@@ -43,7 +39,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
             return UserLoginResponse(
                 id=existing_user.id,
                 email=existing_user.email,
-                roles=await get_role_names(existing_user, db),
+                roles=[],
                 jwt="",
                 status="register"
             )
@@ -60,7 +56,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
             status="login"
         )
     else:
-        # Neues User-Objekt erstellen:
+        # Registrierungsvorgang gestartet: Neues User-Objekt erstellen:
         new_user = User(email=user_in.email, passwort=user_in.password)
         new_user.lastLogin = timestamp()  # Letzter Login
         new_user.hashed_password = get_password_hash(user_in.password)  # Passwort-Hash erstellen
@@ -104,7 +100,7 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
         if not verify_password(user_in.repassword, existing_user.hashed_password):
             await db.delete(existing_user)
             await db.commit()
-            raise HTTPException(status_code=400, detail="Secound Passwort is not the same as the first")
+            raise HTTPException(status_code=400, detail="Second Passwort is not the same, please try registration again.")
         else:
             existing_user.jwt = create_jwt(data={"sub": existing_user.email})  # JWT-Token erstellen
             existing_user.passwordVerify = True  # Letzter Login
