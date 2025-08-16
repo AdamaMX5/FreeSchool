@@ -10,5 +10,6 @@ alembic==1.13.1
 pydantic-settings==2.2.1
 psycopg2-binary==2.9.9  # Falls PostgreSQL
 asyncpg==0.29.0  # Für bessere Async-Performance
+aiosmtplib==2.0.1  # für async Emails
 email-validator==2.1.1 
 argon2-cffi==21.3.0
