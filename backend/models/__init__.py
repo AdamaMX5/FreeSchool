@@ -1,4 +1,4 @@
-from .user import User, UserRoleLink, Role, Profile
+from .user import User, UserRoleLink, Role, Profile, RoleEnum
 from .lesson import Lesson, UserLessonLink
 from .category import Category, CategoryCategory
 from .content import Content
