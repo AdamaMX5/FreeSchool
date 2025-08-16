@@ -91,5 +91,5 @@ echo "Checking container status..."
 docker-compose ps
 
 echo "=== Deployment completed successfully ==="
-echo "Application should be available at http://localhost:8000"
+echo "Application should be available at http://localhost:8080"
 
