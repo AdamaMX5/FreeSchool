@@ -1,4 +1,4 @@
-import smtplib
+import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
@@ -30,7 +30,7 @@ config = EmailConfig()
 
 class EmailService:
     @staticmethod
-    def send_email(
+    async def send_email(
             to_email: str,
             subject: str,
             to_name: Optional[str] = None,
@@ -94,19 +94,14 @@ class EmailService:
                 msg.attach(alt_part)
 
         try:
-            if config.USE_SSL:
-                # SSL-Verbindung verwenden
-                context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(config.SMTP_SERVER, config.SMTP_PORT, context=context) as server:
-                    if config.SMTPAUTH:
-                        server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
-                    server.send_message(msg)
-            else:
-                # Unverschlüsselte oder STARTTLS-Verbindung
-                with smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT) as server:
-                    if config.SMTPAUTH:
-                        server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
-                    server.send_message(msg)
+            await aiosmtplib.send(
+                msg,
+                hostname=config.SMTP_SERVER,
+                port=config.SMTP_PORT,
+                username=config.SMTP_USERNAME,
+                password=config.SMTP_PASSWORD,
+                use_tls=config.USE_SSL
+            )
             return True
         except Exception as e:
             print(f"Email send failed: {str(e)}")
