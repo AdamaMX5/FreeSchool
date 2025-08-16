@@ -113,6 +113,7 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
             # Adminrole for first User
             user_count = await db.scalar(select(func.count()).where(User.is_deleted == False))
             if user_count == 1:
+                await initialize_roles(db)
                 admin_role = await db.scalar(select(Role).where(Role.name == RoleEnum.ADMIN.value))
                 if admin_role:
                     # Prüfen ob Rolle bereits existiert
@@ -182,3 +183,25 @@ async def logout(user: User = Depends(get_current_user)):
     # Hier wäre z.B. ein Token-Blacklist-Eintrag möglich (wenn du sowas hast)
     # Oder einfach nur Logging
     return {"status": "logout", "user_id": user.id}
+
+
+async def initialize_roles(db: AsyncSession):
+    """Erstellt alle notwendigen Rollen, falls sie nicht existieren"""
+    # Rollen aus dem Enum holen
+    required_roles = [role.value for role in RoleEnum]
+
+    # Existierende Rollen abfragen
+    result = await db.execute(select(Role))
+    existing_roles = [role.name for role in result.scalars().all()]
+
+    # Fehlende Rollen erstellen
+    new_roles = []
+    for role_name in required_roles:
+        if role_name not in existing_roles:
+            new_roles.append(Role(name=role_name))
+
+    # Neue Rollen speichern
+    if new_roles:
+        db.add_all(new_roles)
+        await db.commit()
+        print(f"Created {len(new_roles)} new roles")
