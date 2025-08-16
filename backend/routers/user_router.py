@@ -17,17 +17,24 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/user", tags=["user"])
 
 
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str  # Klartext-Passwort wird hier übergeben und dann gehasht gespeichert
-
-
 class UserLoginResponse(BaseModel):
     id: int
     email: EmailStr
     jwt: str
     status: str
     roles: List[str]
+
+
+# Pydantic Modell für Benutzerantwort
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    roles: List[str]
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str  # Klartext-Passwort wird hier übergeben und dann gehasht gespeichert
 
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=UserLoginResponse)
@@ -49,6 +56,16 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
         # Passwort-Hash überprüfen:
         if not verify_password(user_in.password, existing_user.hashed_password):
             raise HTTPException(status_code=400, detail="Invalid password")
+        if not existing_user.emailVerify:
+            # Token neu generieren, falls abgelaufen oder nicht vorhanden
+            if not existing_user.emailVerifyToken:
+                existing_user.emailVerifyToken = create_email_verify_token()
+                await db.commit()
+
+            await send_email_verification(existing_user)
+            status_msg = "login_with_verify_email_sended"  # Status für Login mit E-Mail-Verifizierung
+        else:
+            status_msg = "login"
         existing_user.jwt = create_jwt(data={"sub": existing_user.email, "subid": existing_user.id})  # JWT-Token erstellen
         await db.commit()
         return UserLoginResponse(
@@ -56,7 +73,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
             email=existing_user.email,
             roles=await get_role_names(existing_user, db),
             jwt=existing_user.jwt,
-            status="login"
+            status=status_msg
         )
     else:
         # Registrierungsvorgang gestartet: Neues User-Objekt erstellen:
@@ -185,6 +202,70 @@ async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_as
             raise HTTPException(status_code=400, detail="Invalid token")
     else:
         raise HTTPException(status_code=404, detail="User not found")
+
+
+@router.get("/all", response_model=List[UserResponse])
+async def get_all_users(
+        db: AsyncSession = Depends(get_async_db),
+        current_user: User = Depends(get_current_user)
+):
+    # Nur Admins dürfen alle Benutzer sehen
+    if RoleEnum.ADMIN.value not in current_user.roles:
+        raise HTTPException(status_code=403, detail="Nicht autorisiert")
+
+    result = await db.execute(select(User))
+    users = result.scalars().all()
+
+    # Benutzerdaten ohne sensible Informationen zurückgeben
+    return [
+        UserResponse(
+            id=user.id,
+            email=user.email,
+            roles=[role.name for role in user.roles]
+        )
+        for user in users
+    ]
+
+
+class UpdateRolesRequest(BaseModel):
+    roles: List[str]
+
+
+@router.put("/{user_id}/roles", response_model=UserResponse)
+async def update_user_roles(
+        user_id: int,
+        roles_data: UpdateRolesRequest,
+        db: AsyncSession = Depends(get_async_db),
+        current_user: User = Depends(get_current_user)
+):
+    # Nur Admins dürfen Rollen ändern
+    if RoleEnum.ADMIN.value not in current_user.roles:
+        raise HTTPException(status_code=403, detail="Nicht autorisiert")
+
+    # Benutzer laden
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+
+    # Vorhandene Rollen entfernen
+    await db.execute(delete(UserRoleLink).where(UserRoleLink.user_id == user_id))
+
+    # Neue Rollen hinzufügen
+    for role_name in roles_data.roles:
+        result = await db.execute(select(Role).where(Role.name == role_name))
+        role = result.scalars().first()
+        if role:
+            db.add(UserRoleLink(user_id=user_id, role_id=role.id))
+
+    await db.commit()
+    await db.refresh(user)
+
+    return UserResponse(
+        id=user.id,
+        email=user.email,
+        roles=roles_data.roles
+    )
 
 
 @router.post("/logout")

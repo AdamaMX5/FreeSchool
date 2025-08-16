@@ -1,14 +1,16 @@
 <script lang="ts">
   import { isEditMode, toggleEditMode, isMoveMode, toggleMoveMode } from '../lib/global';
-  import { Edit, Move, PlusCircle, GraduationCap } from 'lucide-svelte';
+  import { Edit, Move, PlusCircle, GraduationCap, Shield } from 'lucide-svelte';
   import CreateLessonDialog from '../dialogs/CreateLessonDialog.svelte'; // <-- Dialog importieren
   import { user } from '../lib/global';
 
+  let isAdmin = $state(false);
   let isModerator = $state(false);
 
   user.subscribe(value => {
     const roles = value.roles ?? [];
     isModerator = roles.includes('MODERATOR');
+    isAdmin = roles.includes('ADMIN');
   });
 
   let {
@@ -17,6 +19,8 @@
     onlessonCreated = () => {},
     onshowTeacherView = () => {}
   } = $props();
+
+  let onshowAdminView = () => {}; // Prop für Admin-Ansicht
 
   let showCreateLessonDialog = $state(false);
   
@@ -54,6 +58,12 @@
   {#if isModerator}
   <button onclick={createLesson} title="Neue Lesson erstellen">
     <PlusCircle size="24" />
+  </button>
+  {/if}  
+
+  {#if isAdmin}
+  <button onclick={(e) => onshowAdminView(e)} title="Admin-Ansicht öffnen">
+    <Shield size="24" />
   </button>
   {/if}
 </div>
