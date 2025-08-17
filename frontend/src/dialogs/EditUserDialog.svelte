@@ -41,7 +41,7 @@
         roles: roles
       };
 
-      const res = await fetch(`${API_BASE_URL}/user/${userEdit.id}/roles`, {
+      const res = await fetch(`${API_BASE_URL}/admin/user/${userEdit.id}/roles`, {
         method: "PUT",
         headers: headers,
         body: JSON.stringify(payload)

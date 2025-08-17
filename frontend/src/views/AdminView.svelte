@@ -24,7 +24,7 @@
         headers['Authorization'] = `Bearer ${$user.jwt}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/user/all/`, { headers });
+      const response = await fetch(`${API_BASE_URL}/admin/users/`, { headers });
       if (!response.ok) throw new Error("Fehler beim Laden der Benutzer");
       users = await response.json();
       error = null;
@@ -49,7 +49,7 @@
 </script>
 
 <div class="admin-view">
-  <button on:click={close} title="Zurück zur normalen Ansicht">
+  <button onclick={close} title="Zurück zur normalen Ansicht">
     <X size="20" />
   </button>
   <h2>👑 Admin-Ansicht</h2>
@@ -80,7 +80,7 @@
               <td>{user.email}</td>
               <td>{user.roles.join(', ')}</td>
               <td>
-                <button on:click={() => openEditDialog(user)}>Bearbeiten</button>
+                <button onclick={() => openEditDialog(user)}>Bearbeiten</button>
               </td>
             </tr>
           {/each}
@@ -92,7 +92,7 @@
 
 {#if showEditDialog}
   <EditUserDialog 
-    user={selectedUser} 
+    userEdit={selectedUser} 
     onsuccess={handleUserUpdated}
     oncancel={() => showEditDialog = false}
   />
@@ -102,7 +102,7 @@
   .admin-view {
     flex: 1;
     background-color: #2c2c2c;
-    color: white;
+    color: rgb(255, 255, 255);
     padding: 1rem;
     display: flex;
     flex-direction: column;

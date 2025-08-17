@@ -9,6 +9,7 @@ from routers.category_router import router as CategoryRouter
 from routers.lesson_router import router as LessonRouter
 from routers.content_router import router as ContentRouter
 from routers.teacher_router import router as TeacherRouter
+from routers.admin_router import router as AdminRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import inspect
 from database import get_async_db, engine, create_tables
@@ -25,6 +26,7 @@ app.include_router(CategoryRouter)
 app.include_router(LessonRouter)
 app.include_router(ContentRouter)
 app.include_router(TeacherRouter)
+app.include_router(AdminRouter)
 
 # CORS-Konfiguration
 origins = [
