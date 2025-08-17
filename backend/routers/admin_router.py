@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from models import User, Role, UserRoleLink, RoleEnum
 from database import get_async_db
-from security.auth import get_current_user
+from security.auth import get_current_user, required_roles
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
