@@ -7,6 +7,7 @@ from typing import List
 from models import User, Role, UserRoleLink, RoleEnum
 from database import get_async_db
 from security.auth import get_current_user, required_roles
+from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
