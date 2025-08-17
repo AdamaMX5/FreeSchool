@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
+from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func
 from typing import List, Optional
 from models import User, Profile, Role, UserRoleLink, RoleEnum
 from database import get_async_db
@@ -210,10 +211,20 @@ async def get_all_users(
         current_user: User = Depends(get_current_user)
 ):
     # Nur Admins dürfen alle Benutzer sehen
-    if RoleEnum.ADMIN.value not in current_user.roles:
+    result = await db.execute(
+        select(User)
+        .where(User.id == current_user.id)
+        .options(selectinload(User.roles))
+    )
+    refreshed_user = result.scalars().first()
+    if not any(role.name == RoleEnum.ADMIN.value for role in refreshed_user.roles):
         raise HTTPException(status_code=403, detail="Nicht autorisiert")
 
-    result = await db.execute(select(User))
+    # Alle Benutzer mit Rollen laden
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.roles))
+    )
     users = result.scalars().all()
 
     # Benutzerdaten ohne sensible Informationen zurückgeben

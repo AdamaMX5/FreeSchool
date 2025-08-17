@@ -17,10 +17,9 @@
     currentCategory = null,
     imageSize = { width: 0, height: 0 },
     onlessonCreated = () => {},
-    onshowTeacherView = () => {}
+    onshowTeacherView = () => {},
+    onshowAdminView = () => {}
   } = $props();
-
-  let onshowAdminView = () => {}; // Prop für Admin-Ansicht
 
   let showCreateLessonDialog = $state(false);
   

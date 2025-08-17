@@ -2,6 +2,7 @@
   import ToolbarView from './ToolbarView.svelte';
   import CategoryView from './CategoryView.svelte';
   import TeacherView from './TeacherView.svelte';
+  import AdminView from './AdminView.svelte';
 
   export let currentCategory = null;
   export let isStudentLoggedIn = false;
@@ -9,7 +10,7 @@
 
   let mainViewDiv;
   let categoryViewRef;
-  let showTeacherView = false;
+  let activeView = 'category';
 
   function handleLessonCreated() {
     if (categoryViewRef && categoryViewRef.loadLessons) {
@@ -18,7 +19,12 @@
   }
 
   function handleTeacherView(){
-    showTeacherView = !showTeacherView;
+    activeView = activeView === 'teacher' ? 'category' : 'teacher';
+  }
+
+  function handleAdminView() {
+    console.log('Admin View wurde aufgerufen');
+    activeView = activeView === 'admin' ? 'category' : 'admin';
   }
 
 
@@ -26,10 +32,10 @@
 
 <div bind:this={mainViewDiv} class="main-view">
 
-  {#if showTeacherView}
-    <TeacherView
-
-    />
+  {#if activeView === 'admin'}
+    <AdminView on:close={() => activeView = 'category'} />
+  {:else if activeView === 'teacher'}
+    <TeacherView on:close={() => activeView = 'category'} />
   {:else}
     <CategoryView
       bind:this={categoryViewRef}
@@ -45,6 +51,7 @@
     {imageSize}
     onlessonCreated={handleLessonCreated}
     onshowTeacherView={handleTeacherView}
+    onshowAdminView={handleAdminView}
   />
 </div>
 
