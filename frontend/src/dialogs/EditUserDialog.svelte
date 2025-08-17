@@ -2,10 +2,10 @@
   import Dialog from './Dialog.svelte';
   import { user } from '../lib/global';
 
-  const API_BASE_URL = "/api";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   let {
-    user = null,
+    userEdit = null,
     onsuccess = () => {},
     oncancel = () => {},
     onerror = () => {}
@@ -14,7 +14,7 @@
   // Verfügbare Rollen
   const availableRoles = ['STUDENT', 'MODERATOR', 'ADMIN'];
   
-  let roles = $state([...user.roles]);
+  let roles = $state([...userEdit.roles]);
   let error = $state("");
 
   function close() {
@@ -41,7 +41,7 @@
         roles: roles
       };
 
-      const res = await fetch(`${API_BASE_URL}/user/${user.id}/roles`, {
+      const res = await fetch(`${API_BASE_URL}/user/${userEdit.id}/roles`, {
         method: "PUT",
         headers: headers,
         body: JSON.stringify(payload)
@@ -64,10 +64,10 @@
 
   <div class="form-grid">
     <label>ID:</label>
-    <input type="text" value={user?.id} readonly />
+    <input type="text" value={userEdit?.id} readonly />
 
     <label>Email:</label>
-    <input type="text" value={user?.email} readonly />
+    <input type="text" value={userEdit?.email} readonly />
 
     <label>Rollen:</label>
     <div class="roles-container">
@@ -76,7 +76,7 @@
           <input 
             type="checkbox" 
             checked={roles.includes(role)}
-            on:change={() => toggleRole(role)}
+            onchange={() => toggleRole(role)}
           />
           {role}
         </label>

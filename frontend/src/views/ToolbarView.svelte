@@ -62,7 +62,7 @@
   {/if}  
 
   {#if isAdmin}
-  <button onclick={(e) => onshowAdminView(e)} title="Admin-Ansicht öffnen">
+  <button onclick={(e) => onshowAdminView()} title="Admin-Ansicht öffnen">
     <Shield size="24" />
   </button>
   {/if}

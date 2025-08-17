@@ -34,6 +34,9 @@ origins = [
     "http://localhost:5173"   # Vite-Entwicklungsserver
     f"https://{os.getenv('DOMAIN')}",
     f"https://app.{os.getenv('DOMAIN')}"
+    f"http://{os.getenv('DOMAIN')}",
+    f"http://app.{os.getenv('DOMAIN')}",
+    "http://v3264.1blu.de:8000"  # Sicherheitshalber direkt
 ]
 app.add_middleware(
     CORSMiddleware,

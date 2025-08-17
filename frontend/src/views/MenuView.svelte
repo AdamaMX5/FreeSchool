@@ -4,7 +4,7 @@
   import CategoryEdit from '../components/CategoryEdit.svelte';
   import CategoryNew from '../components/CategoryNew.svelte';
 
-  const API_BASE_URL = "/api";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   let{
     navCategory = null,
@@ -34,6 +34,7 @@
   });
 
   async function loadLearningHubs() {
+    console.log("APIBASEURL: "+API_BASE_URL);
     try {
       isLoading = true;
       error = null;

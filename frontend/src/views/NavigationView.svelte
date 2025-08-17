@@ -1,8 +1,9 @@
 <script>
   import { onMount } from 'svelte';
   import { user, setUser, unsetUser } from '../lib/global';
-  const API_BASE_URL = "/api";
-
+  
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  
   export const Roles = Object.freeze({
     STUDENT: 'STUDENT',
     TEACHER: 'TEACHER',
@@ -117,8 +118,10 @@
 
         throw new Error('Login fehlgeschlagen<br>' + details);
       }
-      if (data.status === 'login') {
+      if (data.status === 'login' || data.status === 'login_with_verify_email_sended') {
         infoMessage = 'Erfolgreich eingeloggt!';
+        if(data.status === 'login_with_verify_email_sended')
+          infoMessage += '<br>Verifikationsemail versendet';
         id = data.id;
         email = data.email;
         jwt = data.jwt;

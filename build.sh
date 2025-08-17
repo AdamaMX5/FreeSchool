@@ -20,7 +20,7 @@ if [ ! -f .env ]; then
     cat > .env <<EOL
 # ===== ALLGEMEINE KONFIGURATION =====
 APP_NAME=FreeSchool
-DOMAIN=meinedomain.de
+DOMAIN=localhost
 
 # ===== BACKEND-SPEZIFISCH =====
 DB_HOST=db
@@ -28,6 +28,7 @@ DB_PORT=5432
 DB_USER=freeschool
 DB_PASSWORD=sicher123
 DB_NAME=freeschool
+API_BASE_URL=http://{DOMAIN}:8000
 SECRET_KEY=$(openssl rand -hex 32)
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
