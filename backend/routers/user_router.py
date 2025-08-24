@@ -10,6 +10,7 @@ from database import get_async_db
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
 from security.email import EmailService
 from util.time_util import timestamp
+
 # Logging konfigurieren
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -41,12 +42,14 @@ class UserLogin(BaseModel):
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=UserLoginResponse)
 async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob ein User mit der Email existiert:
-    result = await db.execute(select(User).where(User.email == user_in.email))
-    existing_user = result.scalars().first()
+    logger.warning(f"find User with email: {user_in.email}")
+    existing_user = await db.scalar(select(User).where(User.email == user_in.email))
+    logger.warning(f"gefundener User: {existing_user}")
     if existing_user:
         if existing_user.is_deleted:
             raise HTTPException(status_code=400, detail="User is deleted call support")
         if not existing_user.passwordVerify:
+            logger.warning(f"Password is not verifyed: {existing_user.passwordVerify}")
             return UserLoginResponse(
                 id=existing_user.id,
                 email=existing_user.email,
@@ -69,6 +72,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
             status_msg = "login"
         existing_user.jwt = create_jwt(data={"sub": existing_user.email, "subid": existing_user.id})  # JWT-Token erstellen
         await db.commit()
+        logger.warning(f"Login successfull exsisting User: {existing_user}")
         return UserLoginResponse(
             id=existing_user.id,
             email=existing_user.email,
@@ -86,6 +90,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
+        logger.warning(f"New User created and registration is started: {new_user}")
         return UserLoginResponse(
             id=new_user.id,
             email=new_user.email,
@@ -97,12 +102,13 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
 
 async def get_role_names(user: User, db: AsyncSession) -> List[str]:
     # Explizit die Rollen laden
-    result = await db.execute(
+    result = await db.exec(
         select(Role)
         .join(UserRoleLink, UserRoleLink.role_id == Role.id)
         .where(UserRoleLink.user_id == user.id)
     )
     roles = result.scalars().all()
+    logger.info(f"getrolenames: {roles}")
     return [role.name for role in roles]
 
 
@@ -114,9 +120,8 @@ class UserRegister(BaseModel):
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_async_db)):
     # Prüfen, ob ein User mit der gleichen Email bereits existiert:
-    result = await db.execute(select(User).where(User.id == user_in.id))
-    logger.info(f"User ID: {user_in.id}")
-    existing_user = result.scalars().first()
+    existing_user = await db.scalar(select(User).where(User.id == user_in.id))
+
     if existing_user:
         if not verify_password(user_in.repassword, existing_user.hashed_password):
             await db.delete(existing_user)
@@ -131,30 +136,44 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
             await db.commit()
             await db.refresh(existing_user)
 
+            # Rollen initialisieren
+            await initialize_roles(db)
+
+            # Schüler-Rolle für jeden User zuweisen
+            student_role = await db.scalar(select(Role).where(Role.name == RoleEnum.STUDENT.value))
+            if student_role:
+                # Prüfen, ob die Rolle bereits zugewiesen ist
+                exists = await db.scalar(
+                    select(UserRoleLink).where(
+                        UserRoleLink.user_id == existing_user.id,
+                        UserRoleLink.role_id == student_role.id
+                    )
+                )
+                if not exists:
+                    db.add(UserRoleLink(user_id=existing_user.id, role_id=student_role.id))
+                    logger.info(f"Assigned SCHUELER role to user {existing_user.id}")
+
             # Adminrole for first User
             user_count = await db.scalar(select(func.count()).where(User.is_deleted == False))
             logger.info(f"Total users: {user_count}")
 
             if user_count == 1:
                 logger.info("First user detected - assigning ADMIN role")
-                await initialize_roles(db)
                 admin_role = await db.scalar(select(Role).where(Role.name == RoleEnum.ADMIN.value))
                 if admin_role:
                     logger.info(f"Found ADMIN role: ID {admin_role.id}")
                     exists = await db.scalar(select(UserRoleLink).where(
                         UserRoleLink.user_id == existing_user.id,
                         UserRoleLink.role_id == admin_role.id
-                    ).exists().select())
+                    ))
                     if not exists:
                         db.add(UserRoleLink(user_id=existing_user.id, role_id=admin_role.id))
-                        await db.commit()
-                        await db.refresh(existing_user)
                         logger.info("First user gets ADMIN role, now")
                 else:
                     logger.info("ADMIN role not found in database!")
-
+            await db.commit()
+            await db.refresh(existing_user)
             await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
-
 
     else:
         raise HTTPException(status_code=404, detail="User not found")
@@ -187,21 +206,31 @@ async def send_email_verification(user: User):
 
 @router.get("/verify")
 async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_async_db)):
+    logger.warning(f"=== VERIFY EMAIL START ===")
+    logger.warning(f"Token: {token}")
+    logger.warning(f"Email: {email}")
     # Prüfen, ob der Token gültig ist:
-    result = await db.execute(select(User).where(User.email == email))
-    existing_user = result.scalars().first()
+    existing_user = await db.scalar(select(User).where(User.email == email))
     if existing_user:
+        logger.warning(f"User gefunden: ID={existing_user.id}, EmailVerify={existing_user.emailVerify}, Token={existing_user.emailVerifyToken}")
+
         if existing_user.emailVerify:
+            logger.warning("Email bereits verifiziert")
             return {"Deine E-Mail-Adresse ist bereits verifiziert.<br>Du kannst dich jetzt einloggen."}
+        logger.warning(f"Vergleiche Token: DB='{existing_user.emailVerifyToken}' vs Request='{token}'")
         if existing_user.emailVerifyToken == token:
+            logger.warning("Token stimmt überein - verifiziere Email")
             existing_user.emailVerify = True
             existing_user.emailVerifyToken = None
             await db.commit()
             await db.refresh(existing_user)
+            logger.warning("Email erfolgreich verifiziert und committed")
             return {"Vielen Dank, deine Email-Adresse wurde erfolgreich verifiziert.<br>Du kannst dich jetzt einloggen."}
         else:
+            logger.warning("Token stimmt NICHT überein")
             raise HTTPException(status_code=400, detail="Invalid token")
     else:
+        logger.warning("User nicht gefunden")
         raise HTTPException(status_code=404, detail="User not found")
 
 
@@ -218,7 +247,7 @@ async def initialize_roles(db: AsyncSession):
     required_roles = [role.value for role in RoleEnum]
 
     # Existierende Rollen abfragen
-    result = await db.execute(select(Role))
+    result = await db.exec(select(Role))
     existing_roles = [role.name for role in result.scalars().all()]
 
     # Fehlende Rollen erstellen

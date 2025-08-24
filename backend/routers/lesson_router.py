@@ -10,6 +10,11 @@ from models import UserLessonLink, User, Content, Lesson
 from security.auth import get_current_user_optional, get_current_user
 from security.auth import required_roles
 
+import traceback
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/lesson", tags=["Lessons"])
 
 
@@ -18,14 +23,14 @@ class LessonDto(BaseModel):
     category_id: int
     name: str
     description: str
-    order: Optional[int]
+    order: Optional[int] = None
     position_x: int
     position_y: int
     contents: List[int] = []
     progress: Optional[int] = 0  # Jetzt optional mit Default-Wert 0
 
 
-async def wrap(lesson: Lesson, db: AsyncSession, progress: int = 0) -> LessonDto:
+def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
     # Inhalte sind bereits durch Eager Loading geladen
     content_ids = [content.id for content in lesson.contents]
 
@@ -44,6 +49,7 @@ async def wrap(lesson: Lesson, db: AsyncSession, progress: int = 0) -> LessonDto
 
 @router.post("/", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
 async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
+    logger.warning(f"POST New Lession: {dto}")
     try:
         lesson = Lesson(
             category_id=dto.category_id,
@@ -56,40 +62,41 @@ async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
 
         db.add(lesson)
         await db.commit()
-        await db.refresh(lesson)
+
+        lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson.id).options(selectinload(Lesson.contents)))
 
         # Inhalte verknüpfen
         if dto.contents:
-            result = await db.execute(
+            logger.warning(f"find Content in DB {dto.contents}")
+            contents = await db.scalars(
                 select(Content)
                 .where(Content.id.in_(dto.contents))
-                .options(selectinload(Content.lessons))
             )
-            contents = result.scalars().all()
-            lesson.contents = contents
+            logger.warning(f"add lessonid to contents {contents}")
+            # lesson_id auf jedem Content setzen
+            for content in contents:
+                content.lesson_id = lesson.id
+            logger.warning(f"Contents added to Lesson: {lesson}")
             await db.commit()
             await db.refresh(lesson)
-
-        return await wrap(lesson, db)
+        lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson.id).options(selectinload(Lesson.contents)))
+        logger.warning(f"New loaded lesson: {lesson}")
+        return wrap(lesson)
     except Exception as e:
         await db.rollback()
+        logger.warning(f"Exception: {e}")
+        logger.warning(f"Stacktrace: {traceback.format_exc()}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/{lesson_id}")
 async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
-    stmt = (
-        select(Lesson)
-        .where(Lesson.id == lesson_id)
-        .options(selectinload(Lesson.contents))
-    )
-    result = await db.execute(stmt)
-    lesson = result.scalars().first()
+    lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson_id).options(selectinload(Lesson.contents)))
 
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
 
-    return await wrap(lesson, db)
+    return wrap(lesson)
 
 
 @router.get("/by_category/{category_id}")
@@ -284,6 +291,28 @@ async def update_lesson_progress(
         )
 
 
+@router.get("/progress/all", response_model=List[UserLessonLink])
+async def get_all_progress(
+        db: AsyncSession = Depends(get_async_db),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    Get all progress records for the current user.
+    """
+    try:
+        result = await db.execute(
+            select(UserLessonLink)
+            .where(UserLessonLink.user_id == current_user.id)
+            .options(selectinload(UserLessonLink.lesson))
+        )
+        return result.scalars().all()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Could not fetch progress records: {str(e)}"
+        )
+
+
 @router.get("/progress/{lesson_id}", response_model=Optional[UserLessonLink])
 async def get_lesson_progress(
         lesson_id: int,
@@ -306,26 +335,4 @@ async def get_lesson_progress(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Could not fetch progress: {str(e)}"
-        )
-
-
-@router.get("/progress/all", response_model=List[UserLessonLink])
-async def get_all_progress(
-        db: AsyncSession = Depends(get_async_db),
-        current_user: User = Depends(get_current_user)
-):
-    """
-    Get all progress records for the current user.
-    """
-    try:
-        result = await db.execute(
-            select(UserLessonLink)
-            .where(UserLessonLink.user_id == current_user.id)
-            .options(selectinload(UserLessonLink.lesson))
-        )
-        return result.scalars().all()
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not fetch progress records: {str(e)}"
         )

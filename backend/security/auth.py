@@ -13,6 +13,9 @@ from dotenv import load_dotenv
 import random
 import string
 import os
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Lade Umgebungsvariablen aus .env
 load_dotenv()
@@ -45,6 +48,8 @@ def create_jwt(data: dict, expires_delta: Optional[timedelta] = None) -> str:
 
 
 def verify_jwt(token: str) -> Union[dict, None]:
+    if token is None:
+        return None
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
@@ -84,8 +89,15 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    result = await db.execute(select(User).where(User.email == email))
-    user = result.scalars().first()
+    logger.info(f"Token: {token}")
+    logger.info(f"Email from token: {email}")
+
+    user = await db.scalar(select(User).where(User.email == email))
+
+    logger.info(f"User from DB: {user}")
+    logger.info(f"User type: {type(user)}")
+    if user:
+        logger.info(f"User ID: {user.id if hasattr(user, 'id') else 'No id attribute'}")
 
     if user is None:
         raise HTTPException(
@@ -106,8 +118,8 @@ async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme
         if not email:
             return None
 
-        result = await db.execute(select(User).where(User.email == email))
-        return result.scalars().first()
+        result = await db.exec(select(User).where(User.email == email))
+        return result.first()
     except (JWTError, ExpiredSignatureError, HTTPException) as e:
         print(f"Token-Verifikation fehlgeschlagen: {str(e)}")
         return None
@@ -125,8 +137,8 @@ async def get_current_user_by_id(token: str = Depends(oauth2_scheme), db: AsyncS
     if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token enthält keine User-ID")
 
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalars().first()
+    result = await db.exec(select(User).where(User.id == user_id))
+    user = result.first()
 
     if user is None:
         raise HTTPException(
@@ -143,22 +155,25 @@ def create_email_verify_token() -> str:
 
 
 async def get_user_roles(user: User, db: AsyncSession) -> List[str]:
-    result = await db.execute(
+    result = await db.exec(
         select(Role.name)
         .join(UserRoleLink, UserRoleLink.role_id == Role.id)
         .where(UserRoleLink.user_id == user.id)
     )
-    return result.scalars().all()
+    user_role_names = [role[0] for role in result.all()]
+    logger.info(f"Role-Result of User:{user_role_names}")
+    return user_role_names
 
 
 def required_roles(required_roles: List[str]):
     async def role_checker(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_async_db)):
         user_roles = await get_user_roles(current_user, db)
+        logger.info(f"required_roles:{required_roles}")
+        logger.info(f"user_roles:{user_roles}")
         if not any(role in user_roles for role in required_roles):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Operation not permitted"
             )
         return current_user
-
     return role_checker

@@ -1,15 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
-from sqlmodel import select
+from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.future import select
 from database import get_async_db
-
 from models import Content
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 from routers.teacher_router import TeacherDto
 from security.auth import required_roles
+
+import traceback
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/content", tags=["Contents"])
 
@@ -56,8 +60,7 @@ def extractYoutubeId(link: str) -> str:
 @router.get("/{content_id}", response_model=ContentDto)
 async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Content).where(Content.id == content_id))
-        content = result.scalars().first()
+        content = await db.scalar(select(Content).where(Content.id == content_id))
         if not content:
             raise HTTPException(status_code=404, detail="Content not found")
         return content
@@ -67,21 +70,20 @@ async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db))
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/by_lesson/{lesson_id}", response_model=list[ContentWithTeacherDto])
+@router.get("/by_lesson/{lesson_id}", response_model=List[ContentWithTeacherDto])
 async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):  # get_async_db verwenden
     try:
         # Explizites Laden der Beziehungen mit joinedload
-        result = await db.execute(
+        contents = await db.scalars(
             select(Content)
-            .options(joinedload(Content.teacher))
+            .options(selectinload(Content.teacher))
             .where(Content.lesson_id == lesson_id)
             .where(Content.is_deleted == False)
         )
-        contents = result.unique().scalars().all()
 
         # Manuelle Konvertierung in DTOs
         content_dtos = []
-        for content in contents:
+        for content in contents.all():
             teacher_dto = TeacherDto.from_orm(content.teacher) if content.teacher else None
             content_dto = ContentWithTeacherDto(
                 id=content.id,
@@ -130,8 +132,7 @@ async def update_content(
         if content_data.id is None:
             raise HTTPException(status_code=400, detail="ID is required for update")
 
-        result = await db.execute(select(Content).where(Content.id == content_data.id))
-        content = result.scalars().first()
+        content = await db.scalar(select(Content).where(Content.id == content_data.id))
 
         if not content or content.is_deleted:
             raise HTTPException(status_code=404, detail="Content not found")
@@ -155,8 +156,7 @@ async def update_content(
 @router.delete("/{content_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
 async def delete_content(content_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Content).where(Content.id == content_id))
-        content = result.scalars().first()
+        content = await db.scalar(select(Content).where(Content.id == content_id))
 
         if not content or content.is_deleted:
             raise HTTPException(status_code=404, detail="Content not found")
@@ -171,14 +171,13 @@ async def delete_content(content_id: int, db: AsyncSession = Depends(get_async_d
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/all/", response_model=list[ContentDto])
+@router.get("/all/", response_model=List[ContentDto])
 async def get_content(db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(
+        contents = await db.scalars(
             select(Content)
             .where(Content.is_deleted == False)
         )
-        contents = result.scalars().all()
-        return contents
+        return contents.all()
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

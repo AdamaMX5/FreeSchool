@@ -4,12 +4,18 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from database import get_db
+from sqlalchemy.orm import selectinload
+from database import get_async_db
 from pydantic import BaseModel
 from typing import Optional
 
 from models import Teacher
 from security.auth import required_roles
+
+import traceback
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/teacher", tags=["Teachers"])
 
@@ -26,16 +32,15 @@ class TeacherDto(BaseModel):
 
 
 @router.get("/{teacher_id}")
-async def get_teacher(teacher_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Teacher).where(Teacher.id == teacher_id))
-    t = result.scalars().first()
+async def get_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
+    t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
     if t is None:
         raise HTTPException(status_code=404, detail="Teacher not found")
     return t
 
 
 @router.post("/", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_db)):
+async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_async_db)):
     try:
         db.add(t)
         await db.commit()
@@ -47,10 +52,9 @@ async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{teacher_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depends(get_db)):
+async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Teacher).where(Teacher.id == teacher_id))
-        t = result.scalars().first()
+        t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
         if t is None:
             raise HTTPException(status_code=404, detail="Teacher not found")
 
@@ -61,43 +65,47 @@ async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depe
         await db.commit()
         await db.refresh(t)
         return t
+    except HTTPException:
+        raise
     except Exception as e:
         await db.rollback()
         return {"error": str(e)}
 
 
 @router.delete("/{teacher_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Teacher).where(Teacher.id == teacher_id))
-        t = result.scalars().first()
+        t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
         if not t or t.is_deleted:
             raise HTTPException(status_code=404, detail="Teacher not found")
 
         t.is_deleted = True
         await db.commit()
         return {"detail": "Lehrer wurde als gelöscht markiert"}
+    except HTTPException:
+        raise
     except Exception as e:
         await db.rollback()
         return {"error": str(e)}
 
 
 @router.get("/all/")
-async def get_teachers(db: AsyncSession = Depends(get_db)):
+async def get_teachers(db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Teacher).where(Teacher.is_deleted == False))
-        return result.scalars().all()
+        teachers = await db.scalars(select(Teacher).where(Teacher.is_deleted == False))
+        return teachers.all()
     except Exception as e:
         return {"error": str(e)}
 
 
 @router.get("/{teacher_id}/contents/")
-async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_db)):
+async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Teacher).where(Teacher.id == teacher_id))
-        t = result.scalars().first()
+        t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id).options(selectinload(Teacher.contents)))
         if t is None:
             raise HTTPException(status_code=404, detail="Teacher not found")
-        return t.contents
+        return [content for content in t.contents if not content.is_deleted]
+    except HTTPException:
+        raise
     except Exception as e:
         return {"error": str(e)}

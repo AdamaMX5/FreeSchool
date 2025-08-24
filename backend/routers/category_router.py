@@ -10,6 +10,10 @@ from models import Category, CategoryCategory
 from pydantic import BaseModel
 from typing import List, Optional
 from security.auth import required_roles
+# Logging konfigurieren
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/category", tags=["Categories"])
 
@@ -33,8 +37,8 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
                 selectinload(Category.children)
             )
         )
-        result = await db.execute(stmt)
-        c = result.scalars().unique().first()
+        result = await db.exec(stmt)
+        c = result.unique().first()
 
         if c is None:
             raise HTTPException(status_code=404, detail="Category not found")
@@ -46,8 +50,11 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        return {"error": str(e)}
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{category_id}/children")
@@ -63,8 +70,8 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
                 )
             )
         )
-        result = await db.execute(stmt)
-        category = result.scalars().unique().first()
+        result = await db.exec(stmt)
+        category = result.unique().first()
 
         if category is None:
             raise HTTPException(status_code=404, detail="Category not found")
@@ -84,32 +91,52 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
             )
             dtoList.append(dto)
         return dtoList
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        return {"error": str(e)}
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db)):
     try:
+        logger.info("Erstelle neue Category:")
         c = Category(
             name=dto.name,
             backgroundLink=dto.backgroundLink,
         )
+        logger.info("Add zur DB")
         db.add(c)
+        logger.info("Commit Category to DB")
         await db.commit()
+        logger.info("Refresche Category um dei erstellte id zu bekommen")
         await db.refresh(c)
 
+        logger.info("Füge die Eltern Categorien hinzu")
         # add the parents to the category
         for parent_id in dto.parents:
             cc = CategoryCategory(parent_id=parent_id, child_id=c.id)
             db.add(cc)
 
+        logger.info("Füge die Kinder Kategorien hinzu")
         # add the children to the category
         for child_id in dto.children:
             cc = CategoryCategory(parent_id=c.id, child_id=child_id)
             db.add(cc)
 
+        logger.info("DB Committe die Beziehungen der Category zur DB")
         await db.commit()
+
+        logger.info("Kategory mit Eltern und Kindern neu eager laden")
+        c = await db.scalar(
+            select(Category)
+            .where(Category.id == c.id)
+            .options(selectinload(Category.parents))
+            .options(selectinload(Category.children))
+        )
+
+        logger.info(f"Return CategoryDTO of {c}")
         return CategoryDto(
             id=c.id,
             name=c.name,
@@ -117,9 +144,13 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
+    except HTTPException:
+        logger.info(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        return {"error": str(e)}
+        # Andere Exceptions als 500 behandeln
+        logger.info(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/{category_id}/addChild/{child_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
@@ -130,15 +161,18 @@ async def add_child(category_id: int, child_id: int, db: AsyncSession = Depends(
         await db.commit()
         await db.refresh(cc)
         return cc
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        return {"error": str(e)}
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{category_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def update_category(category_id: int, data: CategoryDto, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Category).where(Category.id == category_id))
-        c = result.scalars().first()
+        result = await db.exec(select(Category).where(Category.id == category_id))
+        c = result.first()
 
         if c is None:
             raise HTTPException(status_code=404, detail="Category not found")
@@ -149,13 +183,13 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
 
         # --- Beziehungen aktualisieren ---
         # Bestehende Parent- und Child-Relations abrufen
-        parents_result = await db.execute(
+        parents_result = await db.exec(
             select(CategoryCategory.parent_id)
             .where(CategoryCategory.child_id == c.id)
         )
         existing_parents = {pid for (pid,) in parents_result.all()}
 
-        children_result = await db.execute(
+        children_result = await db.exec(
             select(CategoryCategory.child_id)
             .where(CategoryCategory.parent_id == c.id)
         )
@@ -168,7 +202,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
         # Zu entfernende Parent-Relations
         to_remove_parents = existing_parents - new_parents
         for pid in to_remove_parents:
-            await db.execute(
+            await db.exec(
                 CategoryCategory.__table__.delete()
                 .where(CategoryCategory.parent_id == pid)
                 .where(CategoryCategory.child_id == c.id)
@@ -204,16 +238,18 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
             parents=list(new_parents),
             children=list(new_children)
         )
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        return {"error": str(e)}
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{category_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def delete_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.execute(select(Category).where(Category.id == category_id))
-        category = result.scalars().first()
+        result = await db.exec(select(Category).where(Category.id == category_id))
+        category = result.first()
 
         if not category or category.is_deleted:
             raise HTTPException(status_code=404, detail="Kategorie nicht gefunden")
@@ -221,8 +257,11 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_async
         category.is_deleted = True
         await db.commit()
         return {"detail": "Kategorie wurde als gelöscht markiert"}
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        return {"error": str(e)}
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/all/")
@@ -235,8 +274,8 @@ async def get_categories(db: AsyncSession = Depends(get_async_db)):
             selectinload(Category.children)
         )
     )
-    result = await db.execute(stmt)
-    categories = result.scalars().unique().all()
+    result = await db.exec(stmt)
+    categories = result.unique().all()
 
     dtoList = []
     for c in categories:
@@ -263,8 +302,8 @@ async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_d
             selectinload(Category.children)
         )
     )
-    result = await db.execute(stmt)
-    categories = result.scalars().unique().all()
+    result = await db.exec(stmt)
+    categories = result.unique().all()
 
     dtoList = []
     for c in categories:
@@ -291,8 +330,8 @@ async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(ge
             selectinload(Category.children)
         )
     )
-    result = await db.execute(stmt)
-    categories = result.scalars().unique().all()
+    result = await db.exec(stmt)
+    categories = result.unique().all()
 
     dtoList = []
     for c in categories:
