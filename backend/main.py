@@ -38,7 +38,7 @@ origins = [
     f"https://app.{os.getenv('DOMAIN')}"
     f"http://{os.getenv('DOMAIN')}",
     f"http://app.{os.getenv('DOMAIN')}",
-    "*"  # Sicherheitshalber direkt
+    "*"  # Nur für die Entwicklung!
 ]
 app.add_middleware(
     CORSMiddleware,
