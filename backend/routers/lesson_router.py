@@ -113,8 +113,7 @@ async def get_lessons_by_category(
         .options(selectinload(Lesson.contents))
         .order_by(Lesson.order)
     )
-    result = await db.execute(stmt)
-    lessons = result.scalars().all()
+    lessons = await db.scalars(stmt)
 
     # Keine 404 mehr bei leeren Listen, sondern 200 mit []
     if not lessons:
@@ -123,12 +122,12 @@ async def get_lessons_by_category(
     # Fortschritte laden falls User eingeloggt
     progress_dict = {}
     if current_user:
-        progress_result = await db.execute(
+        progress_result = await db.scalars(
             select(UserLessonLink)
             .where(UserLessonLink.user_id == current_user.id)
-            .where(UserLessonLink.lesson_id.in_([l.id for l in lessons]))
+            .where(UserLessonLink.lesson_id.in_([l.id for l in lessons.all]))
         )
-        progress_dict = {p.lesson_id: p.progress for p in progress_result.scalars()}
+        progress_dict = {p.lesson_id: p.progress for p in progress_result.all()}
 
     return [
         LessonDto(
@@ -159,9 +158,7 @@ async def update_lesson(
             .where(Lesson.id == lesson_id)
             .options(selectinload(Lesson.contents))
         )
-        result = await db.execute(stmt)
-        lesson = result.scalars().first()
-
+        lesson = await db.scalar(stmt)
         if not lesson:
             raise HTTPException(status_code=404, detail="Lesson not found")
 
@@ -175,11 +172,11 @@ async def update_lesson(
         # Inhalte aktualisieren (nur wenn geändert)
         if data.contents is not None:
             # Neue Inhalte laden
-            result = await db.execute(
+            result = await db.scalars(
                 select(Content)
                 .where(Content.id.in_(data.contents))
             )
-            new_contents = result.scalars().all()
+            new_contents = result.all()
 
             # Aktuelle Inhalte löschen
             lesson.contents.clear()
@@ -215,8 +212,7 @@ async def delete_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)
             .where(Lesson.id == lesson_id)
             .options(selectinload(Lesson.contents))
         )
-        result = await db.execute(stmt)
-        lesson = result.scalars().first()
+        lesson = await db.scalar(stmt)
 
         if not lesson or lesson.is_deleted:
             raise HTTPException(status_code=404, detail="Lesson not found")
@@ -246,12 +242,11 @@ async def update_lesson_progress(
     """
     try:
         # Prüfe ob die Lektion existiert
-        result = await db.execute(
+        lesson = await db.scalar(
             select(Lesson)
             .where(Lesson.id == dto.lesson_id)
             .where(Lesson.is_deleted == False)
         )
-        lesson = result.scalars().first()
         if not lesson:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -259,13 +254,11 @@ async def update_lesson_progress(
             )
 
         # Hole oder erstelle den Fortschrittseintrag
-        result = await db.execute(
+        progress = await db.scalar(
             select(UserLessonLink)
             .where(UserLessonLink.user_id == current_user.id)
             .where(UserLessonLink.lesson_id == dto.lesson_id)
         )
-        progress = result.scalars().first()
-
         if progress:
             # Update existing progress
             progress.progress = dto.progress
@@ -300,12 +293,12 @@ async def get_all_progress(
     Get all progress records for the current user.
     """
     try:
-        result = await db.execute(
+        result = await db.scalars(
             select(UserLessonLink)
             .where(UserLessonLink.user_id == current_user.id)
             .options(selectinload(UserLessonLink.lesson))
         )
-        return result.scalars().all()
+        return result.all()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -324,12 +317,11 @@ async def get_lesson_progress(
     Returns None if no progress has been recorded yet.
     """
     try:
-        result = await db.execute(
+        progress = await db.scalar(
             select(UserLessonLink)
             .where(UserLessonLink.user_id == current_user.id)
             .where(UserLessonLink.lesson_id == lesson_id)
         )
-        progress = result.scalars().first()
         return progress
     except Exception as e:
         raise HTTPException(

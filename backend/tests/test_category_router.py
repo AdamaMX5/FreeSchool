@@ -94,8 +94,6 @@ class TestCategoryRouter:
 
         print(f"Response status: {response.status_code}")
         print(f"Response text: {response.text}")
-
-
         assert response.status_code == status.HTTP_200_OK
 
     @pytest.mark.asyncio

@@ -37,9 +37,7 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
                 selectinload(Category.children)
             )
         )
-        result = await db.exec(stmt)
-        c = result.unique().first()
-
+        c = await db.scalar(stmt)
         if c is None:
             raise HTTPException(status_code=404, detail="Category not found")
 
@@ -70,8 +68,7 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
                 )
             )
         )
-        result = await db.exec(stmt)
-        category = result.unique().first()
+        category = await db.scalar(stmt)
 
         if category is None:
             raise HTTPException(status_code=404, detail="Category not found")
@@ -171,9 +168,7 @@ async def add_child(category_id: int, child_id: int, db: AsyncSession = Depends(
 @router.put("/{category_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def update_category(category_id: int, data: CategoryDto, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.exec(select(Category).where(Category.id == category_id))
-        c = result.first()
-
+        c = await db.scalar(select(Category).where(Category.id == category_id))
         if c is None:
             raise HTTPException(status_code=404, detail="Category not found")
 
@@ -183,13 +178,13 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
 
         # --- Beziehungen aktualisieren ---
         # Bestehende Parent- und Child-Relations abrufen
-        parents_result = await db.exec(
+        parents_result = await db.scalars(
             select(CategoryCategory.parent_id)
             .where(CategoryCategory.child_id == c.id)
         )
         existing_parents = {pid for (pid,) in parents_result.all()}
 
-        children_result = await db.exec(
+        children_result = await db.scalars(
             select(CategoryCategory.child_id)
             .where(CategoryCategory.parent_id == c.id)
         )
@@ -202,7 +197,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
         # Zu entfernende Parent-Relations
         to_remove_parents = existing_parents - new_parents
         for pid in to_remove_parents:
-            await db.exec(
+            await db.execute(
                 CategoryCategory.__table__.delete()
                 .where(CategoryCategory.parent_id == pid)
                 .where(CategoryCategory.child_id == c.id)
@@ -248,8 +243,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
 @router.delete("/{category_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def delete_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
-        result = await db.exec(select(Category).where(Category.id == category_id))
-        category = result.first()
+        category = await db.scalar(select(Category).where(Category.id == category_id))
 
         if not category or category.is_deleted:
             raise HTTPException(status_code=404, detail="Kategorie nicht gefunden")
@@ -274,8 +268,7 @@ async def get_categories(db: AsyncSession = Depends(get_async_db)):
             selectinload(Category.children)
         )
     )
-    result = await db.exec(stmt)
-    categories = result.unique().all()
+    categories = await db.scalars(stmt)
 
     dtoList = []
     for c in categories:
@@ -302,8 +295,7 @@ async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_d
             selectinload(Category.children)
         )
     )
-    result = await db.exec(stmt)
-    categories = result.unique().all()
+    categories = await db.scalars(stmt)
 
     dtoList = []
     for c in categories:
@@ -330,8 +322,7 @@ async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(ge
             selectinload(Category.children)
         )
     )
-    result = await db.exec(stmt)
-    categories = result.unique().all()
+    categories = await db.scalars(stmt)
 
     dtoList = []
     for c in categories:

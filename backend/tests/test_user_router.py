@@ -249,20 +249,17 @@ class TestUserRouter:
 
         # Check if user has ADMIN role
         stmt = select(User).where(User.email == "first@example.com")
-        result = await test_db.execute(stmt)
-        user = result.scalar()
+        user = await test_db.scalar(stmt)
 
         stmt = select(UserRoleLink).where(UserRoleLink.user_id == user.id)
-        result = await test_db.execute(stmt)
-        role_links = result.scalars().all()
+        role_links = await test_db.scalars(stmt)
 
         # Should have at least one role (ADMIN)
-        assert len(role_links) >= 1
+        assert len(role_links.all()) >= 1
 
         # Verify ADMIN role exists
         stmt = select(Role).where(Role.name == RoleEnum.ADMIN.value)
-        result = await test_db.execute(stmt)
-        admin_role = result.scalar()
+        admin_role = await test_db.scalar(stmt)
         assert admin_role is not None
 
     @pytest.mark.asyncio

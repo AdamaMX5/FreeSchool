@@ -118,8 +118,7 @@ async def get_current_user_optional(token: Optional[str] = Depends(oauth2_scheme
         if not email:
             return None
 
-        result = await db.exec(select(User).where(User.email == email))
-        return result.first()
+        return await db.scalar(select(User).where(User.email == email))
     except (JWTError, ExpiredSignatureError, HTTPException) as e:
         print(f"Token-Verifikation fehlgeschlagen: {str(e)}")
         return None
@@ -137,8 +136,7 @@ async def get_current_user_by_id(token: str = Depends(oauth2_scheme), db: AsyncS
     if user_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token enthält keine User-ID")
 
-    result = await db.exec(select(User).where(User.id == user_id))
-    user = result.first()
+    user = await db.scalar(select(User).where(User.id == user_id))
 
     if user is None:
         raise HTTPException(
@@ -155,13 +153,13 @@ def create_email_verify_token() -> str:
 
 
 async def get_user_roles(user: User, db: AsyncSession) -> List[str]:
-    result = await db.exec(
+    result = await db.scalars(
         select(Role.name)
         .join(UserRoleLink, UserRoleLink.role_id == Role.id)
         .where(UserRoleLink.user_id == user.id)
     )
-    user_role_names = [role[0] for role in result.all()]
-    logger.info(f"Role-Result of User:{user_role_names}")
+    user_role_names = result.all()
+    logger.warning(f"Role-Result of User:{user_role_names}")
     return user_role_names
 
 

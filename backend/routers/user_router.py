@@ -102,12 +102,12 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
 
 async def get_role_names(user: User, db: AsyncSession) -> List[str]:
     # Explizit die Rollen laden
-    result = await db.exec(
+    result = await db.scalars(
         select(Role)
         .join(UserRoleLink, UserRoleLink.role_id == Role.id)
         .where(UserRoleLink.user_id == user.id)
     )
-    roles = result.scalars().all()
+    roles = result.all()
     logger.info(f"getrolenames: {roles}")
     return [role.name for role in roles]
 
@@ -247,8 +247,8 @@ async def initialize_roles(db: AsyncSession):
     required_roles = [role.value for role in RoleEnum]
 
     # Existierende Rollen abfragen
-    result = await db.exec(select(Role))
-    existing_roles = [role.name for role in result.scalars().all()]
+    result = await db.scalars(select(Role))
+    existing_roles = [role.name for role in result.all()]
 
     # Fehlende Rollen erstellen
     new_roles = []
@@ -260,4 +260,3 @@ async def initialize_roles(db: AsyncSession):
     if new_roles:
         db.add_all(new_roles)
         await db.commit()
-        print(f"Created {len(new_roles)} new roles")

@@ -4,12 +4,9 @@ from fastapi import Request
 from fastapi.testclient import TestClient
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
-
+from sqlmodel import SQLModel, select
 from main import app
 from database import get_async_db
 from tests.auth_utils import AuthClient
@@ -54,14 +51,16 @@ AsyncTestSessionLocal = sessionmaker(
 async def initialize_roles(db):
     """Erstellt alle notwendigen Rollen für Tests"""
     required_roles = [role.value for role in RoleEnum]
-
+    logger.warning(f"Initialize_Roles RoleEnum: {required_roles}")
     for role_name in required_roles:
-        result = await db.exec(select(Role).where(Role.name == role_name))
-        existing_role = result.first()
+        logger.warning(f"Abfrage nach rolename: {role_name}")
+        existing_role = await db.scalar(select(Role).where(Role.name == role_name))
+        logger.warning(f"Exsisting_role: {existing_role}")
         if not existing_role:
+            logger.warning(f"Gebrauchte rolle exsistiert nicht, darum wird sie erstellt: {role_name}")
             db.add(Role(name=role_name))
-
     await db.commit()
+    logger.warning("Fertig, alle rollen sind committed")
 
 
 async def override_get_async_db():
