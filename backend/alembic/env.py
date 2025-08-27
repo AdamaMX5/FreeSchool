@@ -1,24 +1,24 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
+from sqlalchemy import engine_from_config, pool
 from alembic import context
 from sqlmodel import SQLModel
-
+from dotenv import load_dotenv
 import sys
 import os
 
 # Model-Imports (für Autogenerate)
-import models.user
 import models.category
+import models.content
 import models.lesson
 import models.teacher
-import models.content
+import models.user
 
 # Konfiguration
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 config = context.config
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
 # Metadaten für Migrationen
 target_metadata = SQLModel.metadata
@@ -26,6 +26,13 @@ target_metadata = SQLModel.metadata
 # Logging setup
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+database_url = os.getenv("DATABASE_URL")
+if database_url and database_url.startswith("postgresql+asyncpg"):
+    database_url = database_url.replace("postgresql+asyncpg", "postgresql+psycopg2")
+
+config.set_main_option("sqlalchemy.url", database_url)
+
 
 def run_migrations_offline() -> None:
     """Offline-Modus (ohne DB-Verbindung)"""
@@ -40,6 +47,7 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     """Online-Modus (mit aktiver DB-Verbindung)"""
@@ -60,6 +68,7 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 # Ausführungsmodus
 if context.is_offline_mode():
