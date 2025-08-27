@@ -81,3 +81,32 @@ async def get_table_counts(db: AsyncSession):
         result = await db.execute(select(func.count()).select_from(tables[table_name]))
         counts[table_name] = result.scalar()
     return counts
+
+
+def get_database_type(db: AsyncSession) -> str:
+    """Ermittelt den Datenbanktyp"""
+    try:
+        # Wenn eine Session übergeben wurde
+        if db and hasattr(db, 'bind') and db.bind:
+            engine_url = str(db.bind.url)
+            if 'sqlite' in engine_url:
+                return 'sqlite'
+            elif 'postgresql' in engine_url or 'postgres' in engine_url:
+                return 'postgresql'
+            elif 'mysql' in engine_url or 'mariadb' in engine_url:
+                return 'mysql'
+
+        # Fallback: Prüfe die globale Engine
+        global engine
+        if engine:
+            engine_url = str(engine.url)
+            if 'sqlite' in engine_url:
+                return 'sqlite'
+            elif 'postgresql' in engine_url:
+                return 'postgresql'
+            elif 'mysql' in engine_url:
+                return 'mysql'
+
+        return 'unknown'
+    except Exception:
+        return 'unknown'

@@ -14,6 +14,7 @@ from sqlalchemy import Column, Text
 from sqlmodel import SQLModel, Field, Relationship
 from models.base import Base
 
+
 class Content(Base, table=True):
     id: Optional[int] = Field(primary_key=True, index=True)
     is_deleted: bool = Field(default=False)
