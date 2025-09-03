@@ -48,7 +48,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
     if existing_user:
         if existing_user.is_deleted:
             raise HTTPException(status_code=400, detail="User is deleted call support")
-        if not existing_user.passwordVerify:
+        if not existing_user.password_verify:
             logger.warning(f"Password is not verifyed: {existing_user.passwordVerify}")
             return UserLoginResponse(
                 id=existing_user.id,
@@ -62,8 +62,8 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
             raise HTTPException(status_code=400, detail="Invalid password")
         if not existing_user.emailVerify:
             # Token neu generieren, falls abgelaufen oder nicht vorhanden
-            if not existing_user.emailVerifyToken:
-                existing_user.emailVerifyToken = create_email_verify_token()
+            if not existing_user.email_verify_token:
+                existing_user.email_verify_token = create_email_verify_token()
                 await db.commit()
 
             await send_email_verification(existing_user)
@@ -83,10 +83,10 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
     else:
         # Registrierungsvorgang gestartet: Neues User-Objekt erstellen:
         new_user = User(email=user_in.email, passwort=user_in.password)
-        new_user.lastLogin = timestamp()  # Letzter Login
+        new_user.last_login = timestamp()  # Letzter Login
         new_user.hashed_password = get_password_hash(user_in.password)  # Passwort-Hash erstellen
-        new_user.passwordVerify = False  # Passwort-Hash erstellen
-        new_user.emailVerify = False
+        new_user.password_verify = False  # Passwort-Hash erstellen
+        new_user.email_verify = False
         db.add(new_user)
         await db.commit()
         await db.refresh(new_user)
@@ -129,10 +129,10 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
             raise HTTPException(status_code=400, detail="Second Password is incorrect, please try registration again.")
         else:
             existing_user.jwt = create_jwt(data={"sub": existing_user.email})  # JWT-Token erstellen
-            existing_user.passwordVerify = True  # Letzter Login
-            existing_user.emailVerifyToken = create_email_verify_token()
-            existing_user.emailVerify = False
-            existing_user.lastLogin = timestamp()
+            existing_user.password_verify = True  # Letzter Login
+            existing_user.email_verify_token = create_email_verify_token()
+            existing_user.email_verify = False
+            existing_user.last_login = timestamp()
             await db.commit()
             await db.refresh(existing_user)
 
@@ -191,7 +191,7 @@ async def send_email_verification(user: User):
     htmlText = "Wir begrüßen dich bei der Freischule."
     htmlText += "<br><br>"
     htmlText += "Um deine E-Mail-Adresse zu verifizieren, klicke bitte auf folgenden Link:<br>"
-    htmlText += f"Hier ist der Link zur Verifizierung: <a href='http://localhost:8000/user/verify?token={user.emailVerifyToken}&email={user.email}'>Verifizieren</a>"
+    htmlText += f"Hier ist der Link zur Verifizierung: <a href='http://localhost:8000/user/verify?token={user.email_verify_token}&email={user.email}'>Verifizieren</a>"
     htmlText += "<br><br>"
     htmlText += "Vielen Dank für alles und liebe Grüße<br><br>Euer Kurt"
 
@@ -212,16 +212,16 @@ async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_as
     # Prüfen, ob der Token gültig ist:
     existing_user = await db.scalar(select(User).where(User.email == email))
     if existing_user:
-        logger.warning(f"User gefunden: ID={existing_user.id}, EmailVerify={existing_user.emailVerify}, Token={existing_user.emailVerifyToken}")
+        logger.warning(f"User gefunden: ID={existing_user.id}, EmailVerify={existing_user.email_verify}, Token={existing_user.email_verify_token}")
 
-        if existing_user.emailVerify:
+        if existing_user.email_verify:
             logger.warning("Email bereits verifiziert")
             return {"Deine E-Mail-Adresse ist bereits verifiziert.<br>Du kannst dich jetzt einloggen."}
-        logger.warning(f"Vergleiche Token: DB='{existing_user.emailVerifyToken}' vs Request='{token}'")
-        if existing_user.emailVerifyToken == token:
+        logger.warning(f"Vergleiche Token: DB='{existing_user.email_verify_token}' vs Request='{token}'")
+        if existing_user.email_verify_token == token:
             logger.warning("Token stimmt überein - verifiziere Email")
-            existing_user.emailVerify = True
-            existing_user.emailVerifyToken = None
+            existing_user.email_verify = True
+            existing_user.email_verify_token = None
             await db.commit()
             await db.refresh(existing_user)
             logger.warning("Email erfolgreich verifiziert und committed")

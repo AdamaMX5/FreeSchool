@@ -44,7 +44,7 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
         return CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.backgroundLink,
+            backgroundLink=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
@@ -82,7 +82,7 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
             dto = CategoryDto(
                 id=c.id,
                 name=c.name,
-                backgroundLink=c.backgroundLink,
+                backgroundLink=c.background_link,
                 parents=[parent.id for parent in c.parents],
                 children=[child.id for child in c.children]
             )
@@ -137,7 +137,7 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
         return CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.backgroundLink,
+            backgroundLink=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
@@ -174,7 +174,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
 
         # Basisdaten aktualisieren
         c.name = data.name
-        c.backgroundLink = data.backgroundLink
+        c.background_link = data.backgroundLink
 
         # --- Beziehungen aktualisieren ---
         # Bestehende Parent- und Child-Relations abrufen
@@ -229,7 +229,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
         return CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.backgroundLink,
+            backgroundLink=c.background_link,
             parents=list(new_parents),
             children=list(new_children)
         )
@@ -275,7 +275,7 @@ async def get_categories(db: AsyncSession = Depends(get_async_db)):
         dto = CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.backgroundLink,
+            backgroundLink=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
@@ -302,7 +302,7 @@ async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_d
         dto = CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.backgroundLink,
+            backgroundLink=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )

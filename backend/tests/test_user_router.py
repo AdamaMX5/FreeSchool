@@ -171,8 +171,8 @@ class TestUserRouter:
         await test_db.commit()  # Sicherstellen, dass alle Transaktionen abgeschlossen sind
         await test_db.refresh(user)  # User-Objekt aktualisieren
         logger.warning(f"User in Database has emailVerify==true? {user}")
-        assert user.emailVerify == True
-        assert user.emailVerifyToken is None
+        assert user.email_verify == True
+        assert user.email_verify_token is None
 
     @pytest.mark.asyncio
     async def test_verify_email_invalid_token(self, test_client, test_db):

@@ -121,7 +121,7 @@ async def backup_database(
         # Tabellen in der richtigen Reihenfolge sichern (wegen Fremdschlüssel)
         tables_in_order = [
             'role',  # Unabhängige Tabelle
-            'user',  # Benutzer (Referenziert role über Many-to-Many)
+            'users',  # Benutzer (Referenziert role über Many-to-Many)
             'userrolelink',  # Many-to-Many Verknüpfung
             'profile',  # Profil (Referenziert user)
             'category',  # Kategorien

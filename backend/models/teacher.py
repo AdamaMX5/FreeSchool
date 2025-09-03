@@ -8,17 +8,15 @@
 # 5. country: the country of the teacher
 
 from typing import Optional
-
 from sqlmodel import SQLModel, Field, Relationship
 from models.base import Base
 
 
 class Teacher(Base, table=True):
-    id: Optional[int] = Field(primary_key=True, index=True)
-    is_deleted: bool = Field(default=False)
     name: str
     email: str
     city: str
     country: str
+    language: str = Field(default="de")
 
     contents: list["Content"] = Relationship(back_populates="teacher")
