@@ -12,11 +12,12 @@ from models.base import Base, RefBase
 
 
 class CategoryCategory(RefBase, table=True):
-    parent_uid: str = Field(default=None, foreign_key="category.uid", primary_key=True)
-    child_uid: str = Field(default=None, foreign_key="category.uid", primary_key=True)
+    parent_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
+    child_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
 
 
 class Category(Base, table=True):
+    id: Optional[int] = Field(primary_key=True, index=True)
     name: str
     background_link: str
 
@@ -25,13 +26,13 @@ class Category(Base, table=True):
     parents: list["Category"] = Relationship(
         back_populates="children",
         link_model=CategoryCategory,
-        sa_relationship_kwargs={"primaryjoin": "Category.uid==CategoryCategory.child_uid",
-                                "secondaryjoin": "Category.uid==CategoryCategory.parent_uid"}
+        sa_relationship_kwargs={"primaryjoin": "Category.id==CategoryCategory.child_id",
+                                "secondaryjoin": "Category.id==CategoryCategory.parent_id"}
     )
 
     children: list["Category"] = Relationship(
         back_populates="parents",
         link_model=CategoryCategory,
-        sa_relationship_kwargs={"primaryjoin": "Category.uid==CategoryCategory.parent_uid",
-                                "secondaryjoin": "Category.uid==CategoryCategory.child_uid"}
+        sa_relationship_kwargs={"primaryjoin": "Category.id==CategoryCategory.parent_id",
+                                "secondaryjoin": "Category.id==CategoryCategory.child_id"}
     )

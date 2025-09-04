@@ -22,8 +22,8 @@ class RoleEnum(str, Enum):
 # Many-to-Many Association Table
 # ─────────────────────────────
 class UserRoleLink(RefBase, table=True):
-    user_uid: str = Field(foreign_key="users.uid", primary_key=True)
-    role_uid: str = Field(foreign_key="role.uid", primary_key=True)
+    user_id: str = Field(foreign_key="users.id", primary_key=True)
+    role_id: str = Field(foreign_key="role.id", primary_key=True)
 
 
 
@@ -31,6 +31,7 @@ class UserRoleLink(RefBase, table=True):
 # Role-Modelle
 # ─────────────
 class Role(Base, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # z. B. "STUDENT", "TEACHER", "TUTOR", "PROJECTMANAGER", "SCHOOLDIRECTOR", "MODERATOR", "ADMIN"
     # Relationship zur Many-to-Many Verknüpfung:
     users: List["User"] = Relationship(back_populates="roles", link_model=UserRoleLink)
@@ -42,6 +43,7 @@ class Role(Base, table=True):
 class User(Base, table=True):
     __tablename__ = "users" # weil user ein reserviertes WOrt ist
 
+    id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(index=True, unique=True, title="E-Mail-Adresse",  min_length=5)
     hashed_password: str = Field(title="Passwort-Hash")
     jwt: Optional[str] = Field(default=None, title="JWT-Token")
@@ -67,7 +69,7 @@ class Profile(RefBase, table=True):
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
     avatar_url: Optional[str] = Field(default=None, title="URL zum Profilbild")
-    user_uid: str = Field(foreign_key="users.uid", primary_key=True)
+    user_id: str = Field(foreign_key="users.id", primary_key=True)
     user: Optional[User] = Relationship(back_populates="profile")
     comment: str = Field(default="", title="Kommentar")
     last_editor: str = Field(default="automatic", title="Email vom letzten Bearbeiter")

@@ -17,15 +17,16 @@ from models.base import Base
 
 
 class Content(Base, table=True):
+    id: Optional[int] = Field(primary_key=True, index=True)
     language: str
     text: str = Field( default="", sa_column=Column(Text), title="Markdown-Text")
     youtube_id: str
     internal_video: str
 
-    lesson_uid: str = Field(default=None, foreign_key="lesson.uid")
+    lesson_id: str = Field(default=None, foreign_key="lesson.id")
 
     lesson: Optional["Lesson"] = Relationship(back_populates="contents")
 
-    teacher_uid: str = Field(default=None, foreign_key="teacher.uid")
+    teacher_id: str = Field(default=None, foreign_key="teacher.id")
 
     teacher: Optional["Teacher"] = Relationship(back_populates="contents")

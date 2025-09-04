@@ -13,6 +13,7 @@ from models.base import Base
 
 
 class Teacher(Base, table=True):
+    id: Optional[int] = Field(primary_key=True, index=True)
     name: str
     email: str
     city: str

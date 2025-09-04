@@ -11,13 +11,14 @@ from models.base import Base, RefBase
 
 
 class Lesson(Base, table=True):
+    id: Optional[int] = Field(primary_key=True, index=True)
     name: str
     description: str
     display_order: Optional[int]
     position_x: int
     position_y: int
 
-    category_uid: Optional[str] = Field(default=None, foreign_key="category.uid")
+    category_id: Optional[str] = Field(default=None, foreign_key="category.id")
 
     category: Optional["Category"] = Relationship(back_populates="lessons")
 
@@ -28,8 +29,8 @@ class Lesson(Base, table=True):
 
 class UserLessonLink(RefBase, table=True):
     """Tabelle zur Speicherung des Fortschritts eines Users in einer Lektion"""
-    user_uid: str = Field(foreign_key="users.uid", primary_key=True)
-    lesson_uid: str = Field(foreign_key="lesson.uid", primary_key=True)
+    user_id: str = Field(foreign_key="users.id", primary_key=True)
+    lesson_id: str = Field(foreign_key="lesson.id", primary_key=True)
     progress: int = Field(default=0, ge=0, le=100, sa_column=Column(Integer, server_default="0", nullable=False))  # Wert zwischen 0 und 100
 
     # Relationships
