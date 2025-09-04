@@ -137,7 +137,7 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
         return CategoryDto(
             id=c.id,
             name=c.name,
-            background_link=c.background_link,
+            background_link=c.background_link
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )

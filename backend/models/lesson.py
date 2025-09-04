@@ -3,23 +3,22 @@
 # it has an automatically order
 # it has an optional position(x,y) on the background image
 # it is a model for the database
-
+from datetime import datetime
 from typing import Optional
 from sqlalchemy import Column, ForeignKey, Integer
-from sqlmodel import SQLModel, Field, Relationship
-from models.base import Base
+from sqlmodel import Field, Relationship
+from models.base import Base, RefBase
 
 
 class Lesson(Base, table=True):
     id: Optional[int] = Field(primary_key=True, index=True)
-    is_deleted: bool = Field(default=False)
     name: str
     description: str
-    order: Optional[int]
+    display_order: Optional[int]
     position_x: int
     position_y: int
 
-    category_id: Optional[int] = Field(default=None, foreign_key="category.id")
+    category_id: Optional[str] = Field(default=None, foreign_key="category.id")
 
     category: Optional["Category"] = Relationship(back_populates="lessons")
 
@@ -28,11 +27,10 @@ class Lesson(Base, table=True):
     user_progresses: list["UserLessonLink"] = Relationship(back_populates="lesson")
 
 
-class UserLessonLink(Base, table=True):
+class UserLessonLink(RefBase, table=True):
     """Tabelle zur Speicherung des Fortschritts eines Users in einer Lektion"""
     user_id: int = Field(sa_column=Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True))
     lesson_id: int = Field(sa_column=Column(Integer, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
-
     progress: int = Field(default=0, ge=0, le=100, sa_column=Column(Integer, server_default="0", nullable=False))  # Wert zwischen 0 und 100
 
     # Relationships

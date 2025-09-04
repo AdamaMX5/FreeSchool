@@ -4,20 +4,20 @@
 # It has a name, an link to a background image
 # It is a model for the database.
 # it contains lessons
+from datetime import datetime
 from typing import Optional
 
 from sqlmodel import SQLModel, Field, Relationship
-from models.base import Base
+from models.base import Base, RefBase
 
 
-class CategoryCategory(Base, table=True):
+class CategoryCategory(RefBase, table=True):
     parent_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
     child_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
 
 
 class Category(Base, table=True):
     id: Optional[int] = Field(primary_key=True, index=True)
-    is_deleted: bool = Field(default=False)
     name: str
     background_link: str
 

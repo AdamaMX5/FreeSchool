@@ -212,7 +212,7 @@ async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_as
     # Prüfen, ob der Token gültig ist:
     existing_user = await db.scalar(select(User).where(User.email == email))
     if existing_user:
-        logger.warning(f"User gefunden: ID={existing_user.id}, Email_verify={existing_user.email_verify}, Token={existing_user.email_verify_token}")
+        logger.warning(f"User gefunden: ID={existing_user.id}, Email_verify={existing_user.email_verify}, Token={existing_user.email_verify_token}"
 
         if existing_user.email_verify:
             logger.warning("Email bereits verifiziert")

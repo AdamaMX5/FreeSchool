@@ -1,8 +1,8 @@
+from datetime import datetime
 from typing import Optional, List
-
 from sqlmodel import Field, Relationship
 from enum import Enum
-from models.base import Base
+from models.base import Base, RefBase
 
 
 class RoleEnum(str, Enum):
@@ -40,7 +40,6 @@ class User(Base, table=True):
     __tablename__ = "users"  # weil user ein reserviertes Wort ist
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    is_deleted: bool = Field(default=False)
     email: str = Field(index=True, unique=True, title="E-Mail-Adresse",  min_length=5)
     hashed_password: str = Field(title="Passwort-Hash")
     jwt: Optional[str] = Field(default=None, title="JWT-Token")
@@ -48,7 +47,7 @@ class User(Base, table=True):
     password_reset_token: Optional[str] = Field(default=None, title="Passwort-Token")
     email_verify_token: Optional[str] = Field(default=None, title="E-Mail-Token")
     email_verify: bool = Field(default=False, title="E-Mail-Adresse verifiziert")
-    last_login: int = Field(default=None, title="Letzter Login")
+    last_login: datetime = Field(default=None, title="Letzter Login")
     comment: str = Field(default="", title="Kommentar")
     last_editor: str = Field(default="automatic", title="Email vom letzten Bearbeiter")
     # Beziehung zu Rollen über die Association Table:
@@ -62,8 +61,7 @@ class User(Base, table=True):
 # ─────────────
 # Profil-Modell (erweiterte Informationen)
 # ─────────────
-class Profile(Base, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+class Profile(RefBase, table=True):
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
     avatar_url: Optional[str] = Field(default=None, title="URL zum Profilbild")

@@ -170,6 +170,7 @@ class TestUserRouter:
         # Verify user is now marked as verified
         await test_db.commit()  # Sicherstellen, dass alle Transaktionen abgeschlossen sind
         await test_db.refresh(user)  # User-Objekt aktualisieren
+        
         logger.warning(f"User in Database has email_verify==true? {user}")
         assert user.email_verify == True
         assert user.email_verify_token is None
