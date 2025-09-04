@@ -411,8 +411,8 @@ INSERT INTO role (id, name) VALUES (6, 'MODERATOR');
 INSERT INTO role (id, name) VALUES (7, 'ADMIN');
 
 -- Table: user
-DELETE FROM user;
-INSERT INTO user (id, is_deleted, email, hashed_password, jwt, passwordVerify, passwortResetToken, emailVer
+DELETE FROM users;
+INSERT INTO users (id, is_deleted, email, hashed_password, jwt, passwordVerify, passwortResetToken, emailVer
 ifyToken, emailVerify, lastLogin, comment, lastEditor) VALUES (1, 0, 'admin@example.com', '$argon2id$v=19$m
 =65536,t=3,p=4$0zrnXKs15nyvdY6R8h4DYA$Oc94D2NVdX/kQGtzijPfjzxRo5WgwofnOavADw/4Zyg', 'eyJhbGciOiJIUzI1NiIsIn
 R5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInN1YmlkIjoxLCJleHAiOjE3NTYzNzg1NjJ9.CtuNYS3ka1gaL8sfWPB

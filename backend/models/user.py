@@ -1,8 +1,6 @@
 from typing import Optional, List
 
-from sqlalchemy import Column, ForeignKey, Integer
-from sqlalchemy.sql import expression
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 from enum import Enum
 from models.base import Base
 
@@ -21,7 +19,7 @@ class RoleEnum(str, Enum):
 # Many-to-Many Association Table
 # ─────────────────────────────
 class UserRoleLink(Base, table=True):
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id", primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id", primary_key=True)
     role_id: Optional[int] = Field(default=None, foreign_key="role.id", primary_key=True)
 
 
@@ -39,6 +37,8 @@ class Role(Base, table=True):
 # User-Modelle
 # ─────────────
 class User(Base, table=True):
+    __tablename__ = "users"  # weil user ein reserviertes Wort ist
+
     id: Optional[int] = Field(default=None, primary_key=True)
     is_deleted: bool = Field(default=False)
     email: str = Field(index=True, unique=True, title="E-Mail-Adresse",  min_length=5)
@@ -67,7 +67,7 @@ class Profile(Base, table=True):
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
     avatar_url: Optional[str] = Field(default=None, title="URL zum Profilbild")
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id")
     user: Optional[User] = Relationship(back_populates="profile")
     comment: str = Field(default="", title="Kommentar")
     lastEditor: str = Field(default="automatic", title="Email vom letzten Bearbeiter")
