@@ -4,6 +4,7 @@
   import { onMount } from "svelte";
   import { user } from "../lib/global";
   import EditUserDialog from '../dialogs/EditUserDialog.svelte';
+  import DatabaseDialog from '../dialogs/AdminDatabaseDialog.svelte';
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const dispatch = createEventDispatcher();
@@ -11,6 +12,7 @@
   let users = [];
   let error = null;
   let showEditDialog = false;
+  let showDatabaseDialog = false;
   let selectedUser = null;
 
   function close() {
@@ -54,6 +56,12 @@
   </button>
   <h2>👑 Admin-Ansicht</h2>
 
+  <div class="admin-actions">
+    <button onclick={() => showDatabaseDialog = true} class="primary">
+      💾 Datenbank Backup/Import
+    </button>
+  </div>
+
   <div class="users-list">
     <h3>Benutzerverwaltung</h3>
 
@@ -95,6 +103,17 @@
     userEdit={selectedUser} 
     onsuccess={handleUserUpdated}
     oncancel={() => showEditDialog = false}
+  />
+{/if}
+
+{#if showDatabaseDialog}
+  <DatabaseDialog 
+    onsuccess={() => {
+      showDatabaseDialog = false;
+      // Optional: Daten neu laden nach Import
+      fetchUsers();
+    }}
+    oncancel={() => showDatabaseDialog = false}
   />
 {/if}
 
@@ -141,5 +160,23 @@
   .error {
     color: #ff6b6b;
     margin-bottom: 1rem;
+  }
+
+  .admin-actions {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .primary:hover {
+    background-color: #0056b3;
   }
 </style>
