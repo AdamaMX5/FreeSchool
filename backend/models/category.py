@@ -19,7 +19,7 @@ class Category(Base, table=True):
     id: Optional[int] = Field(primary_key=True, index=True)
     is_deleted: bool = Field(default=False)
     name: str
-    backgroundLink: str
+    background_link: str
 
     lessons: list["Lesson"] = Relationship(back_populates="category")
 

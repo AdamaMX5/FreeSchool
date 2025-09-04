@@ -69,10 +69,10 @@ class TestUserRouter:
         user = User(
             email="test@example.com",
             hashed_password=get_password_hash("password123"),
-            passwordVerify=True,
-            emailVerify=False,
-            emailVerifyToken=create_email_verify_token(),
-            lastLogin=timestamp()
+            password_verify=True,
+            email_verify=False,
+            email_verify_token=create_email_verify_token(),
+            last_login=timestamp()
         )
         test_db.add(user)
         await test_db.commit()
@@ -154,10 +154,10 @@ class TestUserRouter:
         user = User(
             email="test@example.com",
             hashed_password=get_password_hash("password123"),
-            passwordVerify=True,
-            emailVerify=False,
-            emailVerifyToken=verify_token,
-            lastLogin=timestamp()
+            password_verify=True,
+            email_verify=False,
+            email_verify_token=verify_token,
+            last_login=timestamp()
         )
         test_db.add(user)
         await test_db.commit()
@@ -170,19 +170,19 @@ class TestUserRouter:
         # Verify user is now marked as verified
         await test_db.commit()  # Sicherstellen, dass alle Transaktionen abgeschlossen sind
         await test_db.refresh(user)  # User-Objekt aktualisieren
-        logger.warning(f"User in Database has emailVerify==true? {user}")
-        assert user.emailVerify == True
-        assert user.emailVerifyToken is None
+        logger.warning(f"User in Database has email_verify==true? {user}")
+        assert user.email_verify == True
+        assert user.email_verify_token is None
 
     @pytest.mark.asyncio
     async def test_verify_email_invalid_token(self, test_client, test_db):
         user = User(
             email="test@example.com",
             hashed_password=get_password_hash("password123"),
-            passwordVerify=True,
-            emailVerify=False,
-            emailVerifyToken="valid_token",
-            lastLogin=timestamp()
+            password_verify=True,
+            email_verify=False,
+            email_verify_token="valid_token",
+            last_login=timestamp()
         )
         test_db.add(user)
         await test_db.commit()
@@ -197,10 +197,10 @@ class TestUserRouter:
         user = User(
             email="test@example.com",
             hashed_password=get_password_hash("password123"),
-            passwordVerify=True,
-            emailVerify=True,
-            emailVerifyToken="some_token",
-            lastLogin=timestamp()
+            password_verify=True,
+            email_verify=True,
+            email_verify_token="some_token",
+            last_login=timestamp()
         )
         test_db.add(user)
         await test_db.commit()
