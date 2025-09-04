@@ -28,7 +28,7 @@ class TestCategoryRouter:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["name"] == "Test Category"
-        assert data["backgroundLink"] == "test.jpg"
+        assert data["background_link"] == "test.jpg"
         assert data["parents"] == []
         assert data["children"] == []
 
@@ -84,7 +84,7 @@ class TestCategoryRouter:
 
         category_data = {
             "name": "New Category",
-            "backgroundLink": "new.jpg",
+            "background_link": "new.jpg",
             "parents": [],
             "children": []
         }
@@ -100,7 +100,7 @@ class TestCategoryRouter:
     async def test_new_category_without_auth(self, test_client, test_db):
         category_data = {
             "name": "New Category",
-            "backgroundLink": "new.jpg",
+            "background_link": "new.jpg",
             "parents": [],
             "children": []
         }
@@ -136,7 +136,7 @@ class TestCategoryRouter:
 
         update_data = {
             "name": "Updated Name",
-            "backgroundLink": "updated.jpg",
+            "background_link": "updated.jpg",
             "parents": [],
             "children": []
         }
