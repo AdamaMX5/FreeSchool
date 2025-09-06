@@ -21,7 +21,7 @@ router = APIRouter(prefix="/category", tags=["Categories"])
 class CategoryDto(BaseModel):
     id: Optional[int] = None
     name: str
-    backgroundLink: str
+    background_link: str
     parents: List[int] = []
     children: List[int] = []
 
@@ -44,7 +44,7 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
         return CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.background_link,
+            background_link=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
@@ -82,7 +82,7 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
             dto = CategoryDto(
                 id=c.id,
                 name=c.name,
-                backgroundLink=c.background_link,
+                background_link=c.background_link,
                 parents=[parent.id for parent in c.parents],
                 children=[child.id for child in c.children]
             )
@@ -101,7 +101,7 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
         logger.info("Erstelle neue Category:")
         c = Category(
             name=dto.name,
-            backgroundLink=dto.backgroundLink,
+            background_link=dto.background_link,
         )
         logger.info("Add zur DB")
         db.add(c)
@@ -137,11 +137,11 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
         return CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.background_link,
+            background_link=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
-    except HTTPException:
+    except HTTPException as e:
         logger.info(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
@@ -174,7 +174,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
 
         # Basisdaten aktualisieren
         c.name = data.name
-        c.background_link = data.backgroundLink
+        c.background_link = data.background_link
 
         # --- Beziehungen aktualisieren ---
         # Bestehende Parent- und Child-Relations abrufen
@@ -229,7 +229,7 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
         return CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.background_link,
+            background_link=c.background_link,
             parents=list(new_parents),
             children=list(new_children)
         )
@@ -275,7 +275,7 @@ async def get_categories(db: AsyncSession = Depends(get_async_db)):
         dto = CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.background_link,
+            background_link=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
@@ -302,7 +302,7 @@ async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_d
         dto = CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.background_link,
+            background_link=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
@@ -329,7 +329,7 @@ async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(ge
         dto = CategoryDto(
             id=c.id,
             name=c.name,
-            backgroundLink=c.backgroundLink,
+            background_link=c.background_link,
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )

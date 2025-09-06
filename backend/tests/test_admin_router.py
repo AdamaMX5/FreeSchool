@@ -278,7 +278,7 @@ class TestAdminRouter:
             headers = auth_client.get_headers("admin")
 
             # Testdaten erstellen
-            category = Category(name="Test Category", backgroundLink="/test.jpg")
+            category = Category(name="Test Category", background_link="/test.jpg")
             test_db.add(category)
             await test_db.commit()
             await test_db.refresh(category)
@@ -411,9 +411,9 @@ INSERT INTO role (id, name) VALUES (6, 'MODERATOR');
 INSERT INTO role (id, name) VALUES (7, 'ADMIN');
 
 -- Table: user
-DELETE FROM user;
-INSERT INTO user (id, is_deleted, email, hashed_password, jwt, passwordVerify, passwortResetToken, emailVer
-ifyToken, emailVerify, lastLogin, comment, lastEditor) VALUES (1, 0, 'admin@example.com', '$argon2id$v=19$m
+DELETE FROM users;
+INSERT INTO users (id, is_deleted, email, hashed_password, jwt, password_verify, password_reset_token, email_ver
+ifyToken, email_verify, last_login, comment, last_editor) VALUES (1, 0, 'admin@example.com', '$argon2id$v=19$m
 =65536,t=3,p=4$0zrnXKs15nyvdY6R8h4DYA$Oc94D2NVdX/kQGtzijPfjzxRo5WgwofnOavADw/4Zyg', 'eyJhbGciOiJIUzI1NiIsIn
 R5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInN1YmlkIjoxLCJleHAiOjE3NTYzNzg1NjJ9.CtuNYS3ka1gaL8sfWPB
 zVTIb2jqpsO4Wi2bdWPjsTV8', 1, NULL, NULL, 1, 1756292162, 'a Testuser', 'pytest');
@@ -584,7 +584,7 @@ PRAGMA foreign_keys = ON;
 
             # Testdaten erstellen
             test_user = await create_test_user(test_db, "backuptest", [RoleEnum.STUDENT.value])
-            category = Category(name="Backup Test", backgroundLink="/backup.jpg")
+            category = Category(name="Backup Test", background_link="/backup.jpg")
             test_db.add(category)
             await test_db.commit()
             await test_db.refresh(category)

@@ -1,4 +1,5 @@
 # tests/test_utils.py
+from datetime import datetime
 from models import Category, CategoryCategory, User, Role, UserRoleLink, Lesson, Content, Teacher
 from sqlmodel import select
 from security.auth import get_password_hash
@@ -8,7 +9,7 @@ from util.time_util import timestamp
 async def create_test_category(db, name="Test Category", background_link="test.jpg", parents=None, children=None):
     category = Category(
         name=name,
-        backgroundLink=background_link,
+        background_link=background_link,
         is_deleted=False
     )
     db.add(category)
@@ -42,11 +43,11 @@ async def create_test_user(db, username="testuser", roles=None, password="passwo
     user = User(
         email=email,
         hashed_password=get_password_hash(password),
-        passwordVerify=True,
-        emailVerify=True,  # Email als verifiziert markieren für Tests
-        lastLogin=timestamp(),
+        password_verify=True,
+        email_verify=True,  # Email als verifiziert markieren für Tests
+        last_login=datetime.now(),
         comment="a Testuser",
-        lastEditor="pytest"
+        last_editor="pytest"
     )
     db.add(user)
     await db.commit()

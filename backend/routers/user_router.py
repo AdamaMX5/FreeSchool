@@ -49,7 +49,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
         if existing_user.is_deleted:
             raise HTTPException(status_code=400, detail="User is deleted call support")
         if not existing_user.password_verify:
-            logger.warning(f"Password is not verifyed: {existing_user.passwordVerify}")
+            logger.warning(f"Password is not verifyed: {existing_user.password_verify}")
             return UserLoginResponse(
                 id=existing_user.id,
                 email=existing_user.email,
@@ -60,7 +60,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
         # Passwort-Hash überprüfen:
         if not verify_password(user_in.password, existing_user.hashed_password):
             raise HTTPException(status_code=400, detail="Invalid password")
-        if not existing_user.emailVerify:
+        if not existing_user.email_verify:
             # Token neu generieren, falls abgelaufen oder nicht vorhanden
             if not existing_user.email_verify_token:
                 existing_user.email_verify_token = create_email_verify_token()
@@ -212,7 +212,7 @@ async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_as
     # Prüfen, ob der Token gültig ist:
     existing_user = await db.scalar(select(User).where(User.email == email))
     if existing_user:
-        logger.warning(f"User gefunden: ID={existing_user.id}, EmailVerify={existing_user.email_verify}, Token={existing_user.email_verify_token}")
+        logger.warning(f"User gefunden: ID={existing_user.id}, Email_verify={existing_user.email_verify}, Token={existing_user.email_verify_token}")
 
         if existing_user.email_verify:
             logger.warning("Email bereits verifiziert")

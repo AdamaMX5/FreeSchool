@@ -1,9 +1,9 @@
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from dotenv import load_dotenv
 from alembic import context
 from sqlmodel import SQLModel
-from dotenv import load_dotenv
 import sys
 import os
 
@@ -19,6 +19,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 config = context.config
+
 
 # Metadaten für Migrationen
 target_metadata = SQLModel.metadata

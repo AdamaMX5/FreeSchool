@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from sqlalchemy import Column, ForeignKey, Integer
-from sqlalchemy.sql import expression
+
 from sqlmodel import Field, Relationship
 from enum import Enum
 from models.base import Base, RefBase
@@ -21,10 +20,9 @@ class RoleEnum(str, Enum):
 # ─────────────────────────────
 # Many-to-Many Association Table
 # ─────────────────────────────
-class UserRoleLink(RefBase, table=True):
-    user_id: str = Field(foreign_key="users.id", primary_key=True)
-    role_id: str = Field(foreign_key="role.id", primary_key=True)
-
+class UserRoleLink(Base, table=True):
+    user_id: Optional[int] = Field(default=None, foreign_key="users.id", primary_key=True)
+    role_id: Optional[int] = Field(default=None, foreign_key="role.id", primary_key=True)
 
 
 # ─────────────
@@ -41,7 +39,7 @@ class Role(Base, table=True):
 # User-Modelle
 # ─────────────
 class User(Base, table=True):
-    __tablename__ = "users" # weil user ein reserviertes WOrt ist
+    __tablename__ = "users"  # weil user ein reserviertes Wort ist
 
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(index=True, unique=True, title="E-Mail-Adresse",  min_length=5)
@@ -57,19 +55,19 @@ class User(Base, table=True):
     # Beziehung zu Rollen über die Association Table:
     roles: List[Role] = Relationship(back_populates="users", link_model=UserRoleLink)
     # Beziehung zum Profil (1:1)
-    profile: Optional["Profile"] = Relationship(back_populates="user", sa_relationship_kwargs={"uselist": False})
+    profile: Optional["Profile"] = Relationship(back_populates="users", sa_relationship_kwargs={"uselist": False})
     # Beziehung zu Lektionen (1:n) - Fortschritt des Users in Lektionen
-    lesson_progresses: List["UserLessonLink"] = Relationship(back_populates="user")
+    lesson_progresses: List["UserLessonLink"] = Relationship(back_populates="users")
 
 
 # ─────────────
 # Profil-Modell (erweiterte Informationen)
 # ─────────────
-class Profile(RefBase, table=True):
+class Profile(Base, table=True):
+    user_id: Optional[int] = Field(primary_key=True, foreign_key="users.id")
+    users: Optional[User] = Relationship(back_populates="profile")
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
     avatar_url: Optional[str] = Field(default=None, title="URL zum Profilbild")
-    user_id: str = Field(foreign_key="users.id", primary_key=True)
-    user: Optional[User] = Relationship(back_populates="profile")
     comment: str = Field(default="", title="Kommentar")
     last_editor: str = Field(default="automatic", title="Email vom letzten Bearbeiter")
