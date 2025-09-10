@@ -3,7 +3,7 @@ import pytest
 from fastapi import status
 from sqlalchemy.future import select
 from models import Lesson, Content, UserLessonLink, RoleEnum
-from tests.test_utils import create_test_lesson, create_test_content, create_test_category, create_test_user
+from tests.test_utils import create_test_lesson, create_test_content, create_test_category, create_test_teacher
 
 # Logging konfigurieren
 import traceback
@@ -39,6 +39,7 @@ class TestLessonRouter:
         """Test Lektion mit Inhalten"""
         # Lektion erstellen
         lesson = await create_test_lesson(test_db)
+        teacher = await create_test_teacher(test_db)
 
         # Contents erstellen (mit allen required Feldern)
         content1 = await create_test_content(test_db,
@@ -46,14 +47,16 @@ class TestLessonRouter:
                                              text="Erster Test-Content",
                                              youtube_id="youtube_id_1",
                                              internal_video="video1.mp4",
-                                             lesson_id=lesson.id)
+                                             lesson_id=lesson.id,
+                                             teacher_id=teacher.id)
 
         content2 = await create_test_content(test_db,
                                              language="en",
                                              text="Second test content",
                                              youtube_id="youtube_id_2",
                                              internal_video="video2.mp4",
-                                             lesson_id=lesson.id)
+                                             lesson_id=lesson.id,
+                                             teacher_id=teacher.id)
 
         response = test_client.get(f"/lesson/{lesson.id}")
         assert response.status_code == status.HTTP_200_OK
@@ -143,56 +146,59 @@ class TestLessonRouter:
             token = await auth_client.login("moderator", ["MODERATOR"])
             headers = auth_client.get_headers("moderator")
 
+            # teacher und category werden immer noch zuerst benötigt
+            teacher = await create_test_teacher(test_db)
             category = await create_test_category(test_db)
 
-            # Zuerst 2 Test-Contents erstellen (ohne lesson_id, da sie erst später verknüpft werden)
-            content1 = await create_test_content(test_db,
-                                                 language="de",
-                                                 text="Erster Test-Content",
-                                                 youtube_id="youtube_id_1",
-                                                 internal_video="video1.mp4")
-
-            content2 = await create_test_content(test_db,
-                                                 language="en",
-                                                 text="Second test content",
-                                                 youtube_id="youtube_id_2",
-                                                 internal_video="video2.mp4")
-
+            # ZUERST die Lektion erstellen (ohne contents)
             lesson_data = {
                 "category_id": category.id,
                 "name": "Lesson with Contents",
                 "description": "Lesson with two contents",
                 "position_x": 100,
                 "position_y": 200,
-                "contents": [content1.id, content2.id]  # IDs der beiden Contents
+                # "contents": []  # Diese Zeile zunächst weglassen oder eine leere Liste übergeben
             }
 
-            logger.warning(f"Creating lesson with contents: {lesson_data}")
+            logger.warning(f"Creating lesson first: {lesson_data}")
             response = test_client.post("/lesson/", json=lesson_data, headers=headers)
-
-            logger.warning(f"Response Status: {response.status_code}")
-            logger.warning(f"Response: {response.text}")
-
             assert response.status_code == status.HTTP_200_OK
-            data = response.json()
+            lesson_data_response = response.json()
+            new_lesson_id = lesson_data_response["id"]
+            logger.warning(f"Lesson created with ID: {new_lesson_id}")
+
+            # DANACH die Contents erstellen, JETZT mit der soeben erhaltenen lesson_id
+            content1 = await create_test_content(test_db,
+                                                 language="de",
+                                                 text="Erster Test-Content",
+                                                 youtube_id="youtube_id_1",
+                                                 internal_video="video1.mp4",
+                                                 teacher_id=teacher.id,
+                                                 lesson_id=new_lesson_id)  # <- WICHTIG: lesson_id hier zuweisen
+
+            content2 = await create_test_content(test_db,
+                                                 language="en",
+                                                 text="Second test content",
+                                                 youtube_id="youtube_id_2",
+                                                 internal_video="video2.mp4",
+                                                 teacher_id=teacher.id,
+                                                 lesson_id=new_lesson_id)  # <- WICHTIG: lesson_id hier zuweisen
+
+            # JETZT die Lektion abrufen und prüfen, ob die Contents korrekt verknüpft sind
+            response = test_client.get(f"/lesson/{new_lesson_id}", headers=headers)
+            logger.warning(f"Get lesson/{new_lesson_id} Response: {response.text}")
+            assert response.status_code == status.HTTP_200_OK
+            final_lesson_data = response.json()
 
             # Überprüfe die Lektionsdaten
-            assert data["name"] == "Lesson with Contents"
-            assert data["category_id"] == category.id
-            assert data["description"] == "Lesson with two contents"
+            assert final_lesson_data["name"] == "Lesson with Contents"
+            assert final_lesson_data["category_id"] == category.id
+            assert final_lesson_data["description"] == "Lesson with two contents"
 
             # Überprüfe dass beide Contents verknüpft wurden
-            assert len(data["contents"]) == 2
-            assert content1.id in data["contents"]
-            assert content2.id in data["contents"]
-
-            # Zusätzlich: Überprüfe in der Datenbank dass die Contents die lesson_id haben
-            await test_db.refresh(content1)
-            await test_db.refresh(content2)
-
-            # Jetzt die lesson_id überprüfen
-            assert content1.lesson_id == data["id"], f"Content {content1.id} should have lesson_id {data['id']}, but has {content1.lesson_id}"
-            assert content2.lesson_id == data["id"], f"Content {content2.id} should have lesson_id {data['id']}, but has {content2.lesson_id}"
+            assert len(final_lesson_data["contents"]) == 2
+            assert content1.id in final_lesson_data["contents"]
+            assert content2.id in final_lesson_data["contents"]
 
         except Exception as e:
             logger.warning(f"Exception occurred: {e}")
@@ -239,7 +245,7 @@ class TestLessonRouter:
         # Überprüfen, dass Lektion als gelöscht markiert ist
         test_db.expire(lesson)
         await test_db.refresh(lesson)
-        assert lesson.is_deleted == True
+        assert lesson.deleted_at
 
     @pytest.mark.asyncio
     async def test_update_lesson_progress(self, test_client, test_db, auth_client):

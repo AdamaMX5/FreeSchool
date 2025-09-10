@@ -2,7 +2,7 @@
 import pytest
 from fastapi import status
 from sqlalchemy.future import select
-
+from datetime import datetime
 from models import User, Role, UserRoleLink, RoleEnum
 from security.auth import get_password_hash, create_jwt, create_email_verify_token
 from util.time_util import timestamp
@@ -72,7 +72,7 @@ class TestUserRouter:
             password_verify=True,
             email_verify=False,
             email_verify_token=create_email_verify_token(),
-            last_login=timestamp()
+            last_login=datetime.utcnow()
         )
         test_db.add(user)
         await test_db.commit()
@@ -157,7 +157,7 @@ class TestUserRouter:
             password_verify=True,
             email_verify=False,
             email_verify_token=verify_token,
-            last_login=timestamp()
+            last_login=datetime.utcnow()
         )
         test_db.add(user)
         await test_db.commit()
@@ -182,7 +182,7 @@ class TestUserRouter:
             password_verify=True,
             email_verify=False,
             email_verify_token="valid_token",
-            last_login=timestamp()
+            last_login=datetime.utcnow()
         )
         test_db.add(user)
         await test_db.commit()
@@ -200,7 +200,7 @@ class TestUserRouter:
             password_verify=True,
             email_verify=True,
             email_verify_token="some_token",
-            last_login=timestamp()
+            last_login=datetime.utcnow()
         )
         test_db.add(user)
         await test_db.commit()

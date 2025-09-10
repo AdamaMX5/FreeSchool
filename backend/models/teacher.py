@@ -7,13 +7,12 @@
 # 4. city: the city of the teacher
 # 5. country: the country of the teacher
 
-from typing import Optional
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import Field, Relationship
 from models.base import Base
 
 
 class Teacher(Base, table=True):
-    id: Optional[int] = Field(primary_key=True, index=True)
+
     name: str
     email: str
     city: str

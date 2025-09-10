@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.future import select
 from database import get_async_db
-from models import Content
+from datetime import datetime
+from models import Content, Category
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -73,12 +74,13 @@ async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db))
 @router.get("/by_lesson/{lesson_id}", response_model=List[ContentWithTeacherDto])
 async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):  # get_async_db verwenden
     try:
+        logger.info(f"Fetching contents for lesson_id: {lesson_id}")
         # Explizites Laden der Beziehungen mit joinedload
         contents = await db.scalars(
             select(Content)
             .options(selectinload(Content.teacher))
             .where(Content.lesson_id == lesson_id)
-            .where(Content.is_deleted == False)
+            .where(Content.deleted_at == None)
         )
 
         # Manuelle Konvertierung in DTOs
@@ -134,7 +136,7 @@ async def update_content(
 
         content = await db.scalar(select(Content).where(Content.id == content_data.id))
 
-        if not content or content.is_deleted:
+        if not content or content.deleted_at:
             raise HTTPException(status_code=404, detail="Content not found")
 
         update_data = content_data.model_dump(exclude_unset=True, exclude={"id"})
@@ -158,10 +160,10 @@ async def delete_content(content_id: int, db: AsyncSession = Depends(get_async_d
     try:
         content = await db.scalar(select(Content).where(Content.id == content_id))
 
-        if not content or content.is_deleted:
+        if not content or content.deleted_at:
             raise HTTPException(status_code=404, detail="Content not found")
 
-        content.is_deleted = True
+        content.deleted_at = datetime.utcnow()
         await db.commit()
         return {"detail": "Content wurde als gelöscht markiert"}
     except HTTPException:
@@ -176,7 +178,7 @@ async def get_content(db: AsyncSession = Depends(get_async_db)):
     try:
         contents = await db.scalars(
             select(Content)
-            .where(Content.is_deleted == False)
+            .where(Content.deleted_at == None)
         )
         return contents.all()
     except Exception as e:

@@ -6,6 +6,7 @@ from sqlalchemy import not_, func
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_async_db
+from datetime import datetime
 from models import Category, CategoryCategory
 from pydantic import BaseModel
 from typing import List, Optional
@@ -75,18 +76,16 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
 
         dtoList = []
         for c in category.children:
-            if c.is_deleted:
-                continue
-
-            # Jetzt haben wir Zugriff auf c.parents und c.children, da sie geladen wurden
-            dto = CategoryDto(
-                id=c.id,
-                name=c.name,
-                background_link=c.background_link,
-                parents=[parent.id for parent in c.parents],
-                children=[child.id for child in c.children]
-            )
-            dtoList.append(dto)
+            if not c.deleted_at:
+                # Jetzt haben wir Zugriff auf c.parents und c.children, da sie geladen wurden
+                dto = CategoryDto(
+                    id=c.id,
+                    name=c.name,
+                    background_link=c.background_link,
+                    parents=[parent.id for parent in c.parents],
+                    children=[child.id for child in c.children]
+                )
+                dtoList.append(dto)
         return dtoList
     except HTTPException:
         raise  # HTTPExceptions weiterwerfen
@@ -245,10 +244,10 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_async
     try:
         category = await db.scalar(select(Category).where(Category.id == category_id))
 
-        if not category or category.is_deleted:
+        if not category or category.deleted_at:
             raise HTTPException(status_code=404, detail="Kategorie nicht gefunden")
 
-        category.is_deleted = True
+        category.deleted_at = datetime.utcnow()
         await db.commit()
         return {"detail": "Kategorie wurde als gelöscht markiert"}
     except HTTPException:
@@ -262,7 +261,7 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_async
 async def get_categories(db: AsyncSession = Depends(get_async_db)):
     stmt = (
         select(Category)
-        .where(Category.is_deleted == False)
+        .where(Category.deleted_at == None)
         .options(
             selectinload(Category.parents),
             selectinload(Category.children)
@@ -289,7 +288,7 @@ async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_d
     stmt = (
         select(Category)
         .where(not_(Category.id.in_(subq)))
-        .where(Category.is_deleted == False)
+        .where(Category.deleted_at == None)
         .options(
             selectinload(Category.parents),
             selectinload(Category.children)
@@ -316,7 +315,7 @@ async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(ge
         select(Category)
         .join(CategoryCategory, Category.id == CategoryCategory.child_id)
         .where(CategoryCategory.parent_id == parent_id)
-        .where(Category.is_deleted == False)
+        .where(Category.deleted_at == None)
         .options(
             selectinload(Category.parents),
             selectinload(Category.children)

@@ -6,6 +6,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from database import get_async_db
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 
@@ -76,10 +77,10 @@ async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depe
 async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
         t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
-        if not t or t.is_deleted:
+        if not t or t.deleted_at:
             raise HTTPException(status_code=404, detail="Teacher not found")
 
-        t.is_deleted = True
+        t.deleted_at = datetime.utcnow()
         await db.commit()
         return {"detail": "Lehrer wurde als gelöscht markiert"}
     except HTTPException:
@@ -92,7 +93,7 @@ async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_d
 @router.get("/all/")
 async def get_teachers(db: AsyncSession = Depends(get_async_db)):
     try:
-        teachers = await db.scalars(select(Teacher).where(Teacher.is_deleted == False))
+        teachers = await db.scalars(select(Teacher).where(Teacher.deleted_at == None))
         return teachers.all()
     except Exception as e:
         return {"error": str(e)}
@@ -104,7 +105,7 @@ async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_a
         t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id).options(selectinload(Teacher.contents)))
         if t is None:
             raise HTTPException(status_code=404, detail="Teacher not found")
-        return [content for content in t.contents if not content.is_deleted]
+        return [content for content in t.contents if not content.deleted_at]
     except HTTPException:
         raise
     except Exception as e:

@@ -7,9 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from models import User, Profile, Role, UserRoleLink, RoleEnum
 from database import get_async_db
+from datetime import datetime
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
 from security.email import EmailService
-from util.time_util import timestamp
 
 # Logging konfigurieren
 import logging
@@ -36,7 +36,7 @@ class UserResponse(BaseModel):
 
 class UserLogin(BaseModel):
     email: EmailStr
-    password: str  # Klartext-Passwort wird hier übergeben und dann gehasht gespeichert
+    password: str  # Klartext-Password wird hier übergeben und dann gehasht gespeichert
 
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=UserLoginResponse)
@@ -46,7 +46,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
     existing_user = await db.scalar(select(User).where(User.email == user_in.email))
     logger.warning(f"gefundener User: {existing_user}")
     if existing_user:
-        if existing_user.is_deleted:
+        if existing_user.deleted_at:
             raise HTTPException(status_code=400, detail="User is deleted call support")
         if not existing_user.password_verify:
             logger.warning(f"Password is not verifyed: {existing_user.password_verify}")
@@ -57,7 +57,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
                 jwt="",
                 status="register"
             )
-        # Passwort-Hash überprüfen:
+        # Password-Hash überprüfen:
         if not verify_password(user_in.password, existing_user.hashed_password):
             raise HTTPException(status_code=400, detail="Invalid password")
         if not existing_user.email_verify:
@@ -82,10 +82,10 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
         )
     else:
         # Registrierungsvorgang gestartet: Neues User-Objekt erstellen:
-        new_user = User(email=user_in.email, passwort=user_in.password)
-        new_user.last_login = timestamp()  # Letzter Login
-        new_user.hashed_password = get_password_hash(user_in.password)  # Passwort-Hash erstellen
-        new_user.password_verify = False  # Passwort-Hash erstellen
+        new_user = User(email=user_in.email, password=user_in.password)
+        new_user.last_login = datetime.utcnow()  # Letzter Login
+        new_user.hashed_password = get_password_hash(user_in.password)  # Password-Hash erstellen
+        new_user.password_verify = False  # Password-Hash erstellen
         new_user.email_verify = False
         db.add(new_user)
         await db.commit()
@@ -114,7 +114,7 @@ async def get_role_names(user: User, db: AsyncSession) -> List[str]:
 
 class UserRegister(BaseModel):
     id: int
-    repassword: str  # Klartext-Passwort wird hier übergeben und dann gehasht und mit dem gespeicherten HashPasswort verglichen
+    repassword: str  # Klartext-Password wird hier übergeben und dann gehasht und mit dem gespeicherten HashPassword verglichen
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -132,7 +132,7 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
             existing_user.password_verify = True  # Letzter Login
             existing_user.email_verify_token = create_email_verify_token()
             existing_user.email_verify = False
-            existing_user.last_login = timestamp()
+            existing_user.last_login = datetime.utcnow()
             await db.commit()
             await db.refresh(existing_user)
 
@@ -154,7 +154,7 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
                     logger.info(f"Assigned SCHUELER role to user {existing_user.id}")
 
             # Adminrole for first User
-            user_count = await db.scalar(select(func.count()).where(User.is_deleted == False))
+            user_count = await db.scalar(select(func.count()).where(User.deleted_at == None))
             logger.info(f"Total users: {user_count}")
 
             if user_count == 1:

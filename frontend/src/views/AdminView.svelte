@@ -4,7 +4,7 @@
   import { onMount } from "svelte";
   import { user } from "../lib/global";
   import EditUserDialog from '../dialogs/EditUserDialog.svelte';
-  import DatabaseDialog from '../dialogs/AdminDatabaseDialog.svelte';
+  import AdminDatabaseDialog from '../dialogs/AdminDatabaseDialog.svelte';
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const dispatch = createEventDispatcher();
@@ -40,6 +40,12 @@
     showEditDialog = true;
   }
 
+  function openDatabaseDialog(){
+    console.log("Open Database Dialog: ", showDatabaseDialog);
+    showDatabaseDialog = true;
+    console.log("Open Database Dialog: ", showDatabaseDialog);
+  }
+
   function handleUserUpdated() {
     showEditDialog = false;
     fetchUsers();
@@ -57,7 +63,7 @@
   <h2>👑 Admin-Ansicht</h2>
 
   <div class="admin-actions">
-    <button onclick={() => showDatabaseDialog = true} class="primary">
+    <button onclick={() => openDatabaseDialog()} class="primary">
       💾 Datenbank Backup/Import
     </button>
   </div>
@@ -107,7 +113,7 @@
 {/if}
 
 {#if showDatabaseDialog}
-  <DatabaseDialog 
+  <AdminDatabaseDialog 
     onsuccess={() => {
       showDatabaseDialog = false;
       // Optional: Daten neu laden nach Import

@@ -1,0 +1,5 @@
+# Neue Migration erstellen
+alembic revision --autogenerate -m "change comment"
+
+# SQL DB auf den neusten Stand migrieren 
+alembic upgrade head

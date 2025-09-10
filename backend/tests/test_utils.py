@@ -10,7 +10,7 @@ async def create_test_category(db, name="Test Category", background_link="test.j
     category = Category(
         name=name,
         background_link=background_link,
-        is_deleted=False
+        deleted_at=None
     )
     db.add(category)
     await db.commit()
@@ -74,7 +74,7 @@ async def create_test_user(db, username="testuser", roles=None, password="passwo
 
 async def create_test_lesson(db, name="Test Lesson", description="Test Description",
                              category_id=None, position_x=100, position_y=100,
-                             order=None):
+                             display_order=None):
     """
     Erstellt eine Test-Lektion ohne Contents (da Contents eigene required Felder haben)
     """
@@ -89,8 +89,8 @@ async def create_test_lesson(db, name="Test Lesson", description="Test Descripti
         category_id=category_id,
         position_x=position_x,
         position_y=position_y,
-        order=order,
-        is_deleted=False
+        display_order=display_order,
+        deleted_at=None
     )
 
     db.add(lesson)
@@ -112,7 +112,7 @@ async def create_test_content(db, lesson_id=None, teacher_id=None,
         text=text,
         youtube_id=youtube_id,
         internal_video=internal_video,
-        is_deleted=False
+        deleted_at=None
     )
 
     # Optionale Verknüpfungen
@@ -138,7 +138,7 @@ async def create_test_teacher(db, name="Test Teacher", email="teacher@example.co
         email=email,
         city=city,
         country=country,
-        is_deleted=False
+        deleted_at=None
     )
 
     db.add(teacher)

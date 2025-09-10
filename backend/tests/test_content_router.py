@@ -1,8 +1,7 @@
 # tests/test_content_router.py
 import pytest
 from fastapi import status
-from sqlalchemy.future import select
-from models import Content, Teacher
+from datetime import datetime
 from tests.test_utils import create_test_content, create_test_teacher, create_test_lesson
 
 # Logging konfigurieren
@@ -22,8 +21,10 @@ class TestContentRouter:
     @pytest.mark.asyncio
     async def test_get_content_success(self, test_client, test_db):
         """Test erfolgreiches Abfragen eines Contents"""
+        test_lesson = await create_test_lesson(test_db)
+        test_teacher = await create_test_teacher(test_db)
         # Test-Content erstellen
-        content = await create_test_content(test_db)
+        content = await create_test_content(test_db, lesson_id=test_lesson.id, teacher_id=test_teacher.id)
 
         response = test_client.get(f"/content/{content.id}")
         assert response.status_code == status.HTTP_200_OK
@@ -35,9 +36,11 @@ class TestContentRouter:
     @pytest.mark.asyncio
     async def test_get_all_contents(self, test_client, test_db):
         """Test Abfragen aller Contents"""
+        test_lesson = await create_test_lesson(test_db)
+        test_teacher = await create_test_teacher(test_db)
         # Mehrere Contents erstellen
-        content1 = await create_test_content(test_db, language="de")
-        content2 = await create_test_content(test_db, language="en")
+        content1 = await create_test_content(test_db, language="de", lesson_id=test_lesson.id, teacher_id=test_teacher.id)
+        content2 = await create_test_content(test_db, language="en", lesson_id=test_lesson.id, teacher_id=test_teacher.id)
 
         response = test_client.get("/content/all/")
         assert response.status_code == status.HTTP_200_OK
@@ -48,10 +51,12 @@ class TestContentRouter:
     @pytest.mark.asyncio
     async def test_get_all_contents_excludes_deleted(self, test_client, test_db):
         """Test dass gelöschte Contents nicht angezeigt werden"""
+        test_lesson = await create_test_lesson(test_db)
+        test_teacher = await create_test_teacher(test_db)
         # Aktiven und gelöschten Content erstellen
-        active_content = await create_test_content(test_db, language="de")
-        deleted_content = await create_test_content(test_db, language="en")
-        deleted_content.is_deleted = True
+        active_content = await create_test_content(test_db, language="de", lesson_id=test_lesson.id, teacher_id=test_teacher.id)
+        deleted_content = await create_test_content(test_db, language="en", lesson_id=test_lesson.id, teacher_id=test_teacher.id)
+        deleted_content.deleted_at = datetime.utcnow()
         await test_db.commit()
 
         response = test_client.get("/content/all/")
@@ -113,7 +118,7 @@ class TestContentRouter:
                                                     language="en",
                                                     lesson_id=lesson.id,
                                                     teacher_id=teacher.id)
-        deleted_content.is_deleted = True
+        deleted_content.deleted_at = datetime.utcnow()
         await test_db.commit()
 
         response = test_client.get(f"/content/by_lesson/{lesson.id}")
@@ -204,9 +209,11 @@ class TestContentRouter:
         # Moderator login
         token = await auth_client.login("moderator", ["MODERATOR"])
         headers = auth_client.get_headers("moderator")
+        test_teacher = await create_test_teacher(test_db)
+        test_lesson = await create_test_lesson(test_db)
 
         # Content erstellen
-        content = await create_test_content(test_db)
+        content = await create_test_content(test_db, lesson_id=test_lesson.id, teacher_id=test_teacher.id)
 
         update_data = {
             "id": content.id,
@@ -251,8 +258,11 @@ class TestContentRouter:
         # Moderator login
         token = await auth_client.login("moderator", ["MODERATOR"])
         headers = auth_client.get_headers("moderator")
+        test_teacher = await create_test_teacher(test_db)
+        test_lesson = await create_test_lesson(test_db)
 
-        content = await create_test_content(test_db)
+        # Content erstellen
+        content = await create_test_content(test_db, lesson_id=test_lesson.id, teacher_id=test_teacher.id)
 
         response = test_client.delete(f"/content/{content.id}", headers=headers)
         assert response.status_code == status.HTTP_200_OK
@@ -260,7 +270,7 @@ class TestContentRouter:
 
         # Überprüfen, dass Content als gelöscht markiert ist
         await test_db.refresh(content)
-        assert content.is_deleted == True
+        assert content.deleted_at
 
     @pytest.mark.asyncio
     async def test_delete_content_not_found(self, test_client, test_db, auth_client):

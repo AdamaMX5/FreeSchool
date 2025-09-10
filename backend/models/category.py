@@ -17,7 +17,6 @@ class CategoryCategory(RefBase, table=True):
 
 
 class Category(Base, table=True):
-    id: Optional[int] = Field(primary_key=True, index=True)
     name: str
     background_link: str
 

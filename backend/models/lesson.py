@@ -11,16 +11,15 @@ from models.base import Base, RefBase
 
 
 class Lesson(Base, table=True):
-    id: Optional[int] = Field(primary_key=True, index=True)
     name: str
     description: str
     display_order: Optional[int]
     position_x: int
     position_y: int
 
-    category_id: Optional[str] = Field(default=None, foreign_key="category.id")
+    category_id: int = Field(foreign_key="category.id")
 
-    category: Optional["Category"] = Relationship(back_populates="lessons")
+    category: "Category" = Relationship(back_populates="lessons")
 
     contents: list["Content"] = Relationship(back_populates="lesson")
     # Beziehung für User-Fortschritte

@@ -483,7 +483,7 @@ async def backup_database_json(
 
         for table in tables_in_order:
             try:
-                result = await db.execute(text(f"SELECT * FROM {table} WHERE is_deleted = FALSE"))
+                result = await db.execute(text(f"SELECT * FROM {table} WHERE deleted_at IS NULL"))
                 rows = result.all()
 
                 if rows:

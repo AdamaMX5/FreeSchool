@@ -20,7 +20,7 @@ class RoleEnum(str, Enum):
 # ─────────────────────────────
 # Many-to-Many Association Table
 # ─────────────────────────────
-class UserRoleLink(Base, table=True):
+class UserRoleLink(RefBase, table=True):
     user_id: Optional[int] = Field(default=None, foreign_key="users.id", primary_key=True)
     role_id: Optional[int] = Field(default=None, foreign_key="role.id", primary_key=True)
 
@@ -29,7 +29,6 @@ class UserRoleLink(Base, table=True):
 # Role-Modelle
 # ─────────────
 class Role(Base, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
     name: str  # z. B. "STUDENT", "TEACHER", "TUTOR", "PROJECTMANAGER", "SCHOOLDIRECTOR", "MODERATOR", "ADMIN"
     # Relationship zur Many-to-Many Verknüpfung:
     users: List["User"] = Relationship(back_populates="roles", link_model=UserRoleLink)
@@ -41,12 +40,11 @@ class Role(Base, table=True):
 class User(Base, table=True):
     __tablename__ = "users"  # weil user ein reserviertes Wort ist
 
-    id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(index=True, unique=True, title="E-Mail-Adresse",  min_length=5)
-    hashed_password: str = Field(title="Passwort-Hash")
+    hashed_password: str = Field(title="Password-Hash")
     jwt: Optional[str] = Field(default=None, title="JWT-Token")
-    password_verify: bool = Field(default=False, title="Passwort zweites Mal korrekt eingegeben")
-    password_reset_token: Optional[str] = Field(default=None, title="Passwort-Token")
+    password_verify: bool = Field(default=False, title="Password zweites Mal korrekt eingegeben")
+    password_reset_token: Optional[str] = Field(default=None, title="Password-Token")
     email_verify_token: Optional[str] = Field(default=None, title="E-Mail-Token")
     email_verify: bool = Field(default=False, title="E-Mail-Adresse verifiziert")
     last_login: datetime = Field(default=None, title="Letzter Login")
@@ -64,7 +62,7 @@ class User(Base, table=True):
 # Profil-Modell (erweiterte Informationen)
 # ─────────────
 class Profile(Base, table=True):
-    user_id: Optional[int] = Field(primary_key=True, foreign_key="users.id")
+    user_id: int = Field(primary_key=True, foreign_key="users.id")
     users: Optional[User] = Relationship(back_populates="profile")
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")

@@ -1,0 +1,9 @@
+# Alle Tests
+pytest tests/
+
+# Eine Testgruppe
+pytest tests/test_admin_router.py
+pytest tests/test_admin_router.py -x      # Abbruch beim ersten Fehlschlag
+
+# ein spezieller Test
+pytest -k "test_backup_database_with_admin_role" -v -s

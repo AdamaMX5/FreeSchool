@@ -1,9 +1,8 @@
 # tests/test_teacher_router.py
 import pytest
 from fastapi import status
-from sqlalchemy.future import select
-from models import Teacher, Content
-from tests.test_utils import create_test_teacher, create_test_content
+from datetime import datetime
+from tests.test_utils import create_test_teacher, create_test_content, create_test_category, create_test_lesson
 
 # Logging konfigurieren
 import traceback
@@ -59,7 +58,7 @@ class TestTeacherRouter:
         # Aktiven und gelöschten Lehrer erstellen
         active_teacher = await create_test_teacher(test_db, "Active Teacher")
         deleted_teacher = await create_test_teacher(test_db, "Deleted Teacher")
-        deleted_teacher.is_deleted = True
+        deleted_teacher.deleted_at = datetime.utcnow()
         await test_db.commit()
 
         response = test_client.get("/teacher/all/")
@@ -175,7 +174,7 @@ class TestTeacherRouter:
 
         # Überprüfen, dass Lehrer als gelöscht markiert ist
         await test_db.refresh(teacher)
-        assert teacher.is_deleted == True
+        assert teacher.deleted_at
 
     @pytest.mark.asyncio
     async def test_delete_teacher_not_found(self, test_client, test_db, auth_client):
@@ -195,7 +194,7 @@ class TestTeacherRouter:
         headers = auth_client.get_headers("moderator")
 
         teacher = await create_test_teacher(test_db)
-        teacher.is_deleted = True
+        teacher.deleted_at = datetime.utcnow()
         await test_db.commit()
 
         response = test_client.delete(f"/teacher/{teacher.id}", headers=headers)
@@ -215,21 +214,27 @@ class TestTeacherRouter:
     async def test_get_teacher_contents_with_contents(self, test_client, test_db):
         """Test Abfragen der Contents eines Lehrers mit Contents"""
         teacher = await create_test_teacher(test_db)
+        category = await create_test_category(test_db, name="Test Category")
+        lesson = await create_test_lesson(test_db,
+                                          name="Test Lesson",
+                                          category_id=category.id)
 
         # Contents für den Lehrer erstellen
         content1 = await create_test_content(test_db,
+                                             teacher_id=teacher.id,
+                                             lesson_id=lesson.id,
                                              language="de",
                                              text="Erster Content",
                                              youtube_id="yt1",
-                                             internal_video="video1.mp4",
-                                             teacher_id=teacher.id)
+                                             internal_video="video1.mp4")
 
         content2 = await create_test_content(test_db,
+                                             teacher_id=teacher.id,
+                                             lesson_id=lesson.id,
                                              language="en",
                                              text="Second Content",
                                              youtube_id="yt2",
-                                             internal_video="video2.mp4",
-                                             teacher_id=teacher.id)
+                                             internal_video="video2.mp4")
 
         response = test_client.get(f"/teacher/{teacher.id}/contents/")
         assert response.status_code == status.HTTP_200_OK
@@ -247,22 +252,28 @@ class TestTeacherRouter:
     async def test_get_teacher_contents_excludes_deleted_contents(self, test_client, test_db):
         """Test dass gelöschte Contents nicht angezeigt werden"""
         teacher = await create_test_teacher(test_db)
+        category = await create_test_category(test_db, name="Test Category")
+        lesson = await create_test_lesson(test_db,
+                                          name="Test Lesson",
+                                          category_id=category.id)
 
         # Aktiven und gelöschten Content erstellen
         active_content = await create_test_content(test_db,
+                                                   teacher_id=teacher.id,
+                                                   lesson_id=lesson.id,
                                                    language="de",
                                                    text="Aktiv",
                                                    youtube_id="yt1",
-                                                   internal_video="video1.mp4",
-                                                   teacher_id=teacher.id)
+                                                   internal_video="video1.mp4")
 
         deleted_content = await create_test_content(test_db,
+                                                    teacher_id=teacher.id,
+                                                    lesson_id=lesson.id,
                                                     language="en",
                                                     text="Gelöscht",
                                                     youtube_id="yt2",
-                                                    internal_video="video2.mp4",
-                                                    teacher_id=teacher.id)
-        deleted_content.is_deleted = True
+                                                    internal_video="video2.mp4")
+        deleted_content.deleted_at = datetime.utcnow()
         await test_db.commit()
 
         response = test_client.get(f"/teacher/{teacher.id}/contents/")

@@ -298,7 +298,6 @@ class TestAdminRouter:
             logger.warning(f"Response Status: {response.status_code}")
             logger.warning(f"Response: {response.text}")
 
-
             assert response.status_code == status.HTTP_200_OK
             assert response.headers["content-type"] == "application/sql"
             assert "attachment" in response.headers["content-disposition"]
@@ -346,8 +345,9 @@ class TestAdminRouter:
             assert insert_count < 50  # Sollte nicht hunderte von INSERTs sein
 
             # Überprüfen dass keine kaputten INSERTs vorhanden sind
-            assert "INSERT INTO role (id, name) VALUES (1);" not in backup_content
-            assert "INSERT INTO role (id, name) VALUES (1, 'STUDENT');" in backup_content
+            # Angepasst an das neue Format mit deleted_at Feld
+            assert "INSERT INTO role (id, deleted_at, name) VALUES (1, NULL, 'STUDENT');" in backup_content
+            assert "INSERT INTO role (id, deleted_at, name) VALUES (1, NULL);" not in backup_content
 
             # Überprüfen dass wichtige Tabellen enthalten sind
             expected_tables = ['role', 'user', 'category', 'teacher', 'lesson']
@@ -395,28 +395,26 @@ class TestAdminRouter:
             # SQL mit allen erforderlichen Feldern für die user-Tabelle
             sql_content = """
 -- FreeSchool Database Backup
--- Generated at: 2025-08-27T12:56:02.510366
+-- Generated at: 2025-09-09T15:02:14.216020
 -- Database type: sqlite
 
 PRAGMA foreign_keys = OFF;
 
 -- Table: role
 DELETE FROM role;
-INSERT INTO role (id, name) VALUES (1, 'STUDENT');
-INSERT INTO role (id, name) VALUES (2, 'TEACHER');
-INSERT INTO role (id, name) VALUES (3, 'TUTOR');
-INSERT INTO role (id, name) VALUES (4, 'PROJECTMANAGER');
-INSERT INTO role (id, name) VALUES (5, 'SCHOOLDIRECTOR');
-INSERT INTO role (id, name) VALUES (6, 'MODERATOR');
-INSERT INTO role (id, name) VALUES (7, 'ADMIN');
+INSERT INTO role (id, deleted_at, name) VALUES (1, NULL, 'STUDENT');
+INSERT INTO role (id, deleted_at, name) VALUES (2, NULL, 'TEACHER');
+INSERT INTO role (id, deleted_at, name) VALUES (3, NULL, 'TUTOR');
+INSERT INTO role (id, deleted_at, name) VALUES (4, NULL, 'PROJECTMANAGER');
+INSERT INTO role (id, deleted_at, name) VALUES (5, NULL, 'SCHOOLDIRECTOR');
+INSERT INTO role (id, deleted_at, name) VALUES (6, NULL, 'MODERATOR');
+INSERT INTO role (id, deleted_at, name) VALUES (7, NULL, 'ADMIN');
 
--- Table: user
+-- Table: users
 DELETE FROM users;
-INSERT INTO users (id, is_deleted, email, hashed_password, jwt, password_verify, password_reset_token, email_ver
-ifyToken, email_verify, last_login, comment, last_editor) VALUES (1, 0, 'admin@example.com', '$argon2id$v=19$m
-=65536,t=3,p=4$0zrnXKs15nyvdY6R8h4DYA$Oc94D2NVdX/kQGtzijPfjzxRo5WgwofnOavADw/4Zyg', 'eyJhbGciOiJIUzI1NiIsIn
-R5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInN1YmlkIjoxLCJleHAiOjE3NTYzNzg1NjJ9.CtuNYS3ka1gaL8sfWPB
-zVTIb2jqpsO4Wi2bdWPjsTV8', 1, NULL, NULL, 1, 1756292162, 'a Testuser', 'pytest');
+INSERT INTO users (id, deleted_at, email, hashed_password, jwt, password_verify, password_reset_token, email_verify_token, email_verify, last_login, comment, last_editor) VALUES (1, NULL, 'admin@example.com', '$argon2id$v=19$m=6
+5536,t=3,p=4$3fu/t5Yy5vy/t7aWstZ6zw$QvvZlCL8lTpzoG7irePIhUMI2dleKvG5Z6ijzjq5tJE', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBleGFtcGxlLmNvbSIsInN1YmlkIjoxLCJleHAiOjE3NTc1MDkzMzR9.sesS_CMiXs1oOUzgEfuNlf3z_aHRRvQeAgY
+lNW-6nsU', 1, NULL, NULL, 1, '2025-09-09 15:02:14.056979', 'a Testuser', 'pytest');
 
 -- Table: userrolelink
 DELETE FROM userrolelink;
@@ -427,20 +425,18 @@ DELETE FROM profile;
 
 -- Table: category
 DELETE FROM category;
-INSERT INTO category (id, is_deleted, name, backgroundLink) VALUES (1, 0, 'Test Category', '/test.jpg');   
+INSERT INTO category (id, deleted_at, name, background_link) VALUES (1, NULL, 'Test Category', '/test.jpg');
 
 -- Table: categorycategory
 DELETE FROM categorycategory;
 
 -- Table: teacher
 DELETE FROM teacher;
-INSERT INTO teacher (id, is_deleted, name, email, city, country) VALUES (1, 0, 'Test Teacher', 'teacher@tes
-t.com', 'Test City', 'Test Country');
+INSERT INTO teacher (id, deleted_at, name, email, city, country, language) VALUES (1, NULL, 'Test Teacher', 'teacher@test.com', 'Test City', 'Test Country', 'de');
 
 -- Table: lesson
 DELETE FROM lesson;
-INSERT INTO lesson (id, is_deleted, name, description, "order", position_x, position_y, category_id) VALUES
- (1, 0, 'Test Lesson', 'Test Description', NULL, 100, 200, 1);
+INSERT INTO lesson (id, deleted_at, name, description, display_order, position_x, position_y, category_id) VALUES (1, NULL, 'Test Lesson', 'Test Description', NULL, 100, 200, 1);
 
 -- Table: content
 DELETE FROM content;

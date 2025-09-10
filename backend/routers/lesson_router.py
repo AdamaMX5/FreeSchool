@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from database import get_async_db
-
+from datetime import datetime
 from models import UserLessonLink, User, Content, Lesson
 from security.auth import get_current_user_optional, get_current_user
 from security.auth import required_roles
@@ -39,7 +39,7 @@ def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
         category_id=lesson.category_id,
         name=lesson.name,
         description=lesson.description,
-        order=lesson.order,
+        order=lesson.display_order,
         position_x=lesson.position_x,
         position_y=lesson.position_y,
         contents=content_ids,
@@ -55,7 +55,7 @@ async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
             category_id=dto.category_id,
             name=dto.name,
             description=dto.description,
-            order=dto.order,
+            display_order=dto.order,
             position_x=dto.position_x,
             position_y=dto.position_y,
         )
@@ -109,9 +109,9 @@ async def get_lessons_by_category(
     stmt = (
         select(Lesson)
         .where(Lesson.category_id == category_id)
-        .where(Lesson.is_deleted == False)
+        .where(Lesson.deleted_at == None)
         .options(selectinload(Lesson.contents))
-        .order_by(Lesson.order)
+        .order_by(Lesson.display_order)
     )
     lessons = await db.scalars(stmt)
 
@@ -135,7 +135,7 @@ async def get_lessons_by_category(
             category_id=lesson.category_id,
             name=lesson.name,
             description=lesson.description,
-            order=lesson.order,
+            order=lesson.display_order,
             position_x=lesson.position_x,
             position_y=lesson.position_y,
             contents=[content.id for content in lesson.contents],
@@ -165,7 +165,7 @@ async def update_lesson(
         # Basisdaten aktualisieren
         lesson.name = data.name
         lesson.description = data.description
-        lesson.order = data.order
+        lesson.display_order = data.order
         lesson.position_x = data.position_x
         lesson.position_y = data.position_y
 
@@ -193,7 +193,7 @@ async def update_lesson(
             category_id=lesson.category_id,
             name=lesson.name,
             description=lesson.description,
-            order=lesson.order,
+            order=lesson.display_order,
             position_x=lesson.position_x,
             position_y=lesson.position_y,
             contents=[c.id for c in lesson.contents],
@@ -212,16 +212,20 @@ async def delete_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)
             .where(Lesson.id == lesson_id)
             .options(selectinload(Lesson.contents))
         )
+        logger.info(f"Delete Lesson with id {lesson_id}")
         lesson = await db.scalar(stmt)
 
-        if not lesson or lesson.is_deleted:
+        if not lesson or lesson.deleted_at:
             raise HTTPException(status_code=404, detail="Lesson not found")
 
-        lesson.is_deleted = True
+        logger.info(f"Found Lesson to delete: {lesson}")
+        lesson.deleted_at = datetime.utcnow()
         await db.commit()
+        logger.info(f"Lesson marked as deleted: {lesson}")
         return {"detail": "Lesson wurde als gelöscht markiert"}
     except Exception as e:
         await db.rollback()
+        logger.warning(f"Error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -245,7 +249,7 @@ async def update_lesson_progress(
         lesson = await db.scalar(
             select(Lesson)
             .where(Lesson.id == dto.lesson_id)
-            .where(Lesson.is_deleted == False)
+            .where(Lesson.deleted_at == None)
         )
         if not lesson:
             raise HTTPException(

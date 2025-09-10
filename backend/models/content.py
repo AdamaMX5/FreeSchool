@@ -9,7 +9,6 @@
 # 6. video: the link to the extern youtube-video
 # 7. internal_video: the link to the intern video (Server will download External Video and save it for the case of deletion)
 
-from datetime import datetime
 from typing import Optional
 from sqlalchemy import Column, Text
 from sqlmodel import Field, Relationship
@@ -17,16 +16,15 @@ from models.base import Base
 
 
 class Content(Base, table=True):
-    id: Optional[int] = Field(primary_key=True, index=True)
     language: str
     text: str = Field( default="", sa_column=Column(Text), title="Markdown-Text")
     youtube_id: str
     internal_video: str
 
-    lesson_id: str = Field(default=None, foreign_key="lesson.id")
+    lesson_id: int = Field(foreign_key="lesson.id")
 
-    lesson: Optional["Lesson"] = Relationship(back_populates="contents")
+    lesson: "Lesson" = Relationship(back_populates="contents")
 
-    teacher_id: str = Field(default=None, foreign_key="teacher.id")
+    teacher_id: Optional[int] = Field(default=None, foreign_key="teacher.id")
 
     teacher: Optional["Teacher"] = Relationship(back_populates="contents")
