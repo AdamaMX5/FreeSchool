@@ -157,10 +157,10 @@
     class="image-container"
     style="width: {containerSize.width}px; height: {containerSize.height}px;"
   >
-    {#if currentCategory?.backgroundLink}
+    {#if currentCategory?.background_link}
       <img
         class="background-image"
-        src={currentCategory.backgroundLink}
+        src={currentCategory.background_link}
         alt={currentCategory.name}
         on:load={handleImageLoad}
         style="width: {containerSize.width}px; height: {containerSize.height}px;"

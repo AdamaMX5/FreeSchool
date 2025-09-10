@@ -97,9 +97,9 @@
       {#each childCategories as category}
         <div class="learning-hub" onclick={() => onselectCategory(category)}>
           <h3>{category.name}</h3>
-          {#if category.backgroundLink}
+          {#if category.background_link}
             <div class="hub-background"
-                 style="background-image: url('{category.backgroundLink}')"
+                 style="background-image: url('{category.background_link}')"
                  alt={category.name}></div>
           {/if}
           {#if isModerator}
@@ -111,9 +111,9 @@
       {#each categories as category}
         <div class="learning-hub" onclick={() => onselectCategory(category)}>
           <h3>{category.name}</h3>
-          {#if category.backgroundLink}
+          {#if category.background_link}
             <div class="hub-background"
-                 style="background-image: url('{category.backgroundLink}')"
+                 style="background-image: url('{category.background_link}')"
                  alt={category.name}></div>
           {/if}
           {#if isModerator}
