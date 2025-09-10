@@ -3,7 +3,8 @@ import pytest
 from fastapi import status
 from sqlalchemy.future import select
 from models import Lesson, Content, UserLessonLink, RoleEnum
-from tests.test_utils import create_test_lesson, create_test_content, create_test_category, create_test_teacher
+from tests.test_utils import create_test_lesson, create_test_content, create_test_category, create_test_teacher, \
+    create_test_user, create_test_progress
 
 # Logging konfigurieren
 import traceback
@@ -309,5 +310,73 @@ class TestLessonRouter:
             assert {p["progress"] for p in data} == {25, 75}
         except Exception as e:
             logger.warning(f"Exception occurred: {e}")
+            logger.warning(f"Stacktrace: {traceback.format_exc()}")
+            raise
+
+
+    @pytest.mark.asyncio
+    async def test_get_lessons_by_category_with_user_progress(self, test_client, test_db, auth_client):
+        """Test Abfragen von Lektionen nach Kategorie mit eingeloggtem User und Fortschrittsdaten"""
+        try:
+            # User erstellen und login
+            user = await create_test_user(test_db, "progress_user", ["STUDENT"])
+            token = await auth_client.login("progress_user", ["STUDENT"])
+            headers = auth_client.get_headers("progress_user")
+
+            # Kategorie und Lektionen erstellen
+            category = await create_test_category(test_db, "Test Category with Progress")
+            lesson1 = await create_test_lesson(test_db, "Lesson with Progress 50", category_id=category.id)
+            lesson2 = await create_test_lesson(test_db, "Lesson with Progress 100", category_id=category.id)
+
+            # Fortschritt für eine Lektion setzen
+            await create_test_progress(test_db, user.id, lesson1.id, 50)
+            await create_test_progress(test_db, user.id, lesson2.id, 100)
+
+            # Lektionen nach Kategorie abfragen
+            response = test_client.get(f"/lesson/by_category/{category.id}", headers=headers)
+            logger.warning(f"Get lesson/by_category/{category.id} Response: {response.text}")
+            assert response.status_code == status.HTTP_200_OK
+
+            data = response.json()
+            assert len(data) == 2
+
+            # Fortschrittsdaten überprüfen
+            lesson1_data = next((lesson for lesson in data if lesson["id"] == lesson1.id), None)
+            lesson2_data = next((lesson for lesson in data if lesson["id"] == lesson2.id), None)
+
+            assert lesson1_data is not None
+            assert lesson2_data is not None
+            assert lesson1_data["progress"] == 50
+            assert lesson2_data["progress"] == 100
+
+            # Weitere Validierungen
+            assert {lesson["name"] for lesson in data} == {"Lesson with Progress 50", "Lesson with Progress 100"}
+
+        except Exception as e:
+            logger.warning(f"Exception occurred in progress test: {e}")
+            logger.warning(f"Stacktrace: {traceback.format_exc()}")
+            raise
+
+
+    @pytest.mark.asyncio
+    async def test_get_lessons_by_category_empty_with_user(self, test_client, test_db, auth_client):
+        """Test Abfragen von leeren Lektionen nach Kategorie mit eingeloggtem User"""
+        try:
+            # User login
+            token = await auth_client.login("student", ["STUDENT"])
+            headers = auth_client.get_headers("student")
+
+            # Leere Kategorie erstellen
+            category = await create_test_category(test_db, "Empty Category with User")
+
+            # Lektionen nach Kategorie abfragen (sollte [] zurückgeben)
+            response = test_client.get(f"/lesson/by_category/{category.id}", headers=headers)
+            logger.warning(f"Get lesson/by_category/{category.id} Response: {response.text}")
+            assert response.status_code == status.HTTP_200_OK
+            data = response.json()
+            assert data == []
+
+        except Exception as e:
+            logger.warning(f"Exception occurred in empty category test: {e}")
             logger.warning(f"Stacktrace: {traceback.format_exc()}")
             raise

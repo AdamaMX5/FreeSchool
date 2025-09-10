@@ -1,9 +1,16 @@
 # tests/test_utils.py
 from datetime import datetime
-from models import Category, CategoryCategory, User, Role, UserRoleLink, Lesson, Content, Teacher
+from models import Category, CategoryCategory, User, Role, UserRoleLink, Lesson, UserLessonLink, Content, Teacher
 from sqlmodel import select
 from security.auth import get_password_hash
 from util.time_util import timestamp
+
+# Logging konfigurieren
+import traceback
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 async def create_test_category(db, name="Test Category", background_link="test.jpg", parents=None, children=None):
@@ -98,6 +105,24 @@ async def create_test_lesson(db, name="Test Lesson", description="Test Descripti
     await db.refresh(lesson)
 
     return lesson
+
+
+async def create_test_progress(db, user_id, lesson_id, progress=50):
+    """
+    Erstellt einen Test-Fortschrittseintrag für einen User und eine Lektion
+    """
+    logger.warning(f"create_test_progress Userid:{user_id} LessonID:{lesson_id} Progress:{progress}")
+    progress_entry = UserLessonLink(
+        user_id=user_id,
+        lesson_id=lesson_id,
+        progress=progress
+    )
+
+    db.add(progress_entry)
+    await db.commit()
+    await db.refresh(progress_entry)
+
+    return progress_entry
 
 
 async def create_test_content(db, lesson_id=None, teacher_id=None,

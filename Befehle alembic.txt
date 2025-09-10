@@ -3,3 +3,8 @@ alembic revision --autogenerate -m "change comment"
 
 # SQL DB auf den neusten Stand migrieren 
 alembic upgrade head
+
+
+
+# Server Docker 
+docker exec -it freeschool_backend alembic upgrade head

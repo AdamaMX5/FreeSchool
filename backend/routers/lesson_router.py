@@ -113,7 +113,8 @@ async def get_lessons_by_category(
         .options(selectinload(Lesson.contents))
         .order_by(Lesson.display_order)
     )
-    lessons = await db.scalars(stmt)
+    result = await db.scalars(stmt)
+    lessons = result.all()
 
     # Keine 404 mehr bei leeren Listen, sondern 200 mit []
     if not lessons:
@@ -125,9 +126,10 @@ async def get_lessons_by_category(
         progress_result = await db.scalars(
             select(UserLessonLink)
             .where(UserLessonLink.user_id == current_user.id)
-            .where(UserLessonLink.lesson_id.in_([l.id for l in lessons.all]))
+            .where(UserLessonLink.lesson_id.in_([l.id for l in lessons]))
         )
-        progress_dict = {p.lesson_id: p.progress for p in progress_result.all()}
+        progresses = progress_result.all()
+        progress_dict = {p.lesson_id: p.progress for p in progresses}
 
     return [
         LessonDto(

@@ -1,0 +1,20 @@
+docker logs freeschool_backend 			# ausgabe anzeigen
+docker logs -f freeschool_backend        	# Folgt den Logs in Echtzeit (wie tail -f)
+
+
+
+# SQL Alembic Migration
+docker exec -it freeschool_backend alembic upgrade head
+
+# Datenbank prüfen
+docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\dt"	   # Tabellen
+docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\d users    # Spalten
+
+
+# Datenbank löschen
+docker exec -it freeschool_db psql -U freeschool -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'freeschool';"
+docker exec -it freeschool_db psql -U freeschool -c "DROP DATABASE IF EXISTS freeschool;"
+# Neue Datenbank erstellen (falls gewünscht)
+docker exec -it freeschool_db psql -U freeschool -c "CREATE DATABASE freeschool;"
+# Datenbank Model aufbauen 
+docker exec -it freeschool_backend python create_tables.py
