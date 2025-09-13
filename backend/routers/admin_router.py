@@ -366,11 +366,17 @@ async def import_database(
         await db.commit()
         logger.info(f"Import completed successfully, executed {executed_count} statements")
 
+        # Sequences nach dem Import automatisch zurücksetzen
+        logger.info("Resetting sequences after import...")
+        sequence_results = await reset_sequences(db)
+        logger.info(f"Sequences reset: {len(sequence_results)} sequences updated")
+
         return {
             "message": "Import erfolgreich",
             "statements_executed": executed_count,
             "statements_skipped": len(statements) - len(filtered_statements),
-            "database_type": db_type
+            "database_type": db_type,
+            "sequences_reset": sequence_results  # NEU: Informationen über zurückgesetzte Sequences
         }
 
     except Exception as e:
@@ -515,3 +521,87 @@ async def backup_database_json(
     except Exception as e:
         logger.error(f"Backup error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Backup fehlgeschlagen: {str(e)}")
+
+
+@router.get("/reset-sequences", dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
+async def get_reset_sequences(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_user)
+):
+    """GET Endpoint zum Zurücksetzen der Sequences"""
+    try:
+        results = await reset_sequences(db)
+        return {
+            "message": "Sequences erfolgreich zurückgesetzt",
+            "results": results
+        }
+    except Exception as e:
+        logger.error(f"Sequence reset error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Sequence Reset fehlgeschlagen: {str(e)}")
+
+
+async def reset_sequences(db: AsyncSession):
+    """Setzt alle Sequence Counter basierend auf den maximalen IDs zurück"""
+    db_type = get_database_type(db)
+    reset_results = {}
+
+    try:
+        if db_type == 'postgresql':
+            # PostgreSQL-spezifische Implementation
+            result = await db.execute(text("""
+                        SELECT table_name, column_name 
+                        FROM information_schema.columns 
+                        WHERE table_schema = 'public' 
+                        AND column_name = 'id' 
+                        AND data_type LIKE '%int%'
+                    """))
+
+            tables = result.all()
+
+            for table in tables:
+                table_name = table.table_name
+                sequence_name = f"{table_name}_id_seq"
+
+                # Prüfe ob die Sequence existiert
+                sequence_exists = await db.execute(
+                    text("""
+                                SELECT EXISTS(
+                                    SELECT 1 FROM information_schema.sequences 
+                                    WHERE sequence_name = :sequence_name
+                                )
+                            """),
+                    {"sequence_name": sequence_name}
+                )
+
+                if sequence_exists.scalar():
+                    # Hole maximale ID
+                    max_id_result = await db.execute(
+                        text(f"SELECT COALESCE(MAX(id), 0) FROM {table_name}")
+                    )
+                    max_id = max_id_result.scalar()
+
+                    # Setze Sequence
+                    await db.execute(
+                        text(f"SELECT setval(:sequence_name, :max_id, false)"),
+                        {"sequence_name": sequence_name, "max_id": max_id + 1}
+                    )
+
+                    reset_results[table_name] = {
+                        "sequence": sequence_name,
+                        "max_id": max_id,
+                        "new_value": max_id + 1
+                    }
+
+        elif db_type == 'sqlite':
+            logger.warning("SQLite: wird beim Testen Ignoriert")
+        else:
+            # MySQL/MariaDB - ähnlich wie PostgreSQL
+            logger.warning("Mysql: bisher kein Anwendungsfall")
+
+        await db.commit()
+        return reset_results
+
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Sequence reset error for {db_type}: {str(e)}")
+        raise e

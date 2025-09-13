@@ -121,6 +121,7 @@ async def create_test_progress(db, user_id, lesson_id, progress=50):
     db.add(progress_entry)
     await db.commit()
     await db.refresh(progress_entry)
+    logger.warning(f"create_test_progress Userid:{user_id} LessonID:{lesson_id} Progress:{progress}")
 
     return progress_entry
 

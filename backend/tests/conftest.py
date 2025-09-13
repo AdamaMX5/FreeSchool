@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel, select
 from main import app
 from database import get_async_db
+from models.base import Base
 from tests.auth_utils import AuthClient
 from models import Role, RoleEnum
 
@@ -22,6 +23,8 @@ logger = logging.getLogger(__name__)
 
 # Test-Datenbank URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# TEST_DATABASE_URL = "postgresql+asyncpg://testuser:testpass@localhost:5432/test_freeschool"
+TESTING = True
 
 
 @app.exception_handler(RequestValidationError)
@@ -71,6 +74,26 @@ async def override_get_async_db():
             await session.close()
 
 
+# # postgresql version
+# @pytest.fixture(scope="session")
+# def test_db_engine():
+#     engine = create_async_engine(TEST_DATABASE_URL, echo=True)
+#     yield engine
+#     engine.sync_engine.dispose()
+#
+#
+# # postgresql version
+# @pytest.fixture(scope="function")
+# async def test_db(test_db_engine):
+#     async with test_db_engine.connect() as conn:
+#         await conn.run_sync(Base.metadata.drop_all)
+#         await conn.run_sync(Base.metadata.create_all)
+#         async with AsyncSession(conn) as session:
+#             yield session
+#         await conn.run_sync(Base.metadata.drop_all)
+
+
+# sqlite in-memory version
 @pytest.fixture(scope="function")
 async def test_db():
     # Create all tables

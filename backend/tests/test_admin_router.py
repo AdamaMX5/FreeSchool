@@ -1,13 +1,14 @@
 # tests/test_admin_router.py
 import pytest
 from fastapi import status
+from sqlalchemy import text, insert
 from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from models import User, Role, UserRoleLink, RoleEnum, Category, Lesson, Teacher, Content
 from tests.test_utils import create_test_user
-from tests.auth_utils import AuthClient
+from conftest import test_db
 from database import get_database_type
-import io
+
 
 # Logging konfigurieren
 import traceback
