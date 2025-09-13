@@ -13,7 +13,7 @@
 
 
   let name = $state(category?.name || "");
-  let backgroundLink = $state(category?.backgroundLink || "");
+  let background_link = $state(category?.backgroundLink || "");
   let parentsStr = $state(JSON.stringify(category?.parents || []));
   let childrenStr = $state(JSON.stringify(category?.children || []));
   let error = $state("");
@@ -45,7 +45,7 @@
     const payload = {
       ...category,
       name,
-      backgroundLink,
+      background_link,
       parents,
       children
     };
@@ -104,7 +104,7 @@
 
     <label>Hintergrundbild:</label>
     <div>
-      <input type="text" bind:value={backgroundLink} />
+      <input type="text" bind:value={background_link} />
       <small class="help-text">Pfad z.B.: <code>/ressources/background/</code></small>
     </div>
 

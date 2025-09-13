@@ -15,6 +15,12 @@ git clone https://github.com/AdamaMX5/FreeSchool.git
 cd FreeSchool # && git pull
 ./build.sh
 
+# Frontend Envirement Variable
+cd FreeSchool/frontend	# in den Frontend Ordner gehen
+nano .env		# erstellt oder öffnet die .env Datei
+VITE_API_BASE_URL=http://domain:8000	# URL, wo das Backend läuft
+Strg+X j Enter		# zum Beenden mit Speichern
+
 docker logs freeschool_backend 							# ausgabe anzeigen
 docker logs -f freeschool_backend        					# Folgt den Logs in Echtzeit (wie tail -f)
 docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\dt"		# Datenbank Tabellenausgabe

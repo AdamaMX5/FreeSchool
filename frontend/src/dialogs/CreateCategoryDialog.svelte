@@ -12,7 +12,7 @@
   } = $props();
 
   let name = $state("");
-  let backgroundLink = $state("");
+  let background_link = $state("");
   let parentsStr = $state(parent ? JSON.stringify([parent.id]) : "[]");
   let childrenStr = $state("[]");
   let error = $state("");
@@ -43,7 +43,7 @@
 
     const payload = {
       name,
-      backgroundLink,
+      background_link,
       parents,
       children
     };
@@ -78,7 +78,7 @@
 
     <label>Hintergrundbild:</label>
     <div>
-      <input type="text" bind:value={backgroundLink} />
+      <input type="text" bind:value={background_link} />
       <small class="help-text">Pfad z.B.: <code>/ressources/background/</code></small>
     </div>
 
@@ -124,7 +124,6 @@
     display: block;
     margin-top: 0.25rem;
     font-size: 0.8rem;
-    color: #777;
   }
 
   .actions {

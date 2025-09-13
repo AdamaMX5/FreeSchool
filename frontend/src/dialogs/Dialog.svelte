@@ -40,7 +40,7 @@
   .dialog {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.0);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -48,7 +48,7 @@
   }
 
   .dialog-content {
-    background: #2c2c2c;
+    background: #aaa;
     padding: 2rem;
     border-radius: 10px;
     min-width: 320px;
