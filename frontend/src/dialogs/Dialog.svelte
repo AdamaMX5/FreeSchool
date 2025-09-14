@@ -48,7 +48,7 @@
   }
 
   .dialog-content {
-    background: #aaa;
+    background: #5a5a5a;
     padding: 2rem;
     border-radius: 10px;
     min-width: 320px;

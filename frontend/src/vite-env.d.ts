@@ -1,9 +1,11 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string;
+  // weitere Variablen hier
+}
+
 interface ImportMeta {
-  readonly env: {
-    VITE_API_BASE_URL?: string;
-    // Weitere Umgebungsvariablen hier definieren
-  };
+  readonly env: ImportMetaEnv;
 }

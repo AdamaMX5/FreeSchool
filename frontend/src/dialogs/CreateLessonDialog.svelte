@@ -1,6 +1,11 @@
 <script lang="ts">
   import Dialog from './Dialog.svelte';
   import { user } from '../lib/global';
+  import { onMount } from 'svelte';
+  import { getTeachersAll } from "../lib/teacherApi";
+  import { postContent } from "../lib/contentApi";
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   let {
     category,
@@ -15,6 +20,23 @@
   let description = "";
   let order = null;
   let error = "";
+
+  // Content-Felder
+  let language = $state("de");
+  let contentText = $state("");
+  let youtubeId = $state("");
+  let internalVideo = $state("");
+  let teacherId = $state(null);
+  let teachers = $state([]);
+
+  onMount(async () => {
+    try {
+      // Lehrer über die exportierte Funktion laden
+      teachers = await getTeachersAll();
+    } catch (e) {
+      console.error("Fehler beim Laden der Lehrer:", e);
+    }
+  });
 
   function close() {
     oncancel();
@@ -37,7 +59,7 @@
         contents: []
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/lesson`, {
+      const lessonRes = await fetch(`${API_BASE_URL}/lesson`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -46,9 +68,13 @@
         body: JSON.stringify(payload)
       });
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Fehler beim Erstellen");
+      const lessonResult = await lessonRes.json();
+      if (!lessonRes.ok) throw new Error(lessonResult.error || "Fehler beim Erstellen der Lesson");
 
+      // Wenn Content-Felder ausgefüllt sind, Content mit der exportierten Funktion erstellen
+      if (youtubeId && youtubeId.trim() !== ""){
+        await postContent(language, contentText.trim(), youtubeId, internalVideo.trim(), lessonResult.id, teacherId);
+      }
       onsuccess();
     } catch (e) {
       onerror();
@@ -60,7 +86,7 @@
   <h2>Neue Lesson erstellen</h2>
 
   <div class="form-grid">
-    <label>Titel:</label>
+    <label>Titel*:</label>
     <input type="text" bind:value={title} />
 
     <label>Beschreibung:</label>
@@ -68,6 +94,30 @@
 
     <label>Reihenfolge:</label>
     <input type="text" bind:value={order} />
+  </div>
+    <h3>Content Details</h3>
+  <div class="form-grid">
+      
+      
+    <label>Sprache:</label>
+    <input type="text" bind:value={language} placeholder="z.B. de, en" />
+
+    <label>Text (Markdown):</label>
+    <textarea bind:value={contentText} rows="4" placeholder="Optional: Markdown-Inhalt" />
+
+    <label>YouTube Video ID/Link*:</label>
+    <input type="text" bind:value={youtubeId} placeholder="YouTube ID oder gesamten Link" />
+
+    <label>Interne Video-URL:</label>
+    <input type="text" bind:value={internalVideo} placeholder="wird später vom Server automatisch gesetzt (nach dem Download des YT-Videos)" />
+
+    <label>Lehrer:</label>
+    <select bind:value={teacherId}>
+      <option value={null}>-- Optional: Lehrer auswählen --</option>
+      {#each teachers as teacher}
+        <option value={teacher.id}>{teacher.name}</option>
+      {/each}
+    </select>
   </div>
 
   {#if error}
@@ -96,11 +146,11 @@
     white-space: nowrap;
   }
 
-  input {
+  input, textarea, select {
     width: 100%;
     padding: 0.5rem;
   }
-
+  
   .help-text {
     display: block;
     margin-top: 0.25rem;

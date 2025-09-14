@@ -20,19 +20,69 @@
   let teachers = $state([]);
   let error = $state("");
 
-  onMount(async () => {
+  export async function loadTeachers() {
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/teacher/all/`,
-      );
+      const res = await fetch(`${API_BASE_URL}/teacher/all/`);
       const data = await res.json();
       if (res.ok) {
         teachers = data;
+        return data;
       } else {
         console.warn("Fehler beim Laden der Lehrerliste:", data.error);
+        throw new Error(data.error || "Fehler beim Laden der Lehrer");
       }
     } catch (e) {
       console.error("Netzwerkfehler beim Laden der Lehrer:", e);
+      throw e;
+    }
+  }
+
+  // Funktion zum Erstellen eines Contents (exportiert)
+  export async function createContent(
+    language: string,
+    text: string,
+    youtube_id: string,
+    internal_video: string,
+    lesson_id: number,
+    teacher_id: number | null
+  ) {
+    try {
+      const payload = {
+        language,
+        text,
+        youtube_id,
+        internal_video,
+        lesson_id: lesson_id,
+        teacher_id: teacher_id
+      };
+      
+      const res = await fetch(`${API_BASE_URL}/content`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${$user.jwt}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.detail || "Fehler beim Erstellen des Contents");
+      }
+
+      return result;
+    } catch (e) {
+      console.error("API Fehler:", e);
+      throw e;
+    }
+  }
+
+  onMount(async () => {
+    // Automatisch Lehrer laden, wenn die Komponente als Dialog verwendet wird
+    try {
+      await loadTeachers();
+    } catch (e) {
+      console.error("Fehler beim automatischen Laden der Lehrer:", e);
     }
   });
 
@@ -43,34 +93,11 @@
   async function submit() {
     error = "";
 
-    const payload = {
-      language,
-      text,
-      youtube_id,
-      internal_video,
-      lesson_id: lesson?.id || null,
-      teacher_id: teacherId ? Number(teacherId) : null,
-    };
-
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/content`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${$user.jwt}`, // JWT-Token hinzufügen
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await res.json();
-      if (!res.ok){
-        error = result.detail;
-        throw new Error(result.detail || "Fehler beim Erstellen");
-      }
-
+      const result = await createContent(language, text, youtube_id, internal_video, lesson?.id || null, teacherId);
       onsuccess(result);
     } catch (e) {
-      console.error("API Fehler:", e);
+      error = e.message;
       onerror(e.message);
     }
   }

@@ -158,7 +158,7 @@
   .learning-hub {
     width: 250px;
     margin: 5px;
-    background: white;
+    background: rgb(209, 209, 209);
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -174,7 +174,8 @@
     margin: 0;
     padding: 0.5rem;
     font-size: 1rem;
-    background: rgba(255,255,255,0.7);
+
+    background: rgba(0, 0, 0, 0.7);
     position: relative;
     z-index: 1;
   }

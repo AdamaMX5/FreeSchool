@@ -12,13 +12,20 @@
   } = $props();
 
   let name = $state("");
-  let background_link = $state("");
+  let background_link = $state("/ressources/background/");
   let parentsStr = $state(parent ? JSON.stringify([parent.id]) : "[]");
   let childrenStr = $state("[]");
   let error = $state("");
 
   function close() {
     oncancel();
+  }
+
+  function addBackgroundLinkForPayload(link){
+    if (link && link.includes('.')) {
+      return link;
+    }
+    return "";
   }
 
   async function submit() {
@@ -43,7 +50,7 @@
 
     const payload = {
       name,
-      background_link,
+      background_link: addBackgroundLinkForPayload(background_link),
       parents,
       children
     };

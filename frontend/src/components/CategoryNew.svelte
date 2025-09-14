@@ -63,6 +63,7 @@
     position: fixed;
     bottom: 20px;
     left: 20px;
+    padding: 0.6em 0.6em;
     display: flex;
     align-items: center;
     justify-content: center;

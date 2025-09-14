@@ -13,13 +13,20 @@
 
 
   let name = $state(category?.name || "");
-  let background_link = $state(category?.backgroundLink || "");
+  let background_link = $state(category?.backgroundLink || "/ressources/background/");
   let parentsStr = $state(JSON.stringify(category?.parents || []));
   let childrenStr = $state(JSON.stringify(category?.children || []));
   let error = $state("");
 
   function close() {
     oncancel()
+  }
+
+  function addBackgroundLinkForPayload(link){
+    if (link && link.includes('.')) {
+      return link;
+    }
+    return "";
   }
 
   async function submit() {
@@ -45,7 +52,7 @@
     const payload = {
       ...category,
       name,
-      background_link,
+      background_link: addBackgroundLinkForPayload(background_link),
       parents,
       children
     };
@@ -76,7 +83,11 @@
 
     try {
       const res = await fetch(`${API_BASE_URL}/category/${category.id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${$user.jwt}`  // JWT-Token hinzufügen
+        },
       });
 
       if (!res.ok) {
@@ -151,7 +162,7 @@
     display: block;
     margin-top: 0.25rem;
     font-size: 0.8rem;
-    color: #777;
+    color: #ffffff;
   }
 
   .actions {

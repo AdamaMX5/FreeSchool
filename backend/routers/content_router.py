@@ -39,7 +39,7 @@ class ContentWithTeacherDto(BaseModel):
     youtube_id: str
     internal_video: str
     lesson_id: Optional[int] = None
-    teacher: TeacherDto = None
+    teacher: Optional[TeacherDto] = None
 
     class Config:
         from_attributes = True
@@ -55,7 +55,7 @@ def extractYoutubeId(link: str) -> str:
     elif len(link) == 11:
         return link
     else:
-        raise ValueError("Invalid YouTube link")
+        raise HTTPException(status_code=400, detail="Invalid YouTube link")
 
 
 @router.get("/{content_id}", response_model=ContentDto)
@@ -76,27 +76,37 @@ async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_
     try:
         logger.info(f"Fetching contents for lesson_id: {lesson_id}")
         # Explizites Laden der Beziehungen mit joinedload
-        contents = await db.scalars(
+        contents = (await db.scalars(
             select(Content)
-            .options(selectinload(Content.teacher))
+            .options(joinedload(Content.teacher))
             .where(Content.lesson_id == lesson_id)
             .where(Content.deleted_at == None)
-        )
+        )).unique().all()
+
+        logger.info(f"Found {len(contents)} content rows")
 
         # Manuelle Konvertierung in DTOs
         content_dtos = []
-        for content in contents.all():
-            teacher_dto = TeacherDto.from_orm(content.teacher) if content.teacher else None
-            content_dto = ContentWithTeacherDto(
-                id=content.id,
-                language=content.language,
-                text=content.text,
-                youtube_id=content.youtube_id,
-                internal_video=content.internal_video,
-                lesson_id=content.lesson_id,
-                teacher=teacher_dto
-            )
-            content_dtos.append(content_dto)
+        for content in contents:
+            logger.info(f"DTO: content_id={content.id}, teacher={content.teacher_id}")
+
+            try:
+                teacher_dto = TeacherDto.from_orm(content.teacher) if content.teacher else None
+                logger.info(f"Teacher DTO created: {teacher_dto is not None}")
+
+                content_dto = ContentWithTeacherDto(
+                    id=content.id,
+                    language=content.language,
+                    text=content.text,
+                    youtube_id=content.youtube_id,
+                    internal_video=content.internal_video,
+                    lesson_id=content.lesson_id,
+                    teacher=teacher_dto
+                )
+                content_dtos.append(content_dto)
+            except Exception as inner_e:
+                logger.error(f"Error processing content {content.id}: {str(inner_e)}")
+                raise inner_e
 
         return content_dtos
     except Exception as e:
@@ -107,8 +117,6 @@ async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_
 async def new_content(content_data: ContentDto, db: AsyncSession = Depends(get_async_db)):
     if content_data.lesson_id is None:
         raise HTTPException(status_code=400, detail="Lesson ID is required")
-    if content_data.teacher_id is None:
-        raise HTTPException(status_code=400, detail="Teacher ID is required")
 
     try:
         content = Content(**content_data.model_dump(exclude_unset=True))
