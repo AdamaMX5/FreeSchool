@@ -90,7 +90,7 @@ async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_d
         return {"error": str(e)}
 
 
-@router.get("/all/")
+@router.get("/all")
 async def get_teachers(db: AsyncSession = Depends(get_async_db)):
     try:
         teachers = await db.scalars(select(Teacher).where(Teacher.deleted_at == None))
@@ -99,7 +99,7 @@ async def get_teachers(db: AsyncSession = Depends(get_async_db)):
         return {"error": str(e)}
 
 
-@router.get("/{teacher_id}/contents/")
+@router.get("/{teacher_id}/contents")
 async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
     try:
         t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id).options(selectinload(Teacher.contents)))

@@ -6,7 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export async function getTeachersAll() {
   try {
     const jwt = get(user)?.jwt;
-    const res = await fetch(`${API_BASE_URL}/teacher/all/`, {
+    const res = await fetch(`${API_BASE_URL}/teacher/all`, {
       headers: {
         "Authorization": `Bearer ${jwt}`
       }

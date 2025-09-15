@@ -44,7 +44,7 @@
       }
       
       const response = await fetch(
-        `${API_BASE_URL}/lesson/by_category/${currentCategory.id}/`,
+        `${API_BASE_URL}/lesson/by_category/${currentCategory.id}`,
         {
             headers: headers
         }

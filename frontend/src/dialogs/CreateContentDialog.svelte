@@ -22,7 +22,7 @@
 
   export async function loadTeachers() {
     try {
-      const res = await fetch(`${API_BASE_URL}/teacher/all/`);
+      const res = await fetch(`${API_BASE_URL}/teacher/all`);
       const data = await res.json();
       if (res.ok) {
         teachers = data;

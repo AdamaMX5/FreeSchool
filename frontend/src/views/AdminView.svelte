@@ -26,7 +26,7 @@
         headers['Authorization'] = `Bearer ${$user.jwt}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/users/`, { headers });
+      const response = await fetch(`${API_BASE_URL}/admin/users`, { headers });
       if (!response.ok) throw new Error("Fehler beim Laden der Benutzer");
       users = await response.json();
       error = null;

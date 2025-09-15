@@ -38,7 +38,7 @@
     try {
       isLoading = true;
       error = null;
-      const response = await fetch(`${API_BASE_URL}/category/asLearningHubs/`);
+      const response = await fetch(`${API_BASE_URL}/category/asLearningHubs`);
       if (!response.ok) throw new Error(`HTTP-Fehler: ${response.status}`);
       categories = await response.json();
       currentCategory = null;
@@ -56,7 +56,7 @@
     try {
       isLoading = true;
       error = null;
-      const response = await fetch(`${API_BASE_URL}/category/${categoryId}/children/`);
+      const response = await fetch(`${API_BASE_URL}/category/${categoryId}/children`);
       if (!response.ok) throw new Error(`HTTP-Fehler: ${response.status}`);
       childCategories = await response.json();
     } catch (err) {

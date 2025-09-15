@@ -181,7 +181,7 @@ async def delete_content(content_id: int, db: AsyncSession = Depends(get_async_d
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/all/", response_model=List[ContentDto])
+@router.get("/all", response_model=List[ContentDto])
 async def get_content(db: AsyncSession = Depends(get_async_db)):
     try:
         contents = await db.scalars(
