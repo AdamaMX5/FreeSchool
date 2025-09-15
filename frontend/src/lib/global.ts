@@ -44,6 +44,8 @@ export function unsetUser(){
 
 // Du kannst auch Hilfsfunktionen exportieren:
 export function toggleMoveMode() {
+  console.log(`Toggle Move Mode: ${get(isMoveMode)}`);
+  
   isMoveMode.update((active) => {
     if (!active) {
       resetModes();

@@ -77,7 +77,7 @@
       }
       onsuccess();
     } catch (e) {
-      onerror();
+      onerror(e);
     }
   }
 </script>

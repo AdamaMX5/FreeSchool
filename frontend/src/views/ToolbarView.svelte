@@ -3,6 +3,8 @@
   import { Edit, Move, PlusCircle, GraduationCap, Shield } from 'lucide-svelte';
   import CreateLessonDialog from '../dialogs/CreateLessonDialog.svelte'; // <-- Dialog importieren
   import { user } from '../lib/global';
+  import { get } from 'svelte/store'; 
+
 
   let isAdmin = $state(false);
   let isModerator = $state(false);
@@ -35,6 +37,8 @@
   function lessonCreated(event) {
     closeCreateLessonDialog();
     onlessonCreated();
+    if(!$isMoveMode)
+      toggleMoveMode();
   }
 </script>
 
@@ -73,8 +77,8 @@
     x={imageSize?.width ? imageSize.width / 2 : 10}
     y={imageSize?.height ? imageSize.height / 2 : 10}
     onsuccess={(e) => {
+      console.log(`Create Lesson Success. ${e}`); // Korrigierte Log-Ausgabe
       lessonCreated(e);
-      showCreateLessonDialog = false;
     }}
     oncancel={() =>{
       showCreateLessonDialog = false;
