@@ -79,6 +79,25 @@ echo "Cleaning up previous builds..."
 docker-compose rm -f frontend backend
 #docker volume prune -f
 
+# ===== SSL CERTIFICATE SETUP ===== (FRÜHER!)
+echo "=== Setting up SSL Certificate ==="
+
+# Certbot installieren falls nicht vorhanden
+if ! command -v certbot &> /dev/null; then
+    echo "Installing Certbot..."
+    sudo apt update
+    sudo apt install -y certbot python3-certbot-nginx
+fi
+
+# Zertifikat erstellen oder erneuern
+if [ -d "/etc/letsencrypt/live/freischule.flussmark.de" ]; then
+    echo "Renewing SSL certificate..."
+    sudo certbot renew --quiet
+else
+    echo "Creating SSL certificate..."
+    sudo certbot certonly --standalone -d freischule.flussmark.de -d api.freischule.flussmark.de --non-interactive --agree-tos -m freischule@flussmark.de
+fi
+
 # ===== BUILD AND START =====
 echo "Building and starting containers..."
 docker-compose up -d --build
@@ -159,26 +178,6 @@ else
     echo "ERROR: Nginx configuration test failed"
     exit 1
 fi
-
-# ===== SSL CERTIFICATE SETUP =====
-echo "=== Setting up SSL Certificate ==="
-
-# Certbot installieren falls nicht vorhanden
-if ! command -v certbot &> /dev/null; then
-    echo "Installing Certbot..."
-    sudo apt update
-    sudo apt install -y certbot python3-certbot-nginx
-fi
-
-# Zertifikat erstellen oder erneuern
-if [ -d "/etc/letsencrypt/live/freischule.flussmark.de" ]; then
-    echo "Renewing SSL certificate..."
-    sudo certbot renew --quiet
-else
-    echo "Creating SSL certificate..."
-    sudo certbot certonly --standalone -d freischule.flussmark.de -d api.freischule.flussmark.de --non-interactive --agree-tos -m freischule@flussmark.de
-fi
-
 
 # ===== FINAL CHECKS =====
 echo "Checking container status..."

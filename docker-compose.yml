@@ -26,7 +26,7 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
     ports:
-      - "127.0.0.1:8000:8000"  # Wichtig: Port-Mapping hinzufügen
+      - "8000:8000"  # Wichtig: Port-Mapping hinzufügen
     depends_on:
       db:
         condition: service_healthy
@@ -42,7 +42,7 @@ services:
     environment:
       - VITE_API_BASE_URL=https://api.${DOMAIN}
     ports:
-      - "127.0.0.1:80:80"
+      - "80:80"
     depends_on:
       - backend
     networks:
