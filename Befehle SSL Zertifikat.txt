@@ -1,0 +1,11 @@
+# certbot installieren
+sudo apt update
+sudo apt install certbot python3-certbot-nginx
+
+# Zertifikat erzeugen # Port 80 muss frei sein.
+sudo certbot certonly --standalone -d freischule.flussmark.de -d api.freischule.flussmark.de --non-interactive --agree-tos -m freischule@flussmark.de
+
+# Cronjob zur Erneuerung # gültig 3 Monate
+sudo crontab -e
+# Füge hinzu:
+0 3 * * * certbot renew --quiet && systemctl reload nginx
