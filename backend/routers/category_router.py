@@ -257,7 +257,7 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_async
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/all/")
+@router.get("/all")
 async def get_categories(db: AsyncSession = Depends(get_async_db)):
     stmt = (
         select(Category)
@@ -282,7 +282,7 @@ async def get_categories(db: AsyncSession = Depends(get_async_db)):
     return dtoList
 
 
-@router.get("/asLearningHubs/")
+@router.get("/asLearningHubs")
 async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_db)):
     subq = select(CategoryCategory.child_id)
     stmt = (

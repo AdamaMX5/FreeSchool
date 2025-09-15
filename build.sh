@@ -147,6 +147,9 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+		
+		proxy_redirect http://localhost:8000/ https://api.freischule.flussmark.de/;
+		proxy_redirect http://$host:8000/ https://$host/;
         
         proxy_connect_timeout 300;
         proxy_send_timeout 300;

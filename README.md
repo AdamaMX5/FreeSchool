@@ -86,6 +86,17 @@ pip install alembic
 alembic upgrade head
 ```
 
+
+### you want to run the backend tests with
+pytest tests
+# before you have to create the test DB:
+CREATE USER testuser WITH PASSWORD 'testpass';
+CREATE DATABASE test_freeschool OWNER testuser;
+GRANT ALL PRIVILEGES ON DATABASE test_freeschool TO testuser;
+GRANT CREATE ON SCHEMA public TO testuser;
+
+
+
 ---
 
 ### Wenn wir die Modelle erweitert haben und noch keine version dafür existiert
