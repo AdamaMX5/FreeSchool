@@ -135,6 +135,7 @@ class TestCategoryRouter:
         category = await create_test_category(test_db, "Old Name", "old.jpg")
 
         update_data = {
+            "id": category.id,
             "name": "Updated Name",
             "background_link": "updated.jpg",
             "parents": [],
@@ -142,7 +143,7 @@ class TestCategoryRouter:
         }
 
         response = test_client.put(
-            f"/category/{category.id}",
+            f"/category",
             json=update_data,
             headers=headers
         )

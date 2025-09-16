@@ -96,8 +96,12 @@ async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_
                 raise inner_e
 
         return content_dtos
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("", response_model=ContentDto, dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
@@ -113,11 +117,12 @@ async def new_content(content_data: ContentDto, db: AsyncSession = Depends(get_a
         await db.commit()
         await db.refresh(content)
         return content
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("", response_model=ContentDto, dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
@@ -143,11 +148,12 @@ async def update_content(
         await db.commit()
         await db.refresh(content)
         return content
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{content_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
@@ -161,11 +167,12 @@ async def delete_content(content_id: int, db: AsyncSession = Depends(get_async_d
         content.deleted_at = datetime.utcnow()
         await db.commit()
         return {"detail": "Content wurde als gelöscht markiert"}
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/all", response_model=List[ContentDto])
@@ -176,8 +183,12 @@ async def get_content(db: AsyncSession = Depends(get_async_db)):
             .where(Content.deleted_at == None)
         )
         return contents.all()
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{content_id}", response_model=ContentDto)
@@ -187,7 +198,9 @@ async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db))
         if not content:
             raise HTTPException(status_code=404, detail="Content not found")
         return content
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

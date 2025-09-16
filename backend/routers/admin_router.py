@@ -220,10 +220,12 @@ async def backup_database(
                 "Content-Disposition": f"attachment; filename=freeschool_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.sql"
             }
         )
-
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        logger.error(f"Backup error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Backup fehlgeschlagen: {str(e)}")
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class ImportRequest(BaseModel):
@@ -378,7 +380,9 @@ async def import_database(
             "database_type": db_type,
             "sequences_reset": sequence_results  # NEU: Informationen über zurückgesetzte Sequences
         }
-
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
         logger.error(f"Import failed: {str(e)}")
         logger.error(traceback.format_exc())
@@ -466,11 +470,12 @@ async def import_database_json(
             "skipped_count": skipped_count
         }
 
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        logger.error(f"Import error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Import fehlgeschlagen: {str(e)}")
-
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/backup/json", dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
 async def backup_database_json(
@@ -517,10 +522,12 @@ async def backup_database_json(
                 "Content-Disposition": f"attachment; filename=freeschool_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             }
         )
-
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        logger.error(f"Backup error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Backup fehlgeschlagen: {str(e)}")
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/reset-sequences", dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
@@ -535,10 +542,12 @@ async def get_reset_sequences(
             "message": "Sequences erfolgreich zurückgesetzt",
             "results": results
         }
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        logger.error(f"Sequence reset error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Sequence Reset fehlgeschlagen: {str(e)}")
-
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 async def reset_sequences(db: AsyncSession):
     """Setzt alle Sequence Counter basierend auf den maximalen IDs zurück"""

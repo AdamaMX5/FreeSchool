@@ -122,61 +122,61 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
     # Prüfen, ob ein User mit der gleichen Email bereits existiert:
     existing_user = await db.scalar(select(User).where(User.id == user_in.id))
 
-    if existing_user:
-        if not verify_password(user_in.repassword, existing_user.hashed_password):
-            await db.delete(existing_user)
-            await db.commit()
-            raise HTTPException(status_code=400, detail="Second Password is incorrect, please try registration again.")
-        else:
-            existing_user.jwt = create_jwt(data={"sub": existing_user.email})  # JWT-Token erstellen
-            existing_user.password_verify = True  # Letzter Login
-            existing_user.email_verify_token = create_email_verify_token()
-            existing_user.email_verify = False
-            existing_user.last_login = datetime.utcnow()
-            await db.commit()
-            await db.refresh(existing_user)
-
-            # Rollen initialisieren
-            await initialize_roles(db)
-
-            # Schüler-Rolle für jeden User zuweisen
-            student_role = await db.scalar(select(Role).where(Role.name == RoleEnum.STUDENT.value))
-            if student_role:
-                # Prüfen, ob die Rolle bereits zugewiesen ist
-                exists = await db.scalar(
-                    select(UserRoleLink).where(
-                        UserRoleLink.user_id == existing_user.id,
-                        UserRoleLink.role_id == student_role.id
-                    )
-                )
-                if not exists:
-                    db.add(UserRoleLink(user_id=existing_user.id, role_id=student_role.id))
-                    logger.info(f"Assigned SCHUELER role to user {existing_user.id}")
-
-            # Adminrole for first User
-            user_count = await db.scalar(select(func.count()).where(User.deleted_at == None))
-            logger.info(f"Total users: {user_count}")
-
-            if user_count == 1:
-                logger.info("First user detected - assigning ADMIN role")
-                admin_role = await db.scalar(select(Role).where(Role.name == RoleEnum.ADMIN.value))
-                if admin_role:
-                    logger.info(f"Found ADMIN role: ID {admin_role.id}")
-                    exists = await db.scalar(select(UserRoleLink).where(
-                        UserRoleLink.user_id == existing_user.id,
-                        UserRoleLink.role_id == admin_role.id
-                    ))
-                    if not exists:
-                        db.add(UserRoleLink(user_id=existing_user.id, role_id=admin_role.id))
-                        logger.info("First user gets ADMIN role, now")
-                else:
-                    logger.info("ADMIN role not found in database!")
-            await db.commit()
-            await db.refresh(existing_user)
-            await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
-
-    else:
+    if not existing_user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if not verify_password(user_in.repassword, existing_user.hashed_password):
+        await db.delete(existing_user)
+        await db.commit()
+        raise HTTPException(status_code=400, detail="Second Password is incorrect, please try registration again.")
+    else:
+        existing_user.jwt = create_jwt(data={"sub": existing_user.email})  # JWT-Token erstellen
+        existing_user.password_verify = True  # Letzter Login
+        existing_user.email_verify_token = create_email_verify_token()
+        existing_user.email_verify = False
+        existing_user.last_login = datetime.utcnow()
+        await db.commit()
+        await db.refresh(existing_user)
+
+        # Rollen initialisieren
+        await initialize_roles(db)
+
+        # Schüler-Rolle für jeden User zuweisen
+        student_role = await db.scalar(select(Role).where(Role.name == RoleEnum.STUDENT.value))
+        if student_role:
+            # Prüfen, ob die Rolle bereits zugewiesen ist
+            exists = await db.scalar(
+                select(UserRoleLink).where(
+                    UserRoleLink.user_id == existing_user.id,
+                    UserRoleLink.role_id == student_role.id
+                )
+            )
+            if not exists:
+                db.add(UserRoleLink(user_id=existing_user.id, role_id=student_role.id))
+                logger.info(f"Assigned SCHUELER role to user {existing_user.id}")
+
+        # Adminrole for first User
+        user_count = await db.scalar(select(func.count()).where(User.deleted_at == None))
+        logger.info(f"Total users: {user_count}")
+
+        if user_count == 1:
+            logger.info("First user detected - assigning ADMIN role")
+            admin_role = await db.scalar(select(Role).where(Role.name == RoleEnum.ADMIN.value))
+            if admin_role:
+                logger.info(f"Found ADMIN role: ID {admin_role.id}")
+                exists = await db.scalar(select(UserRoleLink).where(
+                    UserRoleLink.user_id == existing_user.id,
+                    UserRoleLink.role_id == admin_role.id
+                ))
+                if not exists:
+                    db.add(UserRoleLink(user_id=existing_user.id, role_id=admin_role.id))
+                    logger.info("First user gets ADMIN role, now")
+            else:
+                logger.info("ADMIN role not found in database!")
+        await db.commit()
+        await db.refresh(existing_user)
+        await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
+
     return UserLoginResponse(
         id=existing_user.id,
         email=existing_user.email,
@@ -211,27 +211,27 @@ async def verify_email(token: str, email: str, db: AsyncSession = Depends(get_as
     logger.warning(f"Email: {email}")
     # Prüfen, ob der Token gültig ist:
     existing_user = await db.scalar(select(User).where(User.email == email))
-    if existing_user:
-        logger.warning(f"User gefunden: ID={existing_user.id}, Email_verify={existing_user.email_verify}, Token={existing_user.email_verify_token}")
-
-        if existing_user.email_verify:
-            logger.warning("Email bereits verifiziert")
-            return {"Deine E-Mail-Adresse ist bereits verifiziert.<br>Du kannst dich jetzt einloggen."}
-        logger.warning(f"Vergleiche Token: DB='{existing_user.email_verify_token}' vs Request='{token}'")
-        if existing_user.email_verify_token == token:
-            logger.warning("Token stimmt überein - verifiziere Email")
-            existing_user.email_verify = True
-            existing_user.email_verify_token = None
-            await db.commit()
-            await db.refresh(existing_user)
-            logger.warning("Email erfolgreich verifiziert und committed")
-            return {"Vielen Dank, deine Email-Adresse wurde erfolgreich verifiziert.<br>Du kannst dich jetzt einloggen."}
-        else:
-            logger.warning("Token stimmt NICHT überein")
-            raise HTTPException(status_code=400, detail="Invalid token")
-    else:
-        logger.warning("User nicht gefunden")
+    if not existing_user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    logger.warning(f"User gefunden: ID={existing_user.id}, Email_verify={existing_user.email_verify}, Token={existing_user.email_verify_token}")
+
+    if existing_user.email_verify:
+        logger.warning("Email bereits verifiziert")
+        return {"Deine E-Mail-Adresse ist bereits verifiziert.<br>Du kannst dich jetzt einloggen."}
+
+    logger.warning(f"Vergleiche Token: DB='{existing_user.email_verify_token}' vs Request='{token}'")
+    if existing_user.email_verify_token != token:
+        logger.warning("Token stimmt NICHT überein")
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    logger.warning("Token stimmt überein - verifiziere Email")
+    existing_user.email_verify = True
+    existing_user.email_verify_token = None
+    await db.commit()
+    await db.refresh(existing_user)
+    logger.warning("Email erfolgreich verifiziert und committed")
+    return {"Vielen Dank, deine Email-Adresse wurde erfolgreich verifiziert.<br>Du kannst dich jetzt einloggen."}
 
 
 @router.post("/logout")

@@ -74,18 +74,18 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
             children=[child.id for child in c.children]
         )
     except HTTPException as e:
-        logger.info(f"HTTPException Raise: {e}")
+        logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
         # Andere Exceptions als 500 behandeln
-        logger.info(f"Exeptionlogger: {e}")
+        logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/{category_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def update_category(category_id: int, data: CategoryDto, db: AsyncSession = Depends(get_async_db)):
+@router.put("", dependencies=[Depends(required_roles(["MODERATOR"]))])
+async def update_category(data: CategoryDto, db: AsyncSession = Depends(get_async_db)):
     try:
-        c = await db.scalar(select(Category).where(Category.id == category_id))
+        c = await db.scalar(select(Category).where(Category.id == data.id))
         if c is None:
             raise HTTPException(status_code=404, detail="Category not found")
 
@@ -150,10 +150,11 @@ async def update_category(category_id: int, data: CategoryDto, db: AsyncSession 
             parents=list(new_parents),
             children=list(new_children)
         )
-    except HTTPException:
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        # Andere Exceptions als 500 behandeln
+        logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -168,10 +169,11 @@ async def delete_category(category_id: int, db: AsyncSession = Depends(get_async
         category.deleted_at = datetime.utcnow()
         await db.commit()
         return {"detail": "Kategorie wurde als gelöscht markiert"}
-    except HTTPException:
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        # Andere Exceptions als 500 behandeln
+        logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -276,10 +278,11 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
             parents=[parent.id for parent in c.parents],
             children=[child.id for child in c.children]
         )
-    except HTTPException:
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        # Andere Exceptions als 500 behandeln
+        logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -314,10 +317,11 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
                 )
                 dtoList.append(dto)
         return dtoList
-    except HTTPException:
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        # Andere Exceptions als 500 behandeln
+        logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -329,9 +333,10 @@ async def add_child(category_id: int, child_id: int, db: AsyncSession = Depends(
         await db.commit()
         await db.refresh(cc)
         return cc
-    except HTTPException:
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        # Andere Exceptions als 500 behandeln
+        logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

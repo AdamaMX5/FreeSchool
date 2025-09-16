@@ -82,11 +82,12 @@ async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
         lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson.id).options(selectinload(Lesson.contents)))
         logger.warning(f"New loaded lesson: {lesson}")
         return wrap(lesson)
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        logger.warning(f"Exception: {e}")
-        logger.warning(f"Stacktrace: {traceback.format_exc()}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/by_category/{category_id}")
@@ -191,9 +192,12 @@ async def update_lesson(
             contents=[c.id for c in lesson.contents],
             progress=data.progress if hasattr(data, 'progress') else 0
         )
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{lesson_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
@@ -215,10 +219,12 @@ async def delete_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)
         await db.commit()
         logger.info(f"Lesson marked as deleted: {lesson}")
         return {"detail": "Lesson wurde als gelöscht markiert"}
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        logger.warning(f"Error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class ProgressUpdateDto(BaseModel):
@@ -270,14 +276,12 @@ async def update_lesson_progress(
         await db.commit()
         await db.refresh(progress)
         return progress
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not update progress: {str(e)}"
-        )
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/progress/all", response_model=List[UserLessonLink])
@@ -295,11 +299,12 @@ async def get_all_progress(
             .options(selectinload(UserLessonLink.lesson))
         )
         return result.all()
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not fetch progress records: {str(e)}"
-        )
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/progress/{lesson_id}", response_model=Optional[UserLessonLink])
@@ -319,11 +324,12 @@ async def get_lesson_progress(
             .where(UserLessonLink.lesson_id == lesson_id)
         )
         return progress
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Could not fetch progress: {str(e)}"
-        )
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{lesson_id}")

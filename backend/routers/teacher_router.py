@@ -39,9 +39,12 @@ async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_async_db)):
         await db.commit()
         await db.refresh(t)
         return t
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        return {"error": str(e)}
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{teacher_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
@@ -58,11 +61,12 @@ async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depe
         await db.commit()
         await db.refresh(t)
         return t
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        return {"error": str(e)}
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{teacher_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
@@ -75,11 +79,12 @@ async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_d
         t.deleted_at = datetime.utcnow()
         await db.commit()
         return {"detail": "Lehrer wurde als gelöscht markiert"}
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        await db.rollback()
-        return {"error": str(e)}
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/all")
@@ -87,8 +92,12 @@ async def get_teachers(db: AsyncSession = Depends(get_async_db)):
     try:
         teachers = await db.scalars(select(Teacher).where(Teacher.deleted_at == None))
         return teachers.all()
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        return {"error": str(e)}
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{teacher_id}/contents")
@@ -98,10 +107,12 @@ async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_a
         if t is None:
             raise HTTPException(status_code=404, detail="Teacher not found")
         return [content for content in t.contents if not content.deleted_at]
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        logger.warning(f"HTTPException Raise: {e}")
+        raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        return {"error": str(e)}
+        logger.warning(f"Exeptionlogger: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{teacher_id}")
