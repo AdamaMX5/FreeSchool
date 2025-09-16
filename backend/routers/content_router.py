@@ -100,7 +100,7 @@ async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/", response_model=ContentDto, dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
+@router.post("", response_model=ContentDto, dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
 async def new_content(content_data: ContentDto, db: AsyncSession = Depends(get_async_db)):
     if content_data.lesson_id is None:
         raise HTTPException(status_code=400, detail="Lesson ID is required")
@@ -120,7 +120,7 @@ async def new_content(content_data: ContentDto, db: AsyncSession = Depends(get_a
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put("/", response_model=ContentDto, dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
+@router.put("", response_model=ContentDto, dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
 async def update_content(
         content_data: ContentDto,
         db: AsyncSession = Depends(get_async_db)

@@ -9,3 +9,7 @@ sudo certbot certonly --standalone -d freischule.flussmark.de -d api.freischule.
 sudo crontab -e
 # Füge hinzu:
 0 3 * * * certbot renew --quiet && systemctl reload nginx
+
+
+Zertifikat		5eca0b1b0d359949b46133434d88d655c045be64e6c708ac2d935724b5210f14
+Öffentlicher Schlüssel	23e1c14f372de2c85a2b7819bee3d09059101dc6218958cc4e375431e2a6daa8

@@ -47,7 +47,7 @@ def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
     )
 
 
-@router.post("/", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
+@router.post("", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
 async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
     logger.warning(f"POST New Lession: {dto}")
     try:

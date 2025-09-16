@@ -32,7 +32,7 @@ class TeacherDto(BaseModel):
         from_attributes = True
 
 
-@router.post("/", dependencies=[Depends(required_roles(["MODERATOR"]))])
+@router.post("", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_async_db)):
     try:
         db.add(t)

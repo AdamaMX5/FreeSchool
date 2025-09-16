@@ -27,7 +27,7 @@ class CategoryDto(BaseModel):
     children: List[int] = []
 
 
-@router.post("/", dependencies=[Depends(required_roles(["MODERATOR"]))])
+@router.post("", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db)):
     try:
         logger.info("Erstelle neue Category:")
