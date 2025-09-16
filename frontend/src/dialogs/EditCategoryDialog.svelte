@@ -58,7 +58,7 @@
     };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/category/${category.id}`, {
+      const res = await fetch(`${API_BASE_URL}/category`, {
         method: "PUT",
         headers: { 
           "Content-Type": "application/json",
