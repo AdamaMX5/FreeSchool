@@ -27,73 +27,6 @@ class CategoryDto(BaseModel):
     children: List[int] = []
 
 
-@router.get("/{category_id}")
-async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
-    try:
-        stmt = (
-            select(Category)
-            .where(Category.id == category_id)
-            .options(
-                selectinload(Category.parents),
-                selectinload(Category.children)
-            )
-        )
-        c = await db.scalar(stmt)
-        if c is None:
-            raise HTTPException(status_code=404, detail="Category not found")
-
-        return CategoryDto(
-            id=c.id,
-            name=c.name,
-            background_link=c.background_link,
-            parents=[parent.id for parent in c.parents],
-            children=[child.id for child in c.children]
-        )
-    except HTTPException:
-        raise  # HTTPExceptions weiterwerfen
-    except Exception as e:
-        # Andere Exceptions als 500 behandeln
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/{category_id}/children")
-async def get_category_children(category_id: int, db: AsyncSession = Depends(get_async_db)):
-    try:
-        stmt = (
-            select(Category)
-            .where(Category.id == category_id)
-            .options(
-                selectinload(Category.children).options(
-                    selectinload(Category.parents),
-                    selectinload(Category.children)
-                )
-            )
-        )
-        category = await db.scalar(stmt)
-
-        if category is None:
-            raise HTTPException(status_code=404, detail="Category not found")
-
-        dtoList = []
-        for c in category.children:
-            if not c.deleted_at:
-                # Jetzt haben wir Zugriff auf c.parents und c.children, da sie geladen wurden
-                dto = CategoryDto(
-                    id=c.id,
-                    name=c.name,
-                    background_link=c.background_link,
-                    parents=[parent.id for parent in c.parents],
-                    children=[child.id for child in c.children]
-                )
-                dtoList.append(dto)
-        return dtoList
-    except HTTPException:
-        raise  # HTTPExceptions weiterwerfen
-    except Exception as e:
-        # Andere Exceptions als 500 behandeln
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.post("/", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db)):
     try:
@@ -146,21 +79,6 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
     except Exception as e:
         # Andere Exceptions als 500 behandeln
         logger.info(f"Exeptionlogger: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/{category_id}/addChild/{child_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def add_child(category_id: int, child_id: int, db: AsyncSession = Depends(get_async_db)):
-    try:
-        cc = CategoryCategory(parent_id=category_id, child_id=child_id)
-        db.add(cc)
-        await db.commit()
-        await db.refresh(cc)
-        return cc
-    except HTTPException:
-        raise  # HTTPExceptions weiterwerfen
-    except Exception as e:
-        # Andere Exceptions als 500 behandeln
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -334,3 +252,86 @@ async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(ge
         )
         dtoList.append(dto)
     return dtoList
+
+
+@router.get("/{category_id}")
+async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
+    try:
+        stmt = (
+            select(Category)
+            .where(Category.id == category_id)
+            .options(
+                selectinload(Category.parents),
+                selectinload(Category.children)
+            )
+        )
+        c = await db.scalar(stmt)
+        if c is None:
+            raise HTTPException(status_code=404, detail="Category not found")
+
+        return CategoryDto(
+            id=c.id,
+            name=c.name,
+            background_link=c.background_link,
+            parents=[parent.id for parent in c.parents],
+            children=[child.id for child in c.children]
+        )
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
+    except Exception as e:
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{category_id}/children")
+async def get_category_children(category_id: int, db: AsyncSession = Depends(get_async_db)):
+    try:
+        stmt = (
+            select(Category)
+            .where(Category.id == category_id)
+            .options(
+                selectinload(Category.children).options(
+                    selectinload(Category.parents),
+                    selectinload(Category.children)
+                )
+            )
+        )
+        category = await db.scalar(stmt)
+
+        if category is None:
+            raise HTTPException(status_code=404, detail="Category not found")
+
+        dtoList = []
+        for c in category.children:
+            if not c.deleted_at:
+                # Jetzt haben wir Zugriff auf c.parents und c.children, da sie geladen wurden
+                dto = CategoryDto(
+                    id=c.id,
+                    name=c.name,
+                    background_link=c.background_link,
+                    parents=[parent.id for parent in c.parents],
+                    children=[child.id for child in c.children]
+                )
+                dtoList.append(dto)
+        return dtoList
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
+    except Exception as e:
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{category_id}/addChild/{child_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
+async def add_child(category_id: int, child_id: int, db: AsyncSession = Depends(get_async_db)):
+    try:
+        cc = CategoryCategory(parent_id=category_id, child_id=child_id)
+        db.add(cc)
+        await db.commit()
+        await db.refresh(cc)
+        return cc
+    except HTTPException:
+        raise  # HTTPExceptions weiterwerfen
+    except Exception as e:
+        # Andere Exceptions als 500 behandeln
+        raise HTTPException(status_code=500, detail=str(e))
+

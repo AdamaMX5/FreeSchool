@@ -89,16 +89,6 @@ async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/{lesson_id}")
-async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
-    lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson_id).options(selectinload(Lesson.contents)))
-
-    if not lesson:
-        raise HTTPException(status_code=404, detail="Lesson not found")
-
-    return wrap(lesson)
-
-
 @router.get("/by_category/{category_id}")
 async def get_lessons_by_category(
         category_id: int,
@@ -334,3 +324,13 @@ async def get_lesson_progress(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Could not fetch progress: {str(e)}"
         )
+
+
+@router.get("/{lesson_id}")
+async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
+    lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson_id).options(selectinload(Lesson.contents)))
+
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    return wrap(lesson)

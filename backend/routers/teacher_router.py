@@ -32,14 +32,6 @@ class TeacherDto(BaseModel):
         from_attributes = True
 
 
-@router.get("/{teacher_id}")
-async def get_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
-    t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
-    if t is None:
-        raise HTTPException(status_code=404, detail="Teacher not found")
-    return t
-
-
 @router.post("/", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_async_db)):
     try:
@@ -110,3 +102,11 @@ async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_a
         raise
     except Exception as e:
         return {"error": str(e)}
+
+
+@router.get("/{teacher_id}")
+async def get_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
+    t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
+    if t is None:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    return t

@@ -58,19 +58,6 @@ def extractYoutubeId(link: str) -> str:
         raise HTTPException(status_code=400, detail="Invalid YouTube link")
 
 
-@router.get("/{content_id}", response_model=ContentDto)
-async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db)):
-    try:
-        content = await db.scalar(select(Content).where(Content.id == content_id))
-        if not content:
-            raise HTTPException(status_code=404, detail="Content not found")
-        return content
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/by_lesson/{lesson_id}", response_model=List[ContentWithTeacherDto])
 async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):  # get_async_db verwenden
     try:
@@ -189,5 +176,18 @@ async def get_content(db: AsyncSession = Depends(get_async_db)):
             .where(Content.deleted_at == None)
         )
         return contents.all()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/{content_id}", response_model=ContentDto)
+async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db)):
+    try:
+        content = await db.scalar(select(Content).where(Content.id == content_id))
+        if not content:
+            raise HTTPException(status_code=404, detail="Content not found")
+        return content
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
