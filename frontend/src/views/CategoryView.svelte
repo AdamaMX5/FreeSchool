@@ -105,6 +105,10 @@
       height: img.naturalHeight,
     };
     updateLayout();
+
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
   }
 
   function updateLayout() {
@@ -166,10 +170,13 @@
         style="width: {containerSize.width}px; height: {containerSize.height}px;"
       />
     {:else}
-      <div
-        class="background-placeholder"
+      <img
+        class="background-image"
+        src="ressources/background/learninghub.jpg"
+        alt={currentCategory.name}
+        on:load={handleImageLoad}
         style="width: {containerSize.width}px; height: {containerSize.height}px;"
-      ></div>
+      />
     {/if}
 
     {#each lessons as lesson}

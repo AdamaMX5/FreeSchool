@@ -2,6 +2,7 @@
   import Dialog from "./Dialog.svelte";
   import { onMount } from "svelte";
   import { user } from "../lib/global";
+  import { getTeachersAll } from "../lib/teacherApi";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -20,22 +21,6 @@
   let teachers = $state([]);
   let error = $state("");
 
-  export async function loadTeachers() {
-    try {
-      const res = await fetch(`${API_BASE_URL}/teacher/all`);
-      const data = await res.json();
-      if (res.ok) {
-        teachers = data;
-        return data;
-      } else {
-        console.warn("Fehler beim Laden der Lehrerliste:", data.error);
-        throw new Error(data.error || "Fehler beim Laden der Lehrer");
-      }
-    } catch (e) {
-      console.error("Netzwerkfehler beim Laden der Lehrer:", e);
-      throw e;
-    }
-  }
 
   // Funktion zum Erstellen eines Contents (exportiert)
   export async function createContent(
@@ -80,7 +65,7 @@
   onMount(async () => {
     // Automatisch Lehrer laden, wenn die Komponente als Dialog verwendet wird
     try {
-      await loadTeachers();
+      teachers = await getTeachersAll();
     } catch (e) {
       console.error("Fehler beim automatischen Laden der Lehrer:", e);
     }

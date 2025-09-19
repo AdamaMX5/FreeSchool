@@ -12,15 +12,15 @@ export async function postContent(
   teacher_id: number | null
 ) {
   const jwt = get(user)?.jwt;
-  const payload = { language, text, youtube_id, internal_video, lesson_id, teacher_id };
-
   const res = await fetch(`${API_BASE_URL}/content`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${jwt}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ 
+      language, text, youtube_id, internal_video, lesson_id, teacher_id 
+    })
   });
 
   const result = await res.json();

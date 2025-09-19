@@ -99,13 +99,15 @@ async def update_category(data: CategoryDto, db: AsyncSession = Depends(get_asyn
             select(CategoryCategory.parent_id)
             .where(CategoryCategory.child_id == c.id)
         )
-        existing_parents = {pid for (pid,) in parents_result.all()}
+        parents_result = parents_result.all()
+        logger.debug(f"parents_result: {parents_result}")
+        existing_parents = set(parents_result)
 
         children_result = await db.scalars(
             select(CategoryCategory.child_id)
             .where(CategoryCategory.parent_id == c.id)
         )
-        existing_children = {cid for (cid,) in children_result.all()}
+        existing_children = set(children_result.all())
 
         new_parents = set(data.parents)
         new_children = set(data.children)
@@ -154,7 +156,8 @@ async def update_category(data: CategoryDto, db: AsyncSession = Depends(get_asyn
         logger.warning(f"HTTPException Raise: {e}")
         raise  # HTTPExceptions weiterwerfen
     except Exception as e:
-        logger.warning(f"Exeptionlogger: {e}")
+        logger.error(f"Exception in update_category: {e}", exc_info=True)  # Verbessertes Logging
+        logger.error(f"Exception type: {type(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

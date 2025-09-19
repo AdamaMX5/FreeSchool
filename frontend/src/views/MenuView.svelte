@@ -3,6 +3,7 @@
   import { user } from '../lib/global';
   import CategoryEdit from '../components/CategoryEdit.svelte';
   import CategoryNew from '../components/CategoryNew.svelte';
+  import { getLearningHubs, getChildCategories } from "../lib/categoryApi";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -14,8 +15,6 @@
   let categories = $state([]);
   let childCategories = $state([]);
   let currentCategory = $state(null);
-  let isLoading = false;
-  let error = null;
 
   // For Mods
   let showCategoryPopup = false;
@@ -34,41 +33,20 @@
   });
 
   async function loadLearningHubs() {
-    console.log("APIBASEURL: "+API_BASE_URL);
-    try {
-      isLoading = true;
-      error = null;
-      const response = await fetch(`${API_BASE_URL}/category/asLearningHubs`);
-      if (!response.ok) throw new Error(`HTTP-Fehler: ${response.status}`);
-      categories = await response.json();
-      currentCategory = null;
-      childCategories = [];
-      oncategorySelected(null); // Wichtig: MainView zurücksetzen
-    } catch (err) {
-      error = "Fehler beim Laden der Lernbüros";
-      console.error("API Fehler:", err);
-    } finally {
-      isLoading = false;
-    }
+    console.log("lade Lernbüros");
+    categories = await getLearningHubs();
+    console.log("Lernbüros: "+categories);
+    currentCategory = null;
+    childCategories = [];
+    oncategorySelected(null); // Wichtig: MainView zurücksetzen
   }
 
   async function loadChildCategories(categoryId) {
-    try {
-      isLoading = true;
-      error = null;
-      const response = await fetch(`${API_BASE_URL}/category/${categoryId}/children`);
-      if (!response.ok) throw new Error(`HTTP-Fehler: ${response.status}`);
-      childCategories = await response.json();
-    } catch (err) {
-      error = "Fehler beim Laden der Unterkategorien";
-      console.error("API Fehler:", err);
-    } finally {
-      isLoading = false;
-    }
+    childCategories = await getChildCategories(categoryId);
   }
 
   async function onselectCategory(category) {
-    oncategorySelected(category); // 🎯 Event auslösen
+    oncategorySelected(category); // Event auslösen
     setCurrentCategory(category);
   }
 

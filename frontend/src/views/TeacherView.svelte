@@ -23,7 +23,7 @@
 
     async function fetchTeachers() {
         try {
-            const response = await fetch(`${API_BASE_URL}/teacher/all/`);
+            const response = await fetch(`${API_BASE_URL}/teacher/all`);
             if (!response.ok) throw new Error("Fehler beim Laden der Lehrer");
             teachers = await response.json();
             error = null;
@@ -34,7 +34,7 @@
 
     async function addTeacher() {
         try {
-            const response = await fetch(`${API_BASE_URL}/teacher/`, {
+            const response = await fetch(`${API_BASE_URL}/teacher`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

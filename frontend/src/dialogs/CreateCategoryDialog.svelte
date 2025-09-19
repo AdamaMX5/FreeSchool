@@ -1,8 +1,6 @@
 <script lang="ts">
   import Dialog from './Dialog.svelte';
-  import { user } from '../lib/global';
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  import { postCategory } from "../lib/categoryApi";
   
   let { 
     parent, 
@@ -48,31 +46,7 @@
       return;
     }
 
-    const payload = {
-      name,
-      background_link: addBackgroundLinkForPayload(background_link),
-      parents,
-      children
-    };
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/category`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${$user.jwt}`  // JWT-Token hinzufügen
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Fehler beim Erstellen");
-
-      onsuccess(result);
-    } catch (e) {
-      console.error("API Fehler:", e);
-      onerror(e.message);
-    }
+    postCategory({name, background_link: addBackgroundLinkForPayload(background_link), parents, children});
   }
 </script>
 
