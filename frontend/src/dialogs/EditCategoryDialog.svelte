@@ -10,7 +10,7 @@
   } = $props();
 
   let name = $state(category?.name || "");
-  let background_link = $state(category?.backgroundLink || "/ressources/background/");
+  let background_link = $state(category?.background_link || "/ressources/background/");
   let parentsStr = $state(JSON.stringify(category?.parents || []));
   let childrenStr = $state(JSON.stringify(category?.children || []));
   let error = $state("");
@@ -21,9 +21,12 @@
   }
 
   function addBackgroundLinkForPayload(link){
-    if (link && link.includes('.')) {
+    console.log("Checking Link of Category: "+link)
+    if (link && link != "/ressources/background/") {
+      console.log("Link wird übernommen.")
       return link;
     }
+    console.log("Link scheint kein Bild zu sein, deswegen gebe ich leer zurück.")
     return "";
   }
 
