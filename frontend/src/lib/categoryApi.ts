@@ -50,3 +50,49 @@ export async function postCategory(category: CategoryDto){
     return [];
   }
 }
+export async function putCategory(category: CategoryDto) {
+  try {
+    const jwt = get(user)?.jwt;
+    const res = await fetch(`${API_BASE_URL}/category`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      },
+      body: JSON.stringify(category)
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || `HTTP-Fehler: ${res.status}`);
+    }
+    
+    return await res.json();
+  } catch (e) {
+    console.error("Netzwerkfehler beim Aktualisieren der Kategorie:", e);
+    throw e;
+  }
+}
+
+export async function deleteCategory(id: number) {
+  try {
+    const jwt = get(user)?.jwt;
+    const res = await fetch(`${API_BASE_URL}/category/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwt}`
+      }
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || `HTTP-Fehler: ${res.status}`);
+    }
+    
+    return { success: true, id };
+  } catch (e) {
+    console.error("Netzwerkfehler beim Löschen der Kategorie:", e);
+    throw e;
+  }
+}

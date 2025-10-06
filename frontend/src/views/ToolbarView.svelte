@@ -83,7 +83,7 @@
     oncancel={() =>{
       showCreateLessonDialog = false;
     }}
-    onerror={(e) => alert(e.detail)}
+    onerror={(e) => alert(e.message)}
   />
 {/if}
 

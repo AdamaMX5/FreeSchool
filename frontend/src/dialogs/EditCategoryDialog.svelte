@@ -1,8 +1,6 @@
 <script lang="ts">
   import Dialog from './Dialog.svelte';
-  import { user } from '../lib/global';
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  import { putCategory, deleteCategory } from '../lib/categoryApi';
 
   let {
     category = null,
@@ -11,12 +9,12 @@
     onerror = () => {}
   } = $props();
 
-
   let name = $state(category?.name || "");
   let background_link = $state(category?.backgroundLink || "/ressources/background/");
   let parentsStr = $state(JSON.stringify(category?.parents || []));
   let childrenStr = $state(JSON.stringify(category?.children || []));
   let error = $state("");
+  let isLoading = $state(false);
 
   function close() {
     oncancel()
@@ -32,12 +30,14 @@
   async function submit() {
     let parents, children;
     error = "";
+    isLoading = true;
 
     try {
       parents = JSON.parse(parentsStr);
       if (!Array.isArray(parents)) throw new Error("Parents muss ein Array sein.");
     } catch (e) {
       error = "Fehler im Parents-Feld: " + e.message;
+      isLoading = false;
       return;
     }
 
@@ -46,6 +46,7 @@
       if (!Array.isArray(children)) throw new Error("Children muss ein Array sein.");
     } catch (e) {
       error = "Fehler im Children-Feld: " + e.message;
+      isLoading = false;
       return;
     }
 
@@ -57,48 +58,32 @@
       children
     };
 
-    try {
-      const res = await fetch(`${API_BASE_URL}/category`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${$user.jwt}`  // JWT-Token hinzufügen
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Fehler beim Bearbeiten");
-
+     try {
+      const result = await putCategory(payload);
       onsuccess(result);
     } catch (e) {
       console.error("API Fehler:", e);
+      error = e.message;
       onerror(e.message);
+    } finally {
+      isLoading = false;
     }
   }
 
-  async function deleteCategory() {
+  async function handleDeleteCategory() {
     const confirmed = confirm("Kategorie wirklich löschen?");
     if (!confirmed) return;
 
+    isLoading = true;
     try {
-      const res = await fetch(`${API_BASE_URL}/category/${category.id}`, {
-        method: "DELETE",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${$user.jwt}`  // JWT-Token hinzufügen
-        },
-      });
-
-      if (!res.ok) {
-        const result = await res.json();
-        throw new Error(result.error || "Fehler beim Löschen");
-      }
-
+      await deleteCategory(category.id);
       onsuccess({ deleted: true, id: category.id });
     } catch (e) {
       console.error("Löschfehler:", e);
+      error = e.message;
       onerror(e.message);
+    } finally {
+      isLoading = false;
     }
   }
 </script>
@@ -131,9 +116,13 @@
   {/if}
 
   <div class="actions">
-    <button class="danger" onclick={deleteCategory}>Löschen</button>
-    <button onclick={submit}>Speichern</button>
-    <button onclick={close}>Abbrechen</button>
+    <button class="danger" onclick={handleDeleteCategory} disabled={isLoading}>
+      {#if isLoading}Lädt...{:else}Löschen{/if}
+    </button>
+    <button onclick={submit} disabled={isLoading}>
+      {#if isLoading}Speichert...{:else}Speichern{/if}
+    </button>
+    <button onclick={close} disabled={isLoading}>Abbrechen</button>
   </div>
 </Dialog>
 
@@ -186,5 +175,11 @@
 
   .actions .danger:hover {
     background-color: #b71c1c;
+  }
+
+  .actions .danger:disabled,
+  .actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>

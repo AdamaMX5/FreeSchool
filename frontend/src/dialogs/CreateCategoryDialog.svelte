@@ -14,6 +14,7 @@
   let parentsStr = $state(parent ? JSON.stringify([parent.id]) : "[]");
   let childrenStr = $state("[]");
   let error = $state("");
+  let isLoading = $state(false);
 
   function close() {
     oncancel();
@@ -29,12 +30,14 @@
   async function submit() {
     let parents, children;
     error = "";
+    isLoading = true;
 
     try {
       parents = JSON.parse(parentsStr);
       if (!Array.isArray(parents)) throw new Error("Parents muss ein Array sein.");
     } catch (e) {
       error = "Fehler im Parents-Feld: " + e.message;
+      isLoading = false;
       return;
     }
 
@@ -43,10 +46,25 @@
       if (!Array.isArray(children)) throw new Error("Children muss ein Array sein.");
     } catch (e) {
       error = "Fehler im Children-Feld: " + e.message;
+      isLoading = false;
       return;
     }
 
-    postCategory({name, background_link: addBackgroundLinkForPayload(background_link), parents, children});
+    try {
+      const result = await postCategory({
+        name, 
+        background_link: addBackgroundLinkForPayload(background_link), 
+        parents, 
+        children
+      });
+      onsuccess(result);
+    } catch (e) {
+      console.error("API Fehler:", e);
+      error = e.message;
+      onerror(e.message);
+    } finally {
+      isLoading = false;
+    }
   }
 </script>
 
@@ -75,8 +93,10 @@
   {/if}
 
   <div class="actions">
-    <button onclick={submit}>Erstellen</button>
-    <button onclick={close}>Abbrechen</button>
+    <button onclick={submit} disabled={isLoading}>
+      {#if isLoading}Erstellt...{:else}Erstellen{/if}
+    </button>
+    <button onclick={close} disabled={isLoading}>Abbrechen</button>
   </div>
 </Dialog>
 
@@ -116,5 +136,10 @@
   .error {
     color: red;
     margin-top: 0.5rem;
+  }
+
+  .actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 </style>

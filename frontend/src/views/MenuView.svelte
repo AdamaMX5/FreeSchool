@@ -42,6 +42,7 @@
   }
 
   async function loadChildCategories(categoryId) {
+    console.log("lade Kategorien des Lernbüros: "+categoryId);
     childCategories = await getChildCategories(categoryId);
   }
 
@@ -81,7 +82,7 @@
                  alt={category.name}></div>
           {/if}
           {#if isModerator}
-            <CategoryEdit category={category} onsuccess={() => loadChildCategories(category.id)} />
+            <CategoryEdit category={category} onsuccess={() => loadChildCategories(currentCategory.id)} />
           {/if}
         </div>
       {/each}
@@ -95,7 +96,7 @@
                  alt={category.name}></div>
           {/if}
           {#if isModerator}
-            <CategoryEdit category={category} onsuccess={() => loadChildCategories(category.id)} />
+            <CategoryEdit category={category} onsuccess={loadLearningHubs} />
           {/if}
         </div>
       {/each}

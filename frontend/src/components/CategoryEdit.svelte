@@ -21,13 +21,15 @@
     showDialog = false;
   }
 
-  function handleSuccess(event) {
-    onsuccess(event.detail);
+  function handleSuccess(result) {
+    console.log("Kategorie erfolgreich aktualisiert:", result);
+    onsuccess(result); 
     close();
   }
 
-  function handleError(event) {
-    onerror(event.detail);
+  function handleError(error) {
+    console.error("Fehler beim Aktualisieren:", error);
+    onerror(error);
   }
 
 </script>
@@ -43,12 +45,9 @@
 {#if showDialog}
   <EditCategoryDialog
     category={category}
-    oncancel={() => showDialog = false}
-    onsuccess={(e) => {
-      showDialog = false;
-      console.log("Updated:", e.detail);
-    }}
-    onerror={(e) => alert(e.detail)}
+    oncancel={close}
+    onsuccess={handleSuccess}
+    onerror={handleError}
   />
 {/if}
 
