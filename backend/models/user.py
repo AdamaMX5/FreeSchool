@@ -23,6 +23,8 @@ class RoleEnum(str, Enum):
 class UserRoleLink(RefBase, table=True):
     user_id: Optional[int] = Field(default=None, foreign_key="users.id", primary_key=True)
     role_id: Optional[int] = Field(default=None, foreign_key="role.id", primary_key=True)
+    user_uid: Optional[str] = Field(default=None, foreign_key="users.uid")
+    role_uid: Optional[str] = Field(default=None, foreign_key="role.uid")
 
 
 # ─────────────
@@ -63,6 +65,7 @@ class User(Base, table=True):
 # ─────────────
 class Profile(Base, table=True):
     user_id: int = Field(primary_key=True, foreign_key="users.id")
+    user_uid: Optional[str] = Field(default=None, foreign_key="users.uid")
     users: Optional[User] = Relationship(back_populates="profile")
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
