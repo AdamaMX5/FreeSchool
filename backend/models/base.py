@@ -11,8 +11,7 @@ import string
 class Base(SQLModel):
     __abstract__ = True
     # Gemeinsame Spalten für alle Tabellen
-    id: Optional[int] = Field(primary_key=True, index=True)
-    uid: Optional[str] = Field(default=None, unique=True, index=True)
+    id: Optional[str] = Field(primary_key=True, index=True)
     deleted_at: Optional[datetime] = Field(default=None, nullable=True)
 
     @classmethod
@@ -61,7 +60,7 @@ def generate_unique_id(session, model_class: Type[Base]) -> str:
 
         # Prüfe ob ID bereits existiert
         existing = session.exec(
-            select(model_class).where(model_class.uid == candidate_id)
+            select(model_class).where(model_class.id == candidate_id)
         ).first()
 
         if not existing:
@@ -76,5 +75,5 @@ def generate_unique_id(session, model_class: Type[Base]) -> str:
 def before_flush_handler(session, flush_context, instances):
     """Automatische ID-Generierung für neue Objekte"""
     for obj in session.new:
-        if isinstance(obj, Base) and obj.uid is None:
-            obj.uid = generate_unique_id(session, type(obj))
+        if isinstance(obj, Base) and obj.id is None:
+            obj.id = generate_unique_id(session, type(obj))

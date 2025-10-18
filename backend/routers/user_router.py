@@ -20,7 +20,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 
 class UserLoginResponse(BaseModel):
-    id: int
+    id: str
     email: EmailStr
     jwt: str
     status: str
@@ -29,7 +29,7 @@ class UserLoginResponse(BaseModel):
 
 # Pydantic Modell für Benutzerantwort
 class UserResponse(BaseModel):
-    id: int
+    id: str
     email: str
     roles: List[str]
 
@@ -113,7 +113,7 @@ async def get_role_names(user: User, db: AsyncSession) -> List[str]:
 
 
 class UserRegister(BaseModel):
-    id: int
+    id: str
     repassword: str  # Klartext-Password wird hier übergeben und dann gehasht und mit dem gespeicherten HashPassword verglichen
 
 

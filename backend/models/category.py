@@ -12,11 +12,8 @@ from models.base import Base, RefBase
 
 
 class CategoryCategory(RefBase, table=True):
-    parent_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
-    child_id: Optional[int] = Field(default=None, foreign_key="category.id", primary_key=True)
-    parent_uid: Optional[str] = Field(default=None, foreign_key="category.uid")
-    child_uid: Optional[str] = Field(default=None, foreign_key="category.uid")
-
+    parent_id: Optional[str] = Field(default=None, foreign_key="category.id", primary_key=True)
+    child_id: Optional[str] = Field(default=None, foreign_key="category.id", primary_key=True)
 
 class Category(Base, table=True):
     name: str

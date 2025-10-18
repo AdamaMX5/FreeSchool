@@ -20,11 +20,11 @@ router = APIRouter(prefix="/category", tags=["Categories"])
 
 
 class CategoryDto(BaseModel):
-    id: Optional[int] = None
+    id: Optional[str] = None
     name: str
     background_link: str
-    parents: List[int] = []
-    children: List[int] = []
+    parents: List[str] = []
+    children: List[str] = []
 
 
 @router.post("", dependencies=[Depends(required_roles(["MODERATOR"]))])
@@ -162,7 +162,7 @@ async def update_category(data: CategoryDto, db: AsyncSession = Depends(get_asyn
 
 
 @router.delete("/{category_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def delete_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete_category(category_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         category = await db.scalar(select(Category).where(Category.id == category_id))
 
@@ -233,7 +233,7 @@ async def get_categories_as_learning_hubs(db: AsyncSession = Depends(get_async_d
 
 
 @router.get("/ByParent/{parent_id}")
-async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_categories_by_parent(parent_id: str, db: AsyncSession = Depends(get_async_db)):
     stmt = (
         select(Category)
         .join(CategoryCategory, Category.id == CategoryCategory.child_id)
@@ -260,7 +260,7 @@ async def get_categories_by_parent(parent_id: int, db: AsyncSession = Depends(ge
 
 
 @router.get("/{category_id}")
-async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_category(category_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         stmt = (
             select(Category)
@@ -290,7 +290,7 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_async_db
 
 
 @router.get("/{category_id}/children")
-async def get_category_children(category_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_category_children(category_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         stmt = (
             select(Category)
@@ -329,7 +329,7 @@ async def get_category_children(category_id: int, db: AsyncSession = Depends(get
 
 
 @router.post("/{category_id}/addChild/{child_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def add_child(category_id: int, child_id: int, db: AsyncSession = Depends(get_async_db)):
+async def add_child(category_id: str, child_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         cc = CategoryCategory(parent_id=category_id, child_id=child_id)
         db.add(cc)

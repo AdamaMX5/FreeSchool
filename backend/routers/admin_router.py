@@ -22,7 +22,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 class UserResponse(BaseModel):
-    id: int
+    id: str
     email: str
     roles: List[str]
 
@@ -63,7 +63,7 @@ class UpdateRolesRequest(BaseModel):
 
 @router.put("/user/{user_id}/roles", response_model=UserResponse, dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
 async def update_user_roles(
-        user_id: int,
+        user_id: str,
         roles_data: UpdateRolesRequest,
         db: AsyncSession = Depends(get_async_db),
         current_user: User = Depends(get_current_user)
@@ -477,6 +477,7 @@ async def import_database_json(
         logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/backup/json", dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
 async def backup_database_json(
         db: AsyncSession = Depends(get_async_db),
@@ -548,6 +549,7 @@ async def get_reset_sequences(
     except Exception as e:
         logger.warning(f"Exeptionlogger: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 async def reset_sequences(db: AsyncSession):
     """Setzt alle Sequence Counter basierend auf den maximalen IDs zurück"""

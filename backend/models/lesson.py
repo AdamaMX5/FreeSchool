@@ -17,8 +17,7 @@ class Lesson(Base, table=True):
     position_x: int
     position_y: int
 
-    category_id: int = Field(foreign_key="category.id")
-    category_uid: Optional[str] = Field(default=None, foreign_key="category.uid")
+    category_id: str = Field(foreign_key="category.id")
 
     category: "Category" = Relationship(back_populates="lessons")
 
@@ -29,14 +28,10 @@ class Lesson(Base, table=True):
 
 class UserLessonLink(RefBase, table=True):
     """Tabelle zur Speicherung des Fortschritts eines Users in einer Lektion"""
-    user_id: int = Field(sa_column=Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True))
-    lesson_id: int = Field(sa_column=Column(Integer, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
-
-    user_uid: Optional[str] = Field(default=None, foreign_key="users.uid")
-    lesson_uid: Optional[str] = Field(default=None, foreign_key="lesson.uid")
+    user_id: str = Field(sa_column=Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True))
+    lesson_id: str = Field(sa_column=Column(Integer, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
 
     progress: int = Field(default=0, ge=0, le=100, sa_column=Column(Integer, server_default="0", nullable=False))  # Wert zwischen 0 und 100
-
     # Relationships
     users: "User" = Relationship(back_populates="lesson_progresses")
     lesson: "Lesson" = Relationship(back_populates="user_progresses")

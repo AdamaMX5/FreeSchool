@@ -21,10 +21,8 @@ class RoleEnum(str, Enum):
 # Many-to-Many Association Table
 # ─────────────────────────────
 class UserRoleLink(RefBase, table=True):
-    user_id: Optional[int] = Field(default=None, foreign_key="users.id", primary_key=True)
-    role_id: Optional[int] = Field(default=None, foreign_key="role.id", primary_key=True)
-    user_uid: Optional[str] = Field(default=None, foreign_key="users.uid")
-    role_uid: Optional[str] = Field(default=None, foreign_key="role.uid")
+    user_id: Optional[str] = Field(default=None, foreign_key="users.id", primary_key=True)
+    role_id: Optional[str] = Field(default=None, foreign_key="role.id", primary_key=True)
 
 
 # ─────────────
@@ -64,8 +62,7 @@ class User(Base, table=True):
 # Profil-Modell (erweiterte Informationen)
 # ─────────────
 class Profile(Base, table=True):
-    user_id: int = Field(primary_key=True, foreign_key="users.id")
-    user_uid: Optional[str] = Field(default=None, foreign_key="users.uid")
+    user_id: str = Field(primary_key=True, foreign_key="users.id")
     users: Optional[User] = Relationship(back_populates="profile")
     full_name: Optional[str] = Field(default=None, title="Vollständiger Name")
     bio: Optional[str] = Field(default=None, title="Kurzbeschreibung")
