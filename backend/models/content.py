@@ -21,10 +21,10 @@ class Content(Base, table=True):
     youtube_id: str
     internal_video: str
 
-    lesson_id: int = Field(foreign_key="lesson.id")
+    lesson_id: str = Field(foreign_key="lesson.id")
 
     lesson: "Lesson" = Relationship(back_populates="contents")
 
-    teacher_id: Optional[int] = Field(default=None, foreign_key="teacher.id")
+    teacher_id: Optional[str] = Field(default=None, foreign_key="teacher.id")
 
     teacher: Optional["Teacher"] = Relationship(back_populates="contents")

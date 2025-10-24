@@ -13,7 +13,9 @@ sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx 
 
 git clone https://github.com/AdamaMX5/FreeSchool.git
 cd FreeSchool # && git pull
-./build.sh
+./build.sh # wird beim ersten Versuch fehlschlagen. Die .env Datei wurde erstellt
+nano .env
+
 
 # Frontend Envirement Variable
 cd FreeSchool/frontend	# in den Frontend Ordner gehen
@@ -26,6 +28,20 @@ docker logs -f freeschool_backend        					# Folgt den Logs in Echtzeit (wie 
 docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\dt"		# Datenbank Tabellenausgabe
 ```
 
+## Trubbleshoting
+
+# Test Docker:
+docker ps
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/json": dial unix /var/run/docker.sock: connect: permission denied
+
+sudo usermod -aG docker $USER		# Benutzer zur Docker-Gruppe hinzufügen
+newgrp docker						# Danach neu anmelden oder diese Session aktualisieren
+docker ps
+
+# Docker-Compose komando nicht gefunden:
+sudo apt update
+sudo apt install docker-compose
+docker-compose --version
 ---
 
 ## Installation
@@ -38,7 +54,7 @@ pip install fastapi[all]
 
 ---
 
-## Run Backend
+## Run Backend Development
 
 Start the server with:
 
@@ -59,7 +75,7 @@ uvicorn main:app --reload --host 127.0.0.1 --port 8000 --workers 1
 
 ---
 
-## Run Frontend
+## Run Frontend Development
 
 From the frontend directory, start the dev server:
 

@@ -22,7 +22,7 @@ router = APIRouter(prefix="/teacher", tags=["Teachers"])
 
 
 class TeacherDto(BaseModel):
-    id: Optional[int] = None
+    id: Optional[str] = None
     name: str
     email: str
     city: str
@@ -48,7 +48,7 @@ async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_async_db)):
 
 
 @router.put("/{teacher_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depends(get_async_db)):
+async def update_teacher(teacher_id: str, data: Teacher, db: AsyncSession = Depends(get_async_db)):
     try:
         t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
         if t is None:
@@ -70,7 +70,7 @@ async def update_teacher(teacher_id: int, data: Teacher, db: AsyncSession = Depe
 
 
 @router.delete("/{teacher_id}", dependencies=[Depends(required_roles(["MODERATOR"]))])
-async def delete_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete_teacher(teacher_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
         if not t or t.deleted_at:
@@ -101,7 +101,7 @@ async def get_teachers(db: AsyncSession = Depends(get_async_db)):
 
 
 @router.get("/{teacher_id}/contents")
-async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_teacher_contents(teacher_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id).options(selectinload(Teacher.contents)))
         if t is None:
@@ -116,7 +116,7 @@ async def get_teacher_contents(teacher_id: int, db: AsyncSession = Depends(get_a
 
 
 @router.get("/{teacher_id}")
-async def get_teacher(teacher_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_teacher(teacher_id: str, db: AsyncSession = Depends(get_async_db)):
     t = await db.scalar(select(Teacher).where(Teacher.id == teacher_id))
     if t is None:
         raise HTTPException(status_code=404, detail="Teacher not found")

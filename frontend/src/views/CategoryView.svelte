@@ -195,6 +195,9 @@
   <div class="empty-state">
     <h1>Willkommen in der Freischule</h1>
     <p>Bitte wähle ein Lernbüro</p>
+    <a href="/ressources/pdf/Freischule.pdf" download class="download-link">
+      📥 Freischul Konzept für Swakopmund herunterladen
+    </a>
   </div>
 {/if}
 
@@ -224,5 +227,20 @@
   .empty-state {
     color: #aaa;
     font-size: 1.2rem;
+  }
+
+  .download-link {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #777;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+
+  .download-link:hover {
+    background-color: #0056b3;
   }
 </style>

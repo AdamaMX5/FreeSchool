@@ -19,15 +19,15 @@ router = APIRouter(prefix="/lesson", tags=["Lessons"])
 
 
 class LessonDto(BaseModel):
-    id: Optional[int] = None
-    category_id: int
+    id: Optional[str] = None
+    category_id: str
     name: str
     description: str
-    order: Optional[int] = None
+    order: Optional[str] = None
     position_x: int
     position_y: int
-    contents: List[int] = []
-    progress: Optional[int] = 0  # Jetzt optional mit Default-Wert 0
+    contents: List[str] = []
+    progress: Optional[int] = 0
 
 
 def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
@@ -92,7 +92,7 @@ async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
 
 @router.get("/by_category/{category_id}")
 async def get_lessons_by_category(
-        category_id: int,
+        category_id: str,
         db: AsyncSession = Depends(get_async_db),
         current_user: Optional[User] = Depends(get_current_user_optional)
 ):
@@ -140,7 +140,7 @@ async def get_lessons_by_category(
 
 @router.put("/{lesson_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
 async def update_lesson(
-        lesson_id: int,
+        lesson_id: str,
         data: LessonDto,
         db: AsyncSession = Depends(get_async_db)
 ):
@@ -201,7 +201,7 @@ async def update_lesson(
 
 
 @router.delete("/{lesson_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
-async def delete_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete_lesson(lesson_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         stmt = (
             select(Lesson)
@@ -228,7 +228,7 @@ async def delete_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)
 
 
 class ProgressUpdateDto(BaseModel):
-    lesson_id: int
+    lesson_id: str
     progress: int
 
 
@@ -309,7 +309,7 @@ async def get_all_progress(
 
 @router.get("/progress/{lesson_id}", response_model=Optional[UserLessonLink])
 async def get_lesson_progress(
-        lesson_id: int,
+        lesson_id: str,
         db: AsyncSession = Depends(get_async_db),
         current_user: User = Depends(get_current_user)
 ):
@@ -333,7 +333,7 @@ async def get_lesson_progress(
 
 
 @router.get("/{lesson_id}")
-async def get_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_lesson(lesson_id: str, db: AsyncSession = Depends(get_async_db)):
     lesson = await db.scalar(select(Lesson).where(Lesson.id == lesson_id).options(selectinload(Lesson.contents)))
 
     if not lesson:

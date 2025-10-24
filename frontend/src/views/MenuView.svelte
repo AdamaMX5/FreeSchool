@@ -10,6 +10,7 @@
   let{
     navCategory = null,
     oncategorySelected = () => {},
+    menuVisible = true
   } = $props();
 
   let categories = $state([]);
@@ -64,12 +65,12 @@
     if (isHomeButton(navCategory)) {
       loadLearningHubs();
     } else if (navCategory && navCategory !== currentCategory) {
-//      selectCategory(navCategory);
       setCurrentCategory(navCategory);
     }
   });
 </script>
 
+{#if menuVisible}
 <aside class="menu">
   <div class="menu-scroll">
     {#if currentCategory}
@@ -101,6 +102,8 @@
         </div>
       {/each}
     {/if}
+
+    <div class="scroll-spacer"></div>
   </div>
   {#if isModerator}
     {#if currentCategory}
@@ -109,20 +112,22 @@
       <CategoryNew onsuccess={loadLearningHubs} />
     {/if}
   {/if}
-
-
 </aside>
+{/if}
+
 
 <style>
-  /* Linkes Menü */
+  /* Linkes Menü - fixiert positioniert */
   .menu {
+    position: fixed;
+    top: 50px; /* Unter der Navigationsleiste */
+    left: 0;
+    bottom: 0;
     width: 260px;
-    flex-shrink: 0;
-    background-color: #1e1e1e; /* Dunkles Menü */
+    background-color: #1e1e1e;
     display: flex;
     flex-direction: column;
-    margin: 0;
-    padding: 0;
+    z-index: 900;
   }
 
   /* Scroll-Verhalten */
@@ -153,8 +158,8 @@
     margin: 0;
     padding: 0.5rem;
     font-size: 1rem;
-
     background: rgba(0, 0, 0, 0.7);
+    color: #fff;
     position: relative;
     z-index: 1;
   }
@@ -167,6 +172,9 @@
     margin-top: -2rem;
   }
 
-
-
+  .scroll-spacer {
+    height: 260px;
+    width: 100%;
+    flex-shrink: 0;
+  }
 </style>

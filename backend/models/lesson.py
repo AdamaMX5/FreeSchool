@@ -5,7 +5,7 @@
 # it is a model for the database
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlmodel import Field, Relationship
 from models.base import Base, RefBase
 
@@ -13,11 +13,11 @@ from models.base import Base, RefBase
 class Lesson(Base, table=True):
     name: str
     description: str
-    display_order: Optional[int]
+    display_order: Optional[str]
     position_x: int
     position_y: int
 
-    category_id: int = Field(foreign_key="category.id")
+    category_id: str = Field(foreign_key="category.id")
 
     category: "Category" = Relationship(back_populates="lessons")
 
@@ -28,10 +28,10 @@ class Lesson(Base, table=True):
 
 class UserLessonLink(RefBase, table=True):
     """Tabelle zur Speicherung des Fortschritts eines Users in einer Lektion"""
-    user_id: int = Field(sa_column=Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True))
-    lesson_id: int = Field(sa_column=Column(Integer, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
-    progress: int = Field(default=0, ge=0, le=100, sa_column=Column(Integer, server_default="0", nullable=False))  # Wert zwischen 0 und 100
+    user_id: str = Field(sa_column=Column(String, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True))
+    lesson_id: str = Field(sa_column=Column(String, ForeignKey("lesson.id", ondelete="CASCADE"), primary_key=True))
 
+    progress: int = Field(default=0, ge=0, le=100, sa_column=Column(Integer, server_default="0", nullable=False))  # Wert zwischen 0 und 100
     # Relationships
     users: "User" = Relationship(back_populates="lesson_progresses")
     lesson: "Lesson" = Relationship(back_populates="user_progresses")

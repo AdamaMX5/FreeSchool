@@ -20,25 +20,25 @@ router = APIRouter(prefix="/content", tags=["Contents"])
 
 
 class ContentDto(BaseModel):
-    id: Optional[int] = None
+    id: Optional[str] = None
     language: str
     text: str
     youtube_id: str
     internal_video: str
-    lesson_id: Optional[int] = None
-    teacher_id: Optional[int] = None
+    lesson_id: Optional[str] = None
+    teacher_id: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 
 class ContentWithTeacherDto(BaseModel):
-    id: Optional[int] = None
+    id: Optional[str] = None
     language: str
     text: str
     youtube_id: str
     internal_video: str
-    lesson_id: Optional[int] = None
+    lesson_id: Optional[str] = None
     teacher: Optional[TeacherDto] = None
 
     class Config:
@@ -59,7 +59,7 @@ def extractYoutubeId(link: str) -> str:
 
 
 @router.get("/by_lesson/{lesson_id}", response_model=List[ContentWithTeacherDto])
-async def get_contents_by_lesson(lesson_id: int, db: AsyncSession = Depends(get_async_db)):  # get_async_db verwenden
+async def get_contents_by_lesson(lesson_id: str, db: AsyncSession = Depends(get_async_db)):  # get_async_db verwenden
     try:
         logger.info(f"Fetching contents for lesson_id: {lesson_id}")
         # Explizites Laden der Beziehungen mit joinedload
@@ -157,7 +157,7 @@ async def update_content(
 
 
 @router.delete("/{content_id}", dependencies=[Depends(required_roles(["MODERATOR", "TEACHER"]))])
-async def delete_content(content_id: int, db: AsyncSession = Depends(get_async_db)):
+async def delete_content(content_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         content = await db.scalar(select(Content).where(Content.id == content_id))
 
@@ -192,7 +192,7 @@ async def get_content(db: AsyncSession = Depends(get_async_db)):
 
 
 @router.get("/{content_id}", response_model=ContentDto)
-async def get_content(content_id: int, db: AsyncSession = Depends(get_async_db)):
+async def get_content(content_id: str, db: AsyncSession = Depends(get_async_db)):
     try:
         content = await db.scalar(select(Content).where(Content.id == content_id))
         if not content:
