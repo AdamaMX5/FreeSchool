@@ -23,11 +23,11 @@ class LessonDto(BaseModel):
     category_id: str
     name: str
     description: str
-    order: Optional[int] = None
+    order: Optional[str] = None
     position_x: int
     position_y: int
     contents: List[str] = []
-    progress: Optional[int] = 0  # Jetzt optional mit Default-Wert 0
+    progress: Optional[int] = 0
 
 
 def wrap(lesson: Lesson, progress: int = 0) -> LessonDto:
