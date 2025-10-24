@@ -16,7 +16,8 @@
 
   let {
     currentPath,
-    onNavigate = () => {}
+    onNavigate = () => {},
+    onToggleMenu = () => {}
   } = $props();
 
   let pathLoaded = false;
@@ -89,6 +90,10 @@
     errorMessage = '';
     infoMessage = '';
     step = 'login';
+  }
+
+  function handleMenuToggle() {
+    onToggleMenu();
   }
 
   async function submitLogin() {
@@ -247,6 +252,13 @@
 </script>
 
 <nav class="navigation-bar">
+  <!-- Menü-Toggle-Button -->
+  <div class="menu-toggle-area">
+    <button class="menu-toggle-button" onclick={handleMenuToggle}>
+      ☰
+    </button>
+  </div>
+
   <!-- Breadcrumb-Navigation -->
   <div class="breadcrumbs">
       <button class="home-button" onclick={() => onHomeButton([])}>🏠</button>
@@ -311,17 +323,40 @@
     height: 50px;
     background-color: #252526;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     padding: 0 20px;
     z-index: 1000;
     border-bottom: 1px solid #333;
+    gap: 15px; /* Abstand zwischen den Elementen */
+  }
+
+  .menu-toggle-area {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0; /* Verhindert, dass der Button schrumpft */
+  }
+
+  .menu-toggle-button {
+    background: none;
+    border: none;
+    color: #ddd;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px 10px;
+  }
+
+  .menu-toggle-button:hover {
+    color: #fff;
+    background-color: #333;
+    border-radius: 3px;
   }
 
   .breadcrumbs {
     display: flex;
     align-items: center;
     color: #ddd;
+    flex-grow: 1; /* Nimmt den verfügbaren Platz ein */
+    min-width: 0; /* Erlaubt das Schrumpfen bei Bedarf */
   }
 
   .home-button, .breadcrumb {
@@ -331,6 +366,7 @@
     cursor: pointer;
     padding: 5px 10px;
     font-size: 14px;
+    white-space: nowrap; /* Verhindert Zeilenumbrüche */
   }
 
   .home-button:hover, .breadcrumb:hover {
@@ -341,16 +377,19 @@
   .breadcrumb-separator {
     margin: 0 5px;
     color: #666;
+    flex-shrink: 0; /* Verhindert, dass die Trennzeichen schrumpfen */
   }
 
   .current-category {
     padding: 5px 10px;
     color: #fff;
     font-weight: bold;
+    white-space: nowrap; /* Verhindert Zeilenumbrüche */
   }
 
   .login-area {
     position: relative;
+    flex-shrink: 0; /* Verhindert, dass der Login-Bereich schrumpft */
   }
 
   .login-icon {
@@ -363,26 +402,26 @@
   }
 
   .login-dropdown {
-      position: absolute;
-      right: 0;
-      top: 40px;
-      background: #252526;
-      padding: 15px;
-      border: 1px solid #333;
-      border-radius: 5px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-width: 250px;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: #252526;
+    padding: 15px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 250px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
   }
 
-    .login-dropdown.visible {
-      opacity: 1;
-      visibility: visible;
-    }
+  .login-dropdown.visible {
+    opacity: 1;
+    visibility: visible;
+  }
 
   .login-dropdown input {
     padding: 8px;

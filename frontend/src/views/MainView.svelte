@@ -7,6 +7,7 @@
   export let currentCategory = null;
   export let isStudentLoggedIn = false;
   export let imageSize = { width: 0, height: 0 };
+  export let menuVisible = true; // Neue Property für Menü-Sichtbarkeit
 
   let mainViewDiv;
   let categoryViewRef;
@@ -30,8 +31,7 @@
 
 </script>
 
-<div bind:this={mainViewDiv} class="main-view">
-
+<div bind:this={mainViewDiv} class="main-view" class:menu-visible={menuVisible}>
   {#if activeView === 'admin'}
     <AdminView on:close={() => activeView = 'category'} />
   {:else if activeView === 'teacher'}
@@ -57,11 +57,21 @@
 
 <style>
   .main-view {
+    position: fixed;
+    top: 50px; /* Höhe der Navigationsleiste */
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     background-color: #1e1e1e;
     overflow: auto;
     padding: 20px;
+    transition: left 0.3s ease;
+  }
+
+  .main-view.menu-visible {
+    left: 260px; /* Breite des Menüs */
   }
 </style>

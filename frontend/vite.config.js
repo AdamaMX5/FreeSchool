@@ -14,6 +14,11 @@ export default ({ mode }) => {
       }
     },
     server: {
+      allowedHosts: [
+        'freischule.niwosoft.de',
+        'api.freischule.niwosoft.de'
+      ],
+      host: '0.0.0.0',  // Wichtig für Cloudflare Zugriff!
       proxy: {
         '/api': {
           target: env.VITE_API_BASE_URL || 'http://localhost:8000',

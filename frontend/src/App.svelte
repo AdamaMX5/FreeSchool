@@ -7,6 +7,7 @@
   let navCategory = $state(null);
   let currentCategory = $state(null);
   let currentPath = $state([]);
+  let menuVisible = $state(true);
 
 
   function handleCategorySelected(selected) {
@@ -41,16 +42,28 @@
       currentCategory = newPath.length > 0 ? newPath[newPath.length - 1] : null;
     }
   }
+
+  function handleToggleMenu() {
+    menuVisible = !menuVisible;
+  }
 </script>  
 
 <!-- Navigationsleiste: fixiert oben -->
-<NavigationView {currentPath} onNavigate={handleNavigate} />
+<NavigationView 
+  {currentPath} 
+  onNavigate={handleNavigate}
+  onToggleMenu={handleToggleMenu}
+/>
 
-<!-- Container für Menü & MainView -->
-<div class="content-container">
-  <MenuView {navCategory} oncategorySelected={handleCategorySelected} />
-  <MainView {currentCategory} />
-</div>
+<!-- Menü: fixiert links, außerhalb des Content-Containers -->
+<MenuView 
+  {navCategory} 
+  oncategorySelected={handleCategorySelected}
+  {menuVisible}
+/>
+
+<!-- Content-Container: Nimmt immer die volle Breite ein -->
+<MainView {currentCategory} {menuVisible} />
 
 <style>
   :global(html, #app) {
@@ -64,13 +77,5 @@
     background-color: #1e1e1e;
     overflow: hidden;
   }
-
-  .content-container {
-    display: flex;
-    flex: 1;
-    height: 100%;
-    margin-top: 50px; /* entspricht der Höhe der Navigationsleiste */
-  }
-
 
 </style>

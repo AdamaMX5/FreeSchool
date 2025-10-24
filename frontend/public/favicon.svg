@@ -1,0 +1,10 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blaues Buch -->
+  <rect x="6" y="6" width="20" height="20" rx="2" fill="#4A90E2"/>
+  <!-- Buchrücken (linke Seite) -->
+  <rect x="6" y="6" width="3" height="20" fill="#357ABD"/>
+  <!-- Grünes "F" auf der linken Seite -->
+  <text x="16" y="25" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#2ECC71" text-anchor="middle">F</text>
+  <!-- Buchseiten (Andeutung) -->
+  <path d="M10 8 H24 V24 H10" fill="none" stroke="#FFFFFF" stroke-width="1"/>
+</svg>

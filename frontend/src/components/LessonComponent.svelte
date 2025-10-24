@@ -232,6 +232,7 @@
 
   function onDeleteLesson(event){
     onLessonDeleted(event)
+    showEditDialog = false;
   }
 
 
