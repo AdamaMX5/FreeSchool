@@ -10,8 +10,9 @@ RUN npm config set registry https://registry.npmjs.org/
 ENV HUSKY=0
 
 # Pakete installieren
-COPY package.json package-lock.json ./
-RUN npm ci --legacy-peer-deps --no-optional --ignore-scripts
+COPY package.json ./
+RUN npm install --legacy-peer-deps --no-optional --ignore-scripts
+RUN npx rollup --version || npm install rollup@latest --no-save
 
 # Rest kopieren
 COPY . .
