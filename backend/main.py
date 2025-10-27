@@ -33,12 +33,12 @@ origins = [
     "http://localhost:8080",  # Frontend-URL
     "http://localhost:8000",  # Für direkte API-Aufrufe
     "http://127.0.0.1:8080",
-    "http://localhost:5173"   # Vite-Entwicklungsserver
-    f"https://{os.getenv('DOMAIN')}",
-    f"https://app.{os.getenv('DOMAIN')}"
-    f"http://{os.getenv('DOMAIN')}",
-    f"http://app.{os.getenv('DOMAIN')}",
-    "*"  # Nur für die Entwicklung!
+    "http://localhost:5173",   # Vite-Entwicklungsserver
+    "https://freischule.info",  # Deine Produktions-Domain
+    "https://api.freischule.info",  # API Domain
+    "http://freischule.info",  # HTTP fallback
+    "http://api.freischule.info",   # HTTP API fallback
+    "*",  # Nur für die Entwicklung!
 ]
 app.add_middleware(
     CORSMiddleware,
