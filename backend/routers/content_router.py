@@ -8,6 +8,7 @@ from models import Content, Category
 from pydantic import BaseModel
 from typing import Optional, List
 
+from models.base import generate_unique_id_async
 from routers.teacher_router import TeacherDto
 from security.auth import required_roles
 
@@ -112,7 +113,7 @@ async def new_content(content_data: ContentDto, db: AsyncSession = Depends(get_a
     try:
         content = Content(**content_data.model_dump(exclude_unset=True))
         content.youtube_id = extractYoutubeId(content.youtube_id)
-
+        content.id = await generate_unique_id_async(db, Content)
         db.add(content)
         await db.commit()
         await db.refresh(content)

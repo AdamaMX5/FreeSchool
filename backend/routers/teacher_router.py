@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from models import Teacher
+from models.base import generate_unique_id_async
 from security.auth import required_roles
 
 import traceback
@@ -35,6 +36,7 @@ class TeacherDto(BaseModel):
 @router.post("", dependencies=[Depends(required_roles(["MODERATOR"]))])
 async def new_teacher(t: Teacher, db: AsyncSession = Depends(get_async_db)):
     try:
+        t.id = await generate_unique_id_async(db, Teacher)
         db.add(t)
         await db.commit()
         await db.refresh(t)

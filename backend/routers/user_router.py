@@ -257,7 +257,8 @@ async def initialize_roles(db: AsyncSession):
     new_roles = []
     for role_name in required_roles:
         if role_name not in existing_roles:
-            new_roles.append(Role(name=role_name))
+            role_id = await generate_unique_id_async(db, Role)
+            new_roles.append(Role(id=role_id, name=role_name))
 
     # Neue Rollen speichern
     if new_roles:

@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from database import get_async_db
 from datetime import datetime
 from models import UserLessonLink, User, Content, Lesson
+from models.base import generate_unique_id_async
 from security.auth import get_current_user_optional, get_current_user
 from security.auth import required_roles
 
@@ -53,6 +54,7 @@ async def new_lesson(dto: LessonDto, db: AsyncSession = Depends(get_async_db)):
     try:
         lesson = Lesson(
             category_id=dto.category_id,
+            id=await generate_unique_id_async(db, Lesson),
             name=dto.name,
             description=dto.description,
             display_order=dto.order,

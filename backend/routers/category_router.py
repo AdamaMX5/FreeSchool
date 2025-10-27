@@ -10,6 +10,8 @@ from datetime import datetime
 from models import Category, CategoryCategory
 from pydantic import BaseModel
 from typing import List, Optional
+
+from models.base import generate_unique_id_async
 from security.auth import required_roles
 # Logging konfigurieren
 import logging
@@ -32,6 +34,7 @@ async def new_category(dto: CategoryDto, db: AsyncSession = Depends(get_async_db
     try:
         logger.info("Erstelle neue Category:")
         c = Category(
+            id=await generate_unique_id_async(db, Category),
             name=dto.name,
             background_link=dto.background_link,
         )
