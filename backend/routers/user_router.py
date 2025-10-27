@@ -8,6 +8,8 @@ from typing import List, Optional
 from models import User, Profile, Role, UserRoleLink, RoleEnum
 from database import get_async_db
 from datetime import datetime
+
+from models.base import generate_unique_id_async
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
 from security.email import EmailService
 
@@ -83,6 +85,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
     else:
         # Registrierungsvorgang gestartet: Neues User-Objekt erstellen:
         new_user = User(email=user_in.email, password=user_in.password)
+        new_user.id = await generate_unique_id_async(db, User)
         new_user.last_login = datetime.utcnow()  # Letzter Login
         new_user.hashed_password = get_password_hash(user_in.password)  # Password-Hash erstellen
         new_user.password_verify = False  # Password-Hash erstellen
