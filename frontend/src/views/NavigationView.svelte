@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { user, setUser, unsetUser } from '../lib/global';
   
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.freischule.info';
   
   export const Roles = Object.freeze({
     STUDENT: 'STUDENT',
@@ -90,6 +90,19 @@
     errorMessage = '';
     infoMessage = '';
     step = 'login';
+
+    console.log('=== DEBUG API BASE URL ===');
+    console.log('API_BASE_URL Variable:', API_BASE_URL);
+    console.log('VITE_API_BASE_URL aus env:', import.meta.env.VITE_API_BASE_URL);
+    console.log('Typ von API_BASE_URL:', typeof API_BASE_URL);
+    console.log('Ist API_BASE_URL undefined?:', API_BASE_URL === undefined);
+    console.log('Ist API_BASE_URL "undefined"?:', API_BASE_URL === 'undefined');
+    console.log('Komplette import.meta.env:', import.meta.env);
+    console.log('==========================');
+    
+    // Test-URL zusammenbauen
+    const testUrl = `${API_BASE_URL}/user/login`;
+    console.log('Zusammengebaute Login-URL:', testUrl);
   }
 
   function handleMenuToggle() {
