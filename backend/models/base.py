@@ -85,7 +85,7 @@ async def generate_unique_id_async(session: AsyncSession, model_class: Type[Base
         candidate_id = f"{prefix}_{random_part}"
 
         # Async Prüfung
-        stmt = (select(model_class).where(model_class.uid == candidate_id))
+        stmt = (select(model_class).where(model_class.id == candidate_id))
         existing = await session.scalar(stmt)
 
         if not existing:
