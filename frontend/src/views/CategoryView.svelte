@@ -156,18 +156,22 @@
   });
 </script>
 
+
 {#if currentCategory}
   <div
     class="image-container"
-    style="width: {containerSize.width}px; height: {containerSize.height}px;"
+    style="width: {containerSize.width === 0 ? '100%' : containerSize.width + 'px'};
+         height: {containerSize.height === 0 ? '100%' : containerSize.height + 'px'};"
   >
+  <!-- Width : 100% ist a Hotfix, when ContainerSize is not set... -->
     {#if currentCategory?.background_link}
       <img
         class="background-image"
         src={currentCategory.background_link}
         alt={currentCategory.name}
         on:load={handleImageLoad}
-        style="width: {containerSize.width}px; height: {containerSize.height}px;"
+        style="width: {containerSize.width === 0 ? '100%' : containerSize.width + 'px'};
+              height: {containerSize.height === 0 ? '100%' : containerSize.height + 'px'};"
       />
     {:else}
       <img
@@ -175,7 +179,8 @@
         src="ressources/background/learninghub.jpg"
         alt={currentCategory.name}
         on:load={handleImageLoad}
-        style="width: {containerSize.width}px; height: {containerSize.height}px;"
+        style="width: {containerSize.width === 0 ? '100%' : containerSize.width + 'px'};
+              height: {containerSize.height === 0 ? '100%' : containerSize.height + 'px'};"
       />
     {/if}
 
