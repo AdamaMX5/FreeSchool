@@ -199,7 +199,8 @@
 {:else}
   <div class="empty-state">
     <h1>Willkommen in der Freischule</h1>
-    <p>Bitte wähle ein Lernbüro</p>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/HUMMr4icLeY?si=XW525iCdQxrXPFOE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <br><br>
     <a href="/ressources/pdf/Freischule.pdf" download class="download-link">
       📥 Freischul Konzept für Swakopmund herunterladen
     </a>
