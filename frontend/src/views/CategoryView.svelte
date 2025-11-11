@@ -204,6 +204,10 @@
     <a href="/ressources/pdf/Freischule.pdf" download class="download-link">
       📥 Freischul-Konzept für Swakopmund herunterladen
     </a>
+    <br><br>
+    <a href="/ressources/pdf/Freeschool.pdf" download class="download-link">
+      📥 download Freeschool-Conception for Swakopmund
+    </a>
   </div>
 {/if}
 
