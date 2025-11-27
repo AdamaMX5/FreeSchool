@@ -10,6 +10,7 @@
   export let currentCategory = null;
   export let isStudentLoggedIn = false;
   export let imageSize = { width: 0, height: 0 };
+  export let isMobile = false;
 
   export let lessons = [];
   let containerSize = { width: 0, height: 0 };
@@ -112,10 +113,10 @@
   }
 
   function updateLayout() {
-    const menuWidth = 260;
+    const menuWidth = isMobile ? 0 : 260;
     const navHeight = 50;
-    const toolbarHeight = 66;
-    const padding = 40;
+    const toolbarHeight = isMobile ? 80 : 66;
+    const padding = isMobile ? 10 : 40;
 
     const availableWidth = window.innerWidth - menuWidth - padding;
     const availableHeight = window.innerHeight - navHeight - toolbarHeight - padding;
@@ -160,6 +161,7 @@
 {#if currentCategory}
   <div
     class="image-container"
+    class:mobile={isMobile}
     style="width: {containerSize.width === 0 ? '100%' : containerSize.width + 'px'};
          height: {containerSize.height === 0 ? '100%' : containerSize.height + 'px'};"
   >
@@ -169,7 +171,7 @@
         class="background-image"
         src={currentCategory.background_link}
         alt={currentCategory.name}
-        on:load={handleImageLoad}
+        onload={handleImageLoad}
         style="width: {containerSize.width === 0 ? '100%' : containerSize.width + 'px'};
               height: {containerSize.height === 0 ? '100%' : containerSize.height + 'px'};"
       />
@@ -178,7 +180,7 @@
         class="background-image"
         src="ressources/background/learninghub.jpg"
         alt={currentCategory.name}
-        on:load={handleImageLoad}
+        onload={handleImageLoad}
         style="width: {containerSize.width === 0 ? '100%' : containerSize.width + 'px'};
               height: {containerSize.height === 0 ? '100%' : containerSize.height + 'px'};"
       />
@@ -189,6 +191,7 @@
         {lesson}
         {scaleFactor}
         {isStudentLoggedIn}
+        {isMobile}
         editable={$isEditMode}
         draggable={$isMoveMode}
         onPositionChanged={({ id, x, y }) => updateLessonPosition({ id, x, y })}
@@ -197,7 +200,7 @@
     {/each}
   </div>
 {:else}
-  <div class="empty-state">
+  <div class="empty-state" class:mobile={isMobile}>
     <h1>Willkommen in der Freischule</h1>
     <iframe width="560" height="315" src="https://www.youtube.com/embed/HUMMr4icLeY?si=XW525iCdQxrXPFOE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     <br><br>
@@ -206,7 +209,7 @@
     </a>
     <br><br>
     <a href="/ressources/pdf/Freeschool.pdf" download class="download-link">
-      📥 download Freeschool-Conception for Swakopmund
+      📥 download Free School-Conception for Swakopmund
     </a>
   </div>
 {/if}
@@ -216,27 +219,29 @@
     position: relative;
     background-color: #2a2a2a;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+    max-width: 100%;
+  }
+
+  .image-container.mobile {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 300px;
   }
 
   .background-image {
     display: block;
     object-fit: contain;
-  }
-
-  .background-placeholder {
-    background-color: #333;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 0;
-    border-radius: 4px;
+    max-width: 100%;
   }
 
   .empty-state {
     color: #aaa;
     font-size: 1.2rem;
+  }
+
+  .empty-state.mobile {
+    padding: 20px;
+    text-align: center;
   }
 
   .download-link {
@@ -252,5 +257,31 @@
 
   .download-link:hover {
     background-color: #0056b3;
+  }
+
+  @media (max-width: 768px) {
+    .image-container {
+      width: 100% !important;
+      height: auto !important;
+    }
+    
+    .background-image {
+      width: 100% !important;
+      height: auto !important;
+    }
+    
+    .empty-state {
+      padding: 10px;
+    }
+    
+    .empty-state h1 {
+      font-size: 1.5rem;
+    }
+    
+    .download-link {
+      display: block;
+      margin: 10px 0;
+      text-align: center;
+    }
   }
 </style>

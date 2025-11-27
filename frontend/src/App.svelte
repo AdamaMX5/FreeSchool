@@ -3,12 +3,25 @@
   import MainView from './views/MainView.svelte';
   import NavigationView from './views/NavigationView.svelte';
   import TeacherView from './views/TeacherView.svelte';
+  import { onMount } from 'svelte';
 
   let navCategory = $state(null);
   let currentCategory = $state(null);
   let currentPath = $state([]);
   let menuVisible = $state(true);
+  let isMobile = $state(false);
 
+  function checkMobile() {
+    isMobile = window.innerWidth <= 768;
+    if (isMobile && menuVisible) {
+      menuVisible = false;
+    }
+  }
+
+  onMount(() => {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+  });
 
   function handleCategorySelected(selected) {
 //    console.trace('handleCategorySelected wurde aufgerufen mit:', selected);

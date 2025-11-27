@@ -10,16 +10,14 @@
   let{
     navCategory = null,
     oncategorySelected = () => {},
-    menuVisible = true
+    menuVisible = true,
+    isMobile = false
   } = $props();
 
   let categories = $state([]);
   let childCategories = $state([]);
   let currentCategory = $state(null);
-
-  // For Mods
   let showCategoryPopup = false;
-
   let isModerator = $state(false);
 
   user.subscribe(value => {
@@ -50,6 +48,13 @@
   async function onselectCategory(category) {
     oncategorySelected(category); // Event auslösen
     setCurrentCategory(category);
+
+    // Auf Mobile Menü nach Auswahl schließen
+    if (isMobile) {
+      // Event dispatch um Menü zu schließen
+      const event = new CustomEvent('closeMenu');
+      document.dispatchEvent(event);
+    }
   }
 
   async function setCurrentCategory(category){
@@ -68,10 +73,22 @@
       setCurrentCategory(navCategory);
     }
   });
+  
+  // Close menu when clicking overlay on mobile
+  function handleOverlayClick() {
+    if (isMobile) {
+      const event = new CustomEvent('closeMenu');
+      document.dispatchEvent(event);
+    }
+  }
 </script>
 
 {#if menuVisible}
-<aside class="menu">
+  {#if isMobile}
+    <div class="menu-overlay" onclick={handleOverlayClick} />
+  {/if}
+
+<aside class="menu" class:mobile={isMobile}>
   <div class="menu-scroll">
     {#if currentCategory}
       {#each childCategories as category}
@@ -128,6 +145,26 @@
     display: flex;
     flex-direction: column;
     z-index: 900;
+    transition: transform 0.3s ease;
+  }
+
+  .menu.mobile {
+    transform: translateX(-100%);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .menu.mobile:global(.menu-visible) {
+    transform: translateX(0);
+  }
+
+  .menu-overlay {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 899;
   }
 
   /* Scroll-Verhalten */
@@ -176,5 +213,19 @@
     height: 260px;
     width: 100%;
     flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .menu {
+      width: 280px;
+    }
+    
+    .learning-hub {
+      width: 270px;
+    }
+    
+    .hub-background {
+      height: 120px;
+    }
   }
 </style>

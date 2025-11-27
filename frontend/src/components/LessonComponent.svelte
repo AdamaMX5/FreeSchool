@@ -7,7 +7,7 @@
   import EditContentDialog from "../dialogs/EditContentDialog.svelte";
   import { user } from "../lib/global";
 
-  const API_BASE_URL = "/api";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   let isModerator = $state(false);
 
@@ -24,6 +24,7 @@
     draggable = false,
     editable = false,
     scaleFactor = 1,
+    isMobile = false
   } = $props();
 
   let isOpen = $state(false);
@@ -45,14 +46,17 @@
   let startX: number = 0;
   let startY: number = 0;
 
+  // Mobile Touch Variablen
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let isScrolling = false;
 
-  
   $effect(() => {
-    if (selectedContentId) {
+    if (contents.length > 0 && !selectedContentId) {
+      selectedContentId = contents[0].id;
       updateSelectedContent();
     }
   });
-
 
    $effect(() => {
     if (draggable) {
@@ -73,6 +77,12 @@
     updateProgressColor();
   });
 
+   // Debug-Ausgabe hinzufügen
+  $effect(() => {
+    console.log("Contents:", contents);
+    console.log("Selected Content ID:", selectedContentId);
+    console.log("Selected Content:", selectedContent);
+  });
   
   onMount(() => {
     fetchContents();
@@ -81,20 +91,28 @@
     offsetY = lesson.position_y * scaleFactor;
   });
 
-  function getTempProgressColor(p: number) {
-    if (p < 30) return "green";
-    if (p < 70) return "yellow";
-    return "red";
+  function getSmoothProgressColor(progress: number) {
+    let r, g, b;
+    
+    if (progress < 50) {
+      // Grün: rgb(40, 167, 69) -> Gelb: rgb(255, 233, 0)
+      const ratio = progress / 50;
+      r = Math.floor(40 + (215 * ratio));  // 40 -> 255
+      g = Math.floor(167 + (66 * ratio));  // 167 -> 233
+      b = Math.floor(69 - (69 * ratio));   // 69 -> 0
+    } else {
+      // Gelb: rgb(255, 233, 0) -> Rot: rgb(255, 0, 0)
+      const ratio = (progress - 50) / 50;
+      r = Math.floor(255);  // 255 -> 255
+      g = Math.floor(233 - (233 * ratio)); // 233 -> 0
+      b = Math.floor(0);    // 0 -> 0
+    }
+    console.log(`Progress ${progress} Color: Rot ${r} Grün ${g} Blau ${b}`);
+    return `rgb(${r}, ${g}, ${b})`;
   }
 
   function updateProgressColor() {
-    if (progress < 30) {
-      progressColor = "green";
-    } else if (progress < 70) {
-      progressColor = "yellow";
-    } else {
-      progressColor = "red";
-    }
+    progressColor = getSmoothProgressColor(progress);
   }
 
   function toggleOpen() {
@@ -106,14 +124,9 @@
     }
   }
 
-  function extractYouTubeId(url: string) {
-    const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-    return match ? match[1] : null;
-  }
-
   function handleProgressInput(event) {
     tempProgress = parseInt(event.target.value);
-    progressColor = getTempProgressColor(tempProgress);
+    progressColor = getSmoothProgressColor(tempProgress);
   }
 
   async function handleProgressChange(event) {
@@ -138,8 +151,6 @@
       progress: newProgress
     };
     try {
-      
-
       const response = await fetch(`${API_BASE_URL}/lesson/progress`, {
         method: "POST",
         headers: headers,
@@ -163,20 +174,41 @@
   }
 
   async function fetchContents() {
+    console.log('📡 Fetching contents for lesson:', lesson.id);
+    console.log('🔗 API URL:', `${API_BASE_URL}/content/by_lesson/${lesson.id}`);
     try {
-      const res = await fetch(`${API_BASE_URL}/content/by_lesson/${lesson.id}`);
+      const headers = {};
+      if ($user?.jwt) {
+        headers['Authorization'] = `Bearer ${$user.jwt}`;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/content/by_lesson/${lesson.id}`, {
+        headers: headers
+      });
+      
+      console.log('📊 Response status:', res.status);
+      console.log('📊 Response headers:', Object.fromEntries(res.headers.entries()));
+    
       if (res.ok) {
         contents = await res.json();
-        selectedContentId = contents[0]?.id || null;
-        updateSelectedContent();
+        console.log('✅ Contents loaded:', contents);
+        // Automatisch ersten Content auswählen
+        if (contents.length > 0) {
+          selectedContentId = contents[0].id;
+          updateSelectedContent();
+        } else {
+          selectedContent = null;
+          markdownContent = "";
+          console.log('ℹ️ No contents available for this lesson');
+        }
       } else {
-        console.error(
-          "Fehler beim Laden der aktualisierten Lesson:",
-          await res.json().de,
-        );
+        const errorText = await res.text();
+        console.error('❌ API Error:', errorText);
+        throw new Error(`HTTP-Fehler: ${res.status}`);
       }
     } catch (err) {
-      console.error("Fehler beim Laden der Contents:", err);
+      console.error('❌ Network error:', err);
+      //error = "Fehler beim Laden der Inhalte";
     }
   }
 
@@ -216,9 +248,9 @@
   }
 
   function updateSelectedContent() {
-    selectedContent =
-      contents.find((c) => c.id === selectedContentId) || contents[0] || null;
+    selectedContent = contents.find((c) => c.id === selectedContentId) || null;
     markdownContent = selectedContent?.text || "";
+    console.log("Selected Content:", selectedContent); // Debug-Ausgabe
   }
 
   function onEditSuccess(event) {
@@ -234,8 +266,6 @@
     onLessonDeleted(event)
     showEditDialog = false;
   }
-
-
 
   function onMouseDown(event: MouseEvent) {
     if (!draggable) return;
@@ -271,6 +301,54 @@
     }
   }
 
+  function onTouchStart(event: TouchEvent) {
+    if (!draggable) return;
+    const touch = event.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+    isScrolling = false;
+
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+  }
+
+  function onTouchMove(event: TouchEvent) {
+    if (!draggable || isScrolling) return;
+    
+    const touch = event.touches[0];
+    const diffX = touch.clientX - touchStartX;
+    const diffY = touch.clientY - touchStartY;
+    
+    // Prüfen ob es ein Scroll oder Drag ist
+    if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 10) {
+      isScrolling = true;
+      return;
+    }
+    
+    if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
+      event.preventDefault();
+      offsetX += diffX;
+      offsetY += diffY;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }
+  }
+
+  function onTouchEnd() {
+    if (!draggable) return;
+    window.removeEventListener("touchmove", onTouchMove);
+    window.removeEventListener("touchend", onTouchEnd);
+
+    if (!isScrolling) {
+      const newX = Math.trunc(offsetX / scaleFactor);
+      const newY = Math.trunc(offsetY / scaleFactor);
+
+      if (newX !== lesson.position_x || newY !== lesson.position_y) {
+        onPositionChanged?.({ id: lesson.id, x: newX, y: newY });
+      }
+    }
+  }
+
   let showEditContentDialog = $state(false);
   let contentToEdit = $state(null);
 
@@ -284,31 +362,77 @@
     showEditContentDialog = false;
   }
 
+  // Close lesson details when clicking outside on mobile
+  function handleOutsideClick(event) {
+    if (isMobile && isOpen && !event.target.closest('.lesson-details') && !event.target.closest('.lesson-icon')) {
+      isOpen = false;
+    }
+  }
+
+  // Handle mobile scrolling behavior
+  function handleScroll(event) {
+    if (isMobile && isOpen) {
+      // Prevent background scrolling when lesson is open on mobile
+      event.stopPropagation();
+    }
+  }
 </script>
 
 <div
   class="lesson-wrapper {cursor}"
+  class:mobile={isMobile}
+  class:open={isOpen}
   style="left: {offsetX}px; top: {offsetY}px;"
   title={lesson.name}
+  role="button"
+  tabindex="0"
+  onkeydown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleOutsideClick(e);
+    }
+  }}
+  onclick={(e) => {
+    if (e.target === e.currentTarget) {
+      handleOutsideClick(e);
+    }
+  }}
 >
   <div
     role="button"
     tabindex="0"
     class="lesson-icon"
     onclick={toggleOpen}
-    onmousedown={onMouseDown}
     onkeydown={(e) => (e.key === "Enter" || e.key === " ") && toggleOpen()}
+    onmousedown={onMouseDown}
+    ontouchstart={onTouchStart}
   >
-    <div class="icon-circle {progressColor}">
+
+    <div 
+      class="icon-circle" style="background-color: {getSmoothProgressColor(progress)}"
+    >
       {lesson.order ?? "•"}
     </div>
   </div>
 
   {#if isOpen}
-    <div class="lesson-details">
+    <div class="content-debug" style:display={contents.length === 0 ? 'block' : 'none'}>
+      Keine Contents verfügbar für diese Lesson
+    </div>
+    <div 
+      class="lesson-details" 
+      class:mobile={isMobile}
+      onscroll={handleScroll}
+    >
+      <button class="close-button" onclick={() => isOpen = false}>
+        ✕
+      </button>
+      
+
       {#if isModerator}
         <ContentNew {lesson} onsuccess={onNewConent} />
       {/if}
+
       <h3>{lesson.name}</h3>
       {#if $user?.jwt}
         <div class="progress-container">
@@ -324,7 +448,7 @@
             onchange={handleProgressChange}
             onmousedown={handleMouseDown}
             class="progress-slider"
-            style="--progress-color: {isProgressDragging ? getTempProgressColor(tempProgress) : progressColor}"
+            style="--progress-color: {isProgressDragging ? getSmoothProgressColor(tempProgress) : progressColor}"
           />
           <div class="progress-labels">
             <span>0%</span>
@@ -342,46 +466,55 @@
           {/each}
         </select>
       {/if}
-
+      
       {#if selectedContent}
         {#if selectedContent.internal_video}
-          <video controls src={selectedContent.internal_video}>
-            <track kind="captions" label="Untertitel" srcLang="de" />
-            Dein Browser unterstützt kein Video-Element.
-          </video>
+          <div class="media-container">
+            <video controls src={selectedContent.internal_video}>
+              <track kind="captions" label="Untertitel" srcLang="de" />
+              Dein Browser unterstützt kein Video-Element.
+            </video>
+          </div>
         {:else if selectedContent.youtube_id}
-          <iframe
-            width="600"
-            height="338"
-            src="https://www.youtube.com/embed/{selectedContent.youtube_id}"
-            title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          >
-          </iframe>
+          <div class="media-container">
+            <iframe
+              width="100%"
+              height="{isMobile ? '200' : '338'}"
+              src="https://www.youtube.com/embed/{selectedContent.youtube_id}"
+              title="YouTube video player"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen
+            >
+            </iframe>
+          </div>
         {/if}
 
         {#if isModerator}
           <button class="edit-btn" onclick={() => onEditContentDialog(selectedContent)} title="Content bearbeiten">
-            <Edit size="24" />
+            <Edit size="{isMobile ? 20 : 24}" />
+            {#if isMobile}Bearbeiten{/if}
           </button>
         {/if}
 
-        <MarkdownRenderer markdown={markdownContent} />
+        <div class="markdown-container">
+          <MarkdownRenderer markdown={markdownContent} />
+        </div>
       {/if}
 
-      {#if isStudentLoggedIn}
-        <label for="progress">Fortschritt: {progress}%</label>
-        <input
-          id="progress"
-          type="range"
-          min="0"
-          max="100"
-          step="10"
-          bind:value={progress}
-        />
+      {#if isStudentLoggedIn && !$user?.jwt}
+        <div class="progress-container">
+          <label for="progress">Fortschritt: {progress}%</label>
+          <input
+            id="progress"
+            type="range"
+            min="0"
+            max="100"
+            step="10"
+            bind:value={progress}
+          />
+        </div>
       {/if}
     </div>
   {/if}
@@ -409,6 +542,7 @@
 <style>
   .lesson-wrapper {
     position: absolute;
+    z-index: auto;
   }
 
   .lesson-wrapper.pointer {
@@ -421,6 +555,20 @@
 
   .lesson-wrapper.grabbing {
     cursor: grabbing;
+  }
+
+  .lesson-wrapper.mobile {
+    touch-action: pan-y;
+  }
+
+  .lesson-wrapper.mobile.open {
+    z-index: 100;
+  }
+
+  .lesson-wrapper.mobile .icon-circle {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
   }
 
   .lesson-icon {
@@ -440,36 +588,72 @@
     margin-top: 10px;
     width: 600px;
     max-width: 90vw;
-    z-index: 10;
+    z-index: 11;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .lesson-details.mobile {
+    width: 95vw;
+    max-width: 95vw;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
+    max-height: 90vh;
+    padding: 15px;
   }
 
   .icon-circle {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 2px solid #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.5);
-    transition: transform 0.2s;
+    color: #000; /* Dunkle Schrift für besseren Kontrast */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease;
   }
 
-  .icon-circle.red {
-    background-color: #ff3b30;
+  .icon-circle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
   }
-  .icon-circle.yellow {
-    background-color: #ffff00;
-  }
-  .icon-circle.green {
-    background-color: #28a745;
+
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 5px;
+    z-index: 11;
   }
 
   select {
     margin-bottom: 12px;
     width: 100%;
+    padding: 8px;
+    background: #444;
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 4px;
+  }
+
+  .media-container {
+    margin-top: 10px;
+    border-radius: 6px;
+    overflow: hidden;
   }
 
   iframe,
@@ -503,12 +687,14 @@
     align-items: center;
     gap: 6px;
     margin: 10px 0;
-    padding: 6px 12px;
+    padding: 8px 16px;
     background-color: #444;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    width: 100%;
+    justify-content: center;
   }
 
   .edit-btn:hover {
@@ -556,5 +742,76 @@
     justify-content: space-between;
     font-size: 0.8rem;
     color: #aaa;
+  }
+  
+  .markdown-container {
+    margin-top: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  .lesson-details.mobile .markdown-container {
+    max-height: 200px;
+  }
+
+  /* Mobile-specific styles */
+  @media (max-width: 768px) {
+    .lesson-details {
+      position: fixed;
+      top: 50px;
+      left: 2.5vw;
+      width: 95vw;
+      max-width: 95vw;
+      transform: none;
+      margin-top: 0;
+    }
+
+    .lesson-details h3 {
+      font-size: 1.2rem;
+      margin-right: 30px;
+    }
+
+    .edit-btn {
+      padding: 10px;
+      font-size: 0.9rem;
+    }
+
+    .progress-container label {
+      font-size: 0.9rem;
+    }
+
+    .markdown-container {
+      font-size: 0.9rem;
+    }
+  }
+
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    .lesson-icon {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    
+    .icon-circle {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    
+    .edit-btn {
+      min-height: 44px;
+    }
+    
+    select {
+      min-height: 44px;
+    }
+  }
+
+  .content-debug {
+    border: 2px solid red;
+    padding: 10px;
+    margin: 10px 0;
   }
 </style>

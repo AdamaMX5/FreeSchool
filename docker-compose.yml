@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
@@ -32,8 +33,7 @@ services:
         condition: service_healthy
     networks:
       - freeschool_network
-    volumes:
-      - ./backend:/app
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
@@ -47,6 +47,7 @@ services:
       - backend
     networks:
       - freeschool_network
+    restart: unless-stopped
 
 networks:
   freeschool_network:
