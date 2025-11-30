@@ -1,8 +1,7 @@
 <script lang="ts">
   import Dialog from "./Dialog.svelte";
   import { user } from "../lib/global";
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  import { putLesson, deleteLesson } from "../lib/lessonApi";
   
   let {
     lesson = null,
@@ -32,48 +31,23 @@
     };
 
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/lesson/${lesson.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${$user.jwt}`, // JWT-Token hinzufügen
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Fehler beim Bearbeiten");
-
+      // Verwende die LessonAPI-Funktion statt direktem fetch
+      const result = await putLesson(lesson.id, payload);
       onsuccess(result);
     } catch (e) {
       console.error("API Fehler:", e);
+      console.log("e.message:", e.message);
       onerror(e.message);
     }
   }
 
-  async function deleteLesson() {
+  async function deleteLessonHandler() {
     const confirmed = confirm("Lektion wirklich löschen?");
     if (!confirmed) return;
 
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/lesson/${lesson.id}`,
-        {
-          method: "DELETE", 
-          headers: {
-            Authorization: `Bearer ${$user.jwt}`
-          },
-        },
-      );
-
-      if (!res.ok) {
-        const result = await res.json();
-        throw new Error(result.error || "Fehler beim Löschen");
-      }
-
+      // Verwende die LessonAPI-Funktion statt direktem fetch
+      await deleteLesson(lesson.id);
       ondeleted({ deleted: true, id: lesson.id });
     } catch (e) {
       console.error("Löschfehler:", e);
@@ -96,7 +70,7 @@
     <textarea bind:value={description} rows="3" />
 
     <label>Reihenfolge:</label>
-    <input type="number" bind:value={order} />
+    <input type="text" bind:value={order} />
   </div>
 
   {#if error}
@@ -104,7 +78,7 @@
   {/if}
 
   <div class="actions">
-    <button class="danger" onclick={deleteLesson}>Löschen</button>
+    <button class="danger" onclick={deleteLessonHandler}>Löschen</button>
     <button onclick={submit}>Speichern</button>
     <button onclick={close}>Abbrechen</button>
   </div>

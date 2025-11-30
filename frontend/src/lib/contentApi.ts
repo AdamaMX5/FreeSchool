@@ -8,8 +8,8 @@ export async function postContent(
   text: string,
   youtube_id: string,
   internal_video: string,
-  lesson_id: number,
-  teacher_id: number | null
+  lesson_id: string,
+  teacher_id: string | null
 ) {
   const jwt = get(user)?.jwt;
   const res = await fetch(`${API_BASE_URL}/content`, {

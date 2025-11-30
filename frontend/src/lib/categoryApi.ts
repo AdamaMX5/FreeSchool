@@ -4,11 +4,11 @@ import { get } from "svelte/store"
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export interface CategoryDto {
-  id?: number;
+  id?: string;
   name: string;
   background_link: string;
-  parents: number[];
-  children: number[];
+  parents: string[];
+  children: string[];
 }
 
 export async function getLearningHubs() {

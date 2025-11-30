@@ -76,13 +76,6 @@
     progress = lesson.progress || 0;
     updateProgressColor();
   });
-
-   // Debug-Ausgabe hinzufügen
-  $effect(() => {
-    console.log("Contents:", contents);
-    console.log("Selected Content ID:", selectedContentId);
-    console.log("Selected Content:", selectedContent);
-  });
   
   onMount(() => {
     fetchContents();
@@ -107,7 +100,7 @@
       g = Math.floor(233 - (233 * ratio)); // 233 -> 0
       b = Math.floor(0);    // 0 -> 0
     }
-    console.log(`Progress ${progress} Color: Rot ${r} Grün ${g} Blau ${b}`);
+    //console.log(`Progress ${progress} Color: Rot ${r} Grün ${g} Blau ${b}`);
     return `rgb(${r}, ${g}, ${b})`;
   }
 
@@ -174,8 +167,8 @@
   }
 
   async function fetchContents() {
-    console.log('📡 Fetching contents for lesson:', lesson.id);
-    console.log('🔗 API URL:', `${API_BASE_URL}/content/by_lesson/${lesson.id}`);
+    //console.log('📡 Fetching contents for lesson:', lesson.id);
+    //console.log('🔗 API URL:', `${API_BASE_URL}/content/by_lesson/${lesson.id}`);
     try {
       const headers = {};
       if ($user?.jwt) {
@@ -186,12 +179,11 @@
         headers: headers
       });
       
-      console.log('📊 Response status:', res.status);
-      console.log('📊 Response headers:', Object.fromEntries(res.headers.entries()));
-    
+      //console.log('📊 Response status:', res.status);
+      
       if (res.ok) {
         contents = await res.json();
-        console.log('✅ Contents loaded:', contents);
+        //console.log('✅ Contents loaded:', $state.snapshot(contents));
         // Automatisch ersten Content auswählen
         if (contents.length > 0) {
           selectedContentId = contents[0].id;
@@ -250,7 +242,6 @@
   function updateSelectedContent() {
     selectedContent = contents.find((c) => c.id === selectedContentId) || null;
     markdownContent = selectedContent?.text || "";
-    console.log("Selected Content:", selectedContent); // Debug-Ausgabe
   }
 
   function onEditSuccess(event) {
@@ -259,7 +250,7 @@
   }
 
   function onEditError(event) {
-    alert("Fehler beim Bearbeiten: " + event.detail);
+    alert("Fehler beim Bearbeiten: " + event);
   }
 
   function onDeleteLesson(event){

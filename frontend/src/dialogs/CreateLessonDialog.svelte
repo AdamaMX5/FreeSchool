@@ -4,8 +4,7 @@
   import { onMount } from 'svelte';
   import { getTeachersAll } from "../lib/teacherApi";
   import { postContent } from "../lib/contentApi";
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  import { postLesson } from "../lib/lessonApi";
 
   let {
     category,
@@ -59,18 +58,7 @@
         contents: []
       };
 
-      const lessonRes = await fetch(`${API_BASE_URL}/lesson`, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${$user.jwt}`  // JWT-Token hinzufügen
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const lessonResult = await lessonRes.json();
-      if (!lessonRes.ok) throw new Error(lessonResult.error || "Fehler beim Erstellen der Lesson");
-
+      const lessonResult = await postLesson(payload);
       // Wenn Content-Felder ausgefüllt sind, Content mit der exportierten Funktion erstellen
       if (youtubeId && youtubeId.trim() !== ""){
         await postContent(language, contentText.trim(), youtubeId, internalVideo.trim(), lessonResult.id, teacherId);
@@ -83,7 +71,7 @@
 </script>
 
 <Dialog on:close={close}>
-  <h2>Neue Lesson erstellen</h2>
+  <h2>Neue Lektion erstellen</h2>
 
   <div class="form-grid">
     <label>Titel*:</label>
@@ -95,7 +83,7 @@
     <label>Reihenfolge:</label>
     <input type="text" bind:value={order} />
   </div>
-    <h3>Content Details</h3>
+  <h3>Inhalt erstellen</h3>
   <div class="form-grid">
       
       
@@ -107,10 +95,10 @@
 
     <label>YouTube Video ID/Link*:</label>
     <input type="text" bind:value={youtubeId} placeholder="YouTube ID oder gesamten Link" />
-
+    <!--
     <label>Interne Video-URL:</label>
     <input type="text" bind:value={internalVideo} placeholder="wird später vom Server automatisch gesetzt (nach dem Download des YT-Videos)" />
-
+    -->
     <label>Lehrer:</label>
     <select bind:value={teacherId}>
       <option value={null}>-- Optional: Lehrer auswählen --</option>

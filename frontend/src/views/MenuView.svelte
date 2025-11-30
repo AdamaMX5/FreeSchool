@@ -173,6 +173,15 @@
     overflow-x: hidden;
     flex-grow: 1;
     padding: 0;
+
+    /* Scrollbalken verstecken für Webkit-Browser (Chrome, Safari, Edge) */
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    /* Scrollbalken verstecken für Firefox */
+    scrollbar-width: none;
+    /* Scrollbalken verstecken für IE und Edge */
+    -ms-overflow-style: none;
   }
 
   /* Lernbüro-Karten */
