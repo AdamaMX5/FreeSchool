@@ -20,33 +20,33 @@
   let isLoading = $state(false);
   let error = $state(null);
 
-  $effect(() => {
-    if (currentCategory) {
-      loadLessons(); // Neue Daten laden
-    } else {
-      lessons = []; // Zurücksetzen wenn keine Kategorie
-    }
-  });
+//  $effect(() => {
+//    if (currentCategory) {
+//      loadLessons(); // Neue Daten laden
+//    } else {
+//      lessons = []; // Zurücksetzen wenn keine Kategorie
+//    }
+//  });
 
-  $effect(() => {
-    if (scaleFactor) {
+//  $effect(() => {
+//    if (scaleFactor) {
       // Dieser Block wird ausgeführt, wenn sich scaleFactor ändert
       // Die Lessons werden neu gerendert und ihre Positionen aktualisiert
-      lessons = [...lessons];
-    }
-  });
+//      lessons = [...lessons];
+//    }
+//  });
 
    // Layout bei relevanten Änderungen aktualisieren
-  $effect(() => {
+//  $effect(() => {
     // Diese Abhängigkeiten lösen Layout-Update aus
-    const trigger = menuVisible;
-    const mobile = isMobile;
-    const category = currentCategory?.id;
+//    const trigger = menuVisible;
+//    const mobile = isMobile;
+//    const category = currentCategory?.id;
     
     // Kurze Verzögerung um DOM-Änderungen abzuwarten
-    setTimeout(updateLayout, 10);
-    updateLayout();
-  });
+//    setTimeout(updateLayout, 10);
+//    updateLayout();
+//  });
 
   export async function loadLessons() {
     if (!currentCategory?.id) return;
