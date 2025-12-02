@@ -45,6 +45,7 @@
     
     // Kurze Verzögerung um DOM-Änderungen abzuwarten
     setTimeout(updateLayout, 10);
+    updateLayout();
   });
 
   export async function loadLessons() {
@@ -79,13 +80,6 @@
     };
     updateLayout();
   }
-
-  $effect(() => {
-    menuVisible;
-    isMobile;
-    currentCategory;
-    updateLayout();
-  });
 
   function updateLayout() {
     const menuWidth = (isMobile || !menuVisible) ? 0 : 260;
