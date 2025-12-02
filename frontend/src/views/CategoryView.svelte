@@ -49,7 +49,10 @@
 //  });
 
   $effect(() => {
+    const trigger = menuVisible;
+    const mobile = isMobile;
     const categoryId = currentCategory?.id;
+    
     if (categoryId) {
       loadLessons();
     } else {
