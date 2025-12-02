@@ -48,6 +48,31 @@
 //    updateLayout();
 //  });
 
+  $effect(() => {
+    const categoryId = currentCategory?.id;
+    if (categoryId) {
+      loadLessons();
+    } else {
+      lessons = [];
+    }
+  });
+
+  // ⚠️ WICHTIG: Layout updates mit debounce
+  let layoutTimeout = null;
+  
+  $effect(() => {
+    // Debounce Layout Updates
+    if (layoutTimeout) clearTimeout(layoutTimeout);
+    
+    layoutTimeout = setTimeout(() => {
+      updateLayout();
+    }, 50);
+    
+    return () => {
+      if (layoutTimeout) clearTimeout(layoutTimeout);
+    };
+  });
+
   export async function loadLessons() {
     if (!currentCategory?.id) return;
 
