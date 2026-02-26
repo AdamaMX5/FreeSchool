@@ -27,6 +27,56 @@ class UserResponse(BaseModel):
     roles: List[str]
 
 
+class UserExportResponse(BaseModel):
+    id: str
+    email: str
+    hashed_password: str
+    hash_scheme: str
+    roles: List[str]
+    profile: Dict[str, Any] | None
+
+
+@router.get("/export/users", response_model=List[UserExportResponse], dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
+async def export_users(
+        db: AsyncSession = Depends(get_async_db),
+        current_user: User = Depends(get_current_user)
+):
+    users = await db.scalars(
+        select(User)
+        .options(
+            selectinload(User.roles),
+            selectinload(User.profile)
+        )
+        .where(User.deleted_at.is_(None))
+    )
+
+    exports = []
+    for user in users.all():
+        hash_parts = user.hashed_password.split("$") if user.hashed_password else []
+        hash_scheme = hash_parts[1] if len(hash_parts) > 1 else "unknown"
+        profile_data = None
+        if user.profile:
+            profile_data = {
+                "user_id": user.profile.user_id,
+                "full_name": user.profile.full_name,
+                "bio": user.profile.bio,
+                "avatar_url": user.profile.avatar_url,
+            }
+
+        exports.append(
+            UserExportResponse(
+                id=user.id,
+                email=user.email,
+                hashed_password=user.hashed_password,
+                hash_scheme=hash_scheme,
+                roles=[role.name for role in user.roles],
+                profile=profile_data
+            )
+        )
+
+    return exports
+
+
 @router.get("/users", response_model=List[UserResponse], dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
 async def get_all_users(
         db: AsyncSession = Depends(get_async_db),

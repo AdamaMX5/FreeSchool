@@ -698,3 +698,35 @@ PRAGMA foreign_keys = ON;
             logger.warning(f"Exception occurred: {e}")
             logger.warning(f"Stacktrace: {traceback.format_exc()}")
             raise
+
+    @pytest.mark.asyncio
+    async def test_export_users_with_admin_role(self, test_client, test_db, auth_client):
+        """Test Export aller Userobjekte als JSON mit Hash-Informationen"""
+        admin_user = await create_test_user(test_db, "admin", [RoleEnum.ADMIN.value])
+        await auth_client.login("admin", [RoleEnum.ADMIN.value])
+        headers = auth_client.get_headers("admin")
+
+        await create_test_user(test_db, "student", [RoleEnum.STUDENT.value])
+
+        response = test_client.get("/admin/export/users", headers=headers)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) >= 2
+
+        admin_export = next((entry for entry in data if entry["email"] == "admin@example.com"), None)
+        assert admin_export is not None
+        assert admin_export["hashed_password"].startswith("$argon2")
+        assert admin_export["hash_scheme"] == "argon2id"
+        assert RoleEnum.ADMIN.value in admin_export["roles"]
+
+    @pytest.mark.asyncio
+    async def test_export_users_without_admin_role(self, test_client, test_db, auth_client):
+        """Test Export ohne Admin-Rechte (sollte fehlschlagen)"""
+        await auth_client.login("student", [RoleEnum.STUDENT.value])
+        headers = auth_client.get_headers("student")
+
+        response = test_client.get("/admin/export/users", headers=headers)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
