@@ -194,10 +194,15 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     cursor: pointer;
     transition: transform 0.2s;
+    position: relative;
   }
 
-  .learning-hub:hover {
-    transform: scale(1.02);
+  .learning-hub :global(.icon-button.edit){
+    visibility: hidden;
+  }
+
+  .learning-hub:hover :global(.icon-button.edit) {
+    visibility: visible;
   }
 
   .learning-hub h3 {
