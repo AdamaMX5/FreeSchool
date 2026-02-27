@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from models import User, Role, UserRoleLink, RoleEnum
 from database import get_async_db, get_database_type
 from security.auth import get_current_user, required_roles
@@ -30,10 +30,14 @@ class UserResponse(BaseModel):
 class UserExportResponse(BaseModel):
     id: str
     email: str
+    email_verify: bool
     hashed_password: str
     hash_scheme: str
+    password_verify: bool
+    last_login: datetime
     roles: List[str]
-    profile: Dict[str, Any] | None
+    comment: str
+    deleted_at: Optional[datetime]
 
 
 @router.get("/export/users", response_model=List[UserExportResponse], dependencies=[Depends(required_roles([RoleEnum.ADMIN.value]))])
@@ -47,7 +51,6 @@ async def export_users(
             selectinload(User.roles),
             selectinload(User.profile)
         )
-        .where(User.deleted_at.is_(None))
     )
 
     exports = []
@@ -67,10 +70,14 @@ async def export_users(
             UserExportResponse(
                 id=user.id,
                 email=user.email,
+                email_verify=user.email_verify,
                 hashed_password=user.hashed_password,
                 hash_scheme=hash_scheme,
+                password_verify=user.password_verify,
+                last_login=user.last_login,
                 roles=[role.name for role in user.roles],
-                profile=profile_data
+                comment=user.comment,
+                deleted_at=user.deleted_at,
             )
         )
 

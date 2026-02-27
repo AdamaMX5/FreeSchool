@@ -1,13 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import func
-from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from models import User, Profile, Role, UserRoleLink, RoleEnum
 from database import get_async_db
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models.base import generate_unique_id_async
 from security.auth import verify_password, get_password_hash, create_jwt, create_email_verify_token, get_current_user, get_current_user_by_id
@@ -25,6 +24,7 @@ class UserLoginResponse(BaseModel):
     id: str
     email: EmailStr
     jwt: str
+    refreshJwt: str
     status: str
     roles: List[str]
 
@@ -80,7 +80,8 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
             email=existing_user.email,
             roles=await get_role_names(existing_user, db),
             jwt=existing_user.jwt,
-            status=status_msg
+            refreshJwt="",
+            status=status_msg,
         )
     else:
         # Registrierungsvorgang gestartet: Neues User-Objekt erstellen:
@@ -264,3 +265,24 @@ async def initialize_roles(db: AsyncSession):
     if new_roles:
         db.add_all(new_roles)
         await db.commit()
+
+
+def create_tokens(user_id: str):
+    access_token_expires = timedelta(minutes=15)
+    refresh_token_expires = timedelta(days=7)
+
+    access_token = create_jwt(
+        data={"sub": user_id},
+        expires_delta=access_token_expires
+    )
+
+    refresh_token = create_jwt(
+        data={"sub": user_id, "type": "refresh"},
+        expires_delta=refresh_token_expires
+    )
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_in": int(access_token_expires.total_seconds())
+    }
