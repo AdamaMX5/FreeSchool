@@ -1,3 +1,8 @@
+# starten auf dem Server:
+cd FreeSchool && git pull
+./build.sh
+
+# Ausgaben
 docker logs freeschool_backend 			# ausgabe anzeigen
 docker logs -f freeschool_backend        	# Folgt den Logs in Echtzeit (wie tail -f)
 

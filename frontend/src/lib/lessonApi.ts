@@ -98,7 +98,7 @@ export async function updateLessonPosition(lesson_id: string, position: { x: num
     position_x: position.x,
     position_y: position.y
   };
-
+  console.log("Neue Informationen der lesson hochladen:", updatedLesson);
   const res = await fetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
     method: "PUT",
     headers: {

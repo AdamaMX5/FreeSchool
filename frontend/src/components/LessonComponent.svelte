@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { Edit } from 'lucide-svelte';
   import MarkdownRenderer from "./MarkdownRenderer.svelte";
   import ContentNew from "../components/ContentNew.svelte";
   import EditLessonDialog from "../dialogs/EditLessonDialog.svelte";
   import EditContentDialog from "../dialogs/EditContentDialog.svelte";
   import { user } from "../lib/global";
+  import { layout } from "../lib/global";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -23,7 +24,6 @@
     lesson,
     draggable = false,
     editable = false,
-    scaleFactor = 1,
     isMobile = false
   } = $props();
 
@@ -38,18 +38,28 @@
   let selectedContent = $state(null);
   let markdownContent = $state("");
   
+  const offsetX = $derived($layout.imgOffsetX);
+  const offsetY = $derived($layout.imgOffsetY);
+  const scale   = $derived($layout.scale);
+  const screenX = $derived(lesson.position_x * scale);
+  const screenY = $derived(lesson.position_y * scale);
+  const iconSize = $derived(80 * scale);
+  const fontSize = $derived(14 * scale);
 
-  let dragging = false;
-  let cursor = $state("pointer");
-  let offsetX = $state(0);
-  let offsetY = $state(0);
   let startX: number = 0;
   let startY: number = 0;
-
   // Mobile Touch Variablen
   let touchStartX = 0;
   let touchStartY = 0;
   let isScrolling = false;
+
+  let cursor = $state("pointer");
+  let dragging = false;
+  let dragStartX = 0;
+  let dragStartY = 0;
+  let originalX = 0;
+  let originalY = 0;
+  let element;
 
   $effect(() => {
     if (contents.length > 0 && !selectedContentId) {
@@ -67,21 +77,12 @@
   });
 
   $effect(() => {
-    // Position neu berechnen, wenn scaleFactor sich ändert
-    offsetX = lesson.position_x * scaleFactor;
-    offsetY = lesson.position_y * scaleFactor;
-  });
-
-  $effect(() => {
     progress = lesson.progress || 0;
     updateProgressColor();
   });
   
   onMount(() => {
     fetchContents();
-    // Initial Position setzen:
-    offsetX = lesson.position_x * scaleFactor;
-    offsetY = lesson.position_y * scaleFactor;
   });
 
   function getSmoothProgressColor(progress: number) {
@@ -222,9 +223,6 @@
           position_x: updatedLesson.position_x,
           position_y: updatedLesson.position_y,
         };
-        // Aktualisiere auch die Position im UI
-        offsetX = updatedLesson.position_x * scaleFactor;
-        offsetY = updatedLesson.position_y * scaleFactor;
       } else {
         console.error(
           "Fehler beim Laden der aktualisierten Lesson:",
@@ -262,19 +260,31 @@
     if (!draggable) return;
     dragging = true;
     cursor = "grabbing";
-    startX = event.clientX;
-    startY = event.clientY;
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
 
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    originalX = lesson.position_x;
+    originalY = lesson.position_y;
+
+    event.stopPropagation();
+    event.preventDefault();
   }
 
   function onMouseMove(event: MouseEvent) {
     if (!dragging) return;
-    offsetX += event.clientX - startX;
-    offsetY += event.clientY - startY;
-    startX = event.clientX;
-    startY = event.clientY;
+    const dx = (event.clientX - dragStartX) / scale;
+    const dy = (event.clientY - dragStartY) / scale;
+
+    lesson.position_x = originalX + dx;
+    lesson.position_y = originalY + dy;
+
+    // Sofort visualisieren
+    lessonsRerender();
+  }
+
+  function lessonsRerender() {
+    // Trick: zwingt Svelte zu einem Re-Render, ohne Endlosschleife
+    lesson = { ...lesson };
   }
 
   function onMouseUp() {
@@ -284,13 +294,24 @@
     window.removeEventListener("mouseup", onMouseUp);
     cursor = "grab";
 
-    const newX = Math.trunc(offsetX / scaleFactor);
-    const newY = Math.trunc(offsetY / scaleFactor);
-
-    if (newX !== lesson.position_x || newY !== lesson.position_y) {
-      onPositionChanged?.({ id: lesson.id, x: newX, y: newY });
-    }
+    dispatchEvent(new CustomEvent("positionChanged", {
+      detail: {
+        id: lesson.id,
+        x: Math.round(lesson.position_x),
+        y: Math.round(lesson.position_y)
+      }
+    }));
   }
+
+  onMount(() => {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  });
+
+  onDestroy(() => {
+    window.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("mouseup", onMouseUp);
+  });
 
   function onTouchStart(event: TouchEvent) {
     if (!draggable) return;
@@ -318,8 +339,8 @@
     
     if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
       event.preventDefault();
-      offsetX += diffX;
-      offsetY += diffY;
+      //offsetX += diffX;
+      //offsetY += diffY;
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
     }
@@ -331,8 +352,8 @@
     window.removeEventListener("touchend", onTouchEnd);
 
     if (!isScrolling) {
-      const newX = Math.trunc(offsetX / scaleFactor);
-      const newY = Math.trunc(offsetY / scaleFactor);
+      const newX = Math.trunc(offsetX / scale);
+      const newY = Math.trunc(offsetY / scale);
 
       if (newX !== lesson.position_x || newY !== lesson.position_y) {
         onPositionChanged?.({ id: lesson.id, x: newX, y: newY });
@@ -373,7 +394,13 @@
   class="lesson-wrapper {cursor}"
   class:mobile={isMobile}
   class:open={isOpen}
-  style="left: {offsetX}px; top: {offsetY}px;"
+  style="
+        width: {iconSize}px;
+        height: {iconSize}px;
+        font-size: {fontSize}px;
+        left: {screenX - iconSize/2}px;
+        top: {screenY - iconSize/2}px;
+     "
   title={lesson.name}
   role="button"
   tabindex="0"
@@ -390,6 +417,7 @@
   }}
 >
   <div
+    bind:this={element}
     role="button"
     tabindex="0"
     class="lesson-icon"
@@ -397,6 +425,13 @@
     onkeydown={(e) => (e.key === "Enter" || e.key === " ") && toggleOpen()}
     onmousedown={onMouseDown}
     ontouchstart={onTouchStart}
+    style="
+      left: {screenX}px;
+      top: {screenY}px;
+      width: {iconSize}px;
+      height: {iconSize}px;
+      font-size: {fontSize}px;
+    "
   >
 
     <div 
@@ -533,6 +568,10 @@
 <style>
   .lesson-wrapper {
     position: absolute;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: auto;
   }
 
@@ -752,8 +791,8 @@
   @media (max-width: 768px) {
     .lesson-details {
       position: fixed;
-      top: 50px;
-      left: 2.5vw;
+      top: 55px;
+      left: 1vw;
       width: 95vw;
       max-width: 95vw;
       transform: none;

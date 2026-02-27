@@ -5,6 +5,7 @@
   import { user } from "../lib/global";
   import EditUserDialog from '../dialogs/EditUserDialog.svelte';
   import AdminDatabaseDialog from '../dialogs/AdminDatabaseDialog.svelte';
+  import { Download } from "lucide-svelte";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const dispatch = createEventDispatcher();
@@ -14,6 +15,7 @@
   let showEditDialog = false;
   let showDatabaseDialog = false;
   let selectedUser = null;
+  let downloading = false;
 
   function close() {
     dispatch("close");
@@ -34,6 +36,43 @@
       error = err.message;
     }
   }
+
+  async function downloadUsers() {
+    try {
+      downloading = true;
+      error = null;
+      
+      const headers = {};
+      if ($user?.jwt) {
+        headers['Authorization'] = `Bearer ${$user.jwt}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/admin/export/users`, { headers });
+      
+      if (!response.ok) {
+        throw new Error(`Fehler beim Exportieren der Benutzer: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // JSON-Datei erstellen und herunterladen
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `benutzer-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (err) {
+      error = err.message;
+    } finally {
+      downloading = false;
+    }
+  }
+
 
   function openEditDialog(user) {
     selectedUser = user;
@@ -65,6 +104,14 @@
   <div class="admin-actions">
     <button onclick={() => openDatabaseDialog()} class="primary">
       💾 Datenbank Backup/Import
+    </button>
+    <button 
+      onclick={downloadUsers} 
+      class="primary export-button"
+      disabled={downloading}
+    >
+      <Download size={16} />
+      {downloading ? 'Exportiere...' : 'Benutzer exportieren (JSON)'}
     </button>
   </div>
 
@@ -142,6 +189,11 @@
     padding: 0.5rem;
   }
 
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .users-list {
     background-color: #3a3a3a;
     padding: 1rem;
@@ -172,7 +224,9 @@
     margin-bottom: 1rem;
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
   }
+
   .primary {
     background-color: #007bff;
     color: white;
@@ -181,8 +235,19 @@
     border-radius: 4px;
     cursor: pointer;
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   .primary:hover {
     background-color: #0056b3;
+  }
+  
+  .export-button {
+    background-color: #28a745;
+  }
+
+  .export-button:hover:not(:disabled) {
+    background-color: #218838;
   }
 </style>

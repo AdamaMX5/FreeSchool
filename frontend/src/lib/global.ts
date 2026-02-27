@@ -19,6 +19,15 @@ export const user = writable<User>({
   roles: []
 });
 
+export const layout = writable({
+  viewWidth: 0,
+  viewHeight: 0,
+  imgWidth: 0,
+  imgHeight: 0,
+  imgOffsetX: 0,
+  imgOffsetY: 0,
+  scale: 1
+})
 
 export function setUser(setid: number, setemail: string, setjwt: string, setroles: Role[]){
   user.set({

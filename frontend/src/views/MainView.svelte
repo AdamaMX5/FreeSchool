@@ -4,6 +4,8 @@
   import TeacherView from './TeacherView.svelte';
   import AdminView from './AdminView.svelte';
   import { onMount } from 'svelte';
+  import { layout } from "../lib/global";
+  import { throttle } from "../lib/throttle";
 
   let{
     currentCategory = null,
@@ -14,10 +16,12 @@
     onSwipe = () => {}
   } = $props();
   
-  let mainViewDiv = $state();
   let categoryViewRef = $state(null);
   let activeView = $state('category');
   let startX = $state(0);
+
+  let container: HTMLElement;
+  let ro: ResizeObserver;
 
   // Reagiere auf Änderungen von menuVisible
   $effect(() => {
@@ -27,6 +31,25 @@
         categoryViewRef.updateLayout();
       }, 50);
     }
+  });
+
+  const updateLayout = throttle((rect: DOMRect) => {
+    layout.update(prev => ({
+      ...prev,
+      viewWidth: rect.width,
+      viewHeight: rect.height
+    }));
+  }, 60);
+
+  onMount(() => {
+    ro = new ResizeObserver((entries) => {
+      const rect = entries[0].contentRect;
+      updateLayout(rect);     // <- Nur hier wird Layout gesetzt!
+    });
+
+    if (container) ro.observe(container);
+
+    return () => ro.disconnect();
   });
 
   function handleLessonCreated() {
@@ -65,7 +88,7 @@
 </script>
 
 <div 
-  bind:this={mainViewDiv} 
+  bind:this={container} 
   class="main-view" 
   class:menu-visible={menuVisible}
   class:mobile={isMobile}
@@ -79,7 +102,6 @@
   {:else}
     <CategoryView
       bind:this={categoryViewRef}
-      {mainViewDiv}
       {currentCategory}
       {isStudentLoggedIn}
       {imageSize}
