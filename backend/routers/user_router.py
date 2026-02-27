@@ -72,7 +72,7 @@ async def login_user(
                 existing_user.email_verify_token = create_email_verify_token()
                 await db.commit()
 
-            background_tasks.add_task(send_email_verification_safe, existing_user)
+            background_tasks.add_task(send_email_verification, existing_user)
             status_msg = "login_with_verify_email_sended"  # Status für Login mit E-Mail-Verifizierung
         else:
             status_msg = "login"
@@ -126,7 +126,11 @@ class UserRegister(BaseModel):
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_async_db)):
+async def register_user(
+    user_in: UserRegister,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_async_db),
+):
     # Prüfen, ob ein User mit der gleichen Email bereits existiert:
     existing_user = await db.scalar(select(User).where(User.id == user_in.id))
 
@@ -183,7 +187,7 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
                 logger.info("ADMIN role not found in database!")
         await db.commit()
         await db.refresh(existing_user)
-        await send_email_verification(existing_user)  # E-Mail zur Verifizierung senden
+        background_tasks.add_task(send_email_verification, existing_user)
 
     return UserLoginResponse(
         id=existing_user.id,
@@ -195,26 +199,22 @@ async def register_user(user_in: UserRegister, db: AsyncSession = Depends(get_as
 
 
 async def send_email_verification(user: User):
-    # verify E-Mail erzeugen
-    htmlText = "Wir begrüßen dich bei der Freischule."
-    htmlText += "<br><br>"
-    htmlText += "Um deine E-Mail-Adresse zu verifizieren, klicke bitte auf folgenden Link:<br>"
-    htmlText += f"Hier ist der Link zur Verifizierung: <a href='http://localhost:8000/user/verify?token={user.email_verify_token}&email={user.email}'>Verifizieren</a>"
-    htmlText += "<br><br>"
-    htmlText += "Vielen Dank für alles und liebe Grüße<br><br>Euer Kurt"
-
-    await EmailService.send_email(
-        to_email=user.email,
-        subject="Verifizierung deiner E-Mail-Adresse",
-        from_email="registration@flussmark.de",
-        from_name="Freischule Registrationsservice",
-        html_body=htmlText
-    )
-
-
-async def send_email_verification_safe(user: User):
     try:
-        await send_email_verification(user)
+        # verify E-Mail erzeugen
+        htmlText = "Wir begrüßen dich bei der Freischule."
+        htmlText += "<br><br>"
+        htmlText += "Um deine E-Mail-Adresse zu verifizieren, klicke bitte auf folgenden Link:<br>"
+        htmlText += f"Hier ist der Link zur Verifizierung: <a href='http://localhost:8000/user/verify?token={user.email_verify_token}&email={user.email}'>Verifizieren</a>"
+        htmlText += "<br><br>"
+        htmlText += "Vielen Dank für alles und liebe Grüße<br><br>Euer Kurt"
+
+        await EmailService.send_email(
+            to_email=user.email,
+            subject="Verifizierung deiner E-Mail-Adresse",
+            from_email="registration@flussmark.de",
+            from_name="Freischule Registrationsservice",
+            html_body=htmlText
+        )
     except Exception as error:
         logger.exception("Failed to send verification email for user %s: %s", user.email, error)
 
