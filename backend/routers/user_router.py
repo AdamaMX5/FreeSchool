@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, BackgroundTasks
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import func
 from sqlalchemy.future import select
@@ -42,7 +42,11 @@ class UserLogin(BaseModel):
 
 
 @router.post("/login", status_code=status.HTTP_200_OK, response_model=UserLoginResponse)
-async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db)):
+async def login_user(
+    user_in: UserLogin,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_async_db)
+):
     # Prüfen, ob ein User mit der Email existiert:
     logger.warning(f"find User with email: {user_in.email}")
     existing_user = await db.scalar(select(User).where(User.email == user_in.email))
@@ -68,7 +72,7 @@ async def login_user(user_in: UserLogin, db: AsyncSession = Depends(get_async_db
                 existing_user.email_verify_token = create_email_verify_token()
                 await db.commit()
 
-            await send_email_verification(existing_user)
+            background_tasks.add_task(send_email_verification_safe, existing_user)
             status_msg = "login_with_verify_email_sended"  # Status für Login mit E-Mail-Verifizierung
         else:
             status_msg = "login"
@@ -206,6 +210,13 @@ async def send_email_verification(user: User):
         from_name="Freischule Registrationsservice",
         html_body=htmlText
     )
+
+
+async def send_email_verification_safe(user: User):
+    try:
+        await send_email_verification(user)
+    except Exception as error:
+        logger.exception("Failed to send verification email for user %s: %s", user.email, error)
 
 
 @router.get("/verify")
