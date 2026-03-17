@@ -23,17 +23,17 @@ router = APIRouter(prefix="/user", tags=["user"])
 class UserLoginResponse(BaseModel):
     id: str
     email: EmailStr
-    jwt: str
-    refreshJwt: str
+    jwt: str = ''
+    refreshJwt: str = ''
     status: str
-    roles: List[str]
+    roles: List[str] = []
 
 
 # Pydantic Modell für Benutzerantwort
 class UserResponse(BaseModel):
     id: str
     email: str
-    roles: List[str]
+    roles: List[str] = []
 
 
 class UserLogin(BaseModel):
@@ -61,7 +61,7 @@ async def login_user(
                 email=existing_user.email,
                 roles=[],
                 jwt="",
-                status="register"
+                status="register", refreshJwt=""
             )
         # Password-Hash überprüfen:
         if not verify_password(user_in.password, existing_user.hashed_password):
@@ -104,7 +104,7 @@ async def login_user(
             email=new_user.email,
             roles=[],
             jwt="",
-            status="register"
+            status="register", refreshJwt=""
         )
 
 
