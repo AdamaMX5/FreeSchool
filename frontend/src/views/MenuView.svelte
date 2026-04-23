@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { user } from '../lib/global';
   import CategoryEdit from '../components/CategoryEdit.svelte';
   import CategoryNew from '../components/CategoryNew.svelte';
@@ -25,19 +24,12 @@
     isModerator = roles.includes('MODERATOR');
   });
 
-  onMount(() => {
-    if (!navCategory || isHomeButton(navCategory)) {
-      loadLearningHubs();
-    }
-  });
-
   async function loadLearningHubs() {
     console.log("lade Lernbüros");
     categories = await getLearningHubs();
     console.log("Lernbüros: "+categories);
     currentCategory = null;
     childCategories = [];
-    oncategorySelected(null); // Wichtig: MainView zurücksetzen
   }
 
   async function loadChildCategories(categoryId) {
@@ -67,9 +59,9 @@
   }
 
   $effect(() => {
-    if (isHomeButton(navCategory)) {
+    if (!navCategory || isHomeButton(navCategory)) {
       loadLearningHubs();
-    } else if (navCategory && navCategory !== currentCategory) {
+    } else if (navCategory !== currentCategory) {
       setCurrentCategory(navCategory);
     }
   });
