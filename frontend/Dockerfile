@@ -11,8 +11,8 @@ ENV HUSKY=0
 
 # Pakete installieren
 COPY package.json ./
-RUN npm install --legacy-peer-deps --no-optional --ignore-scripts
-RUN npx rollup --version || npm install rollup@latest --no-save
+RUN npm install --legacy-peer-deps
+
 
 # Rest kopieren
 COPY . .
