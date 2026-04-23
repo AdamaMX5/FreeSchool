@@ -3,7 +3,6 @@ import os
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles  # Favicon
 from fastapi.responses import FileResponse  # Favicon
-from fastapi.middleware.cors import CORSMiddleware
 from routers.user_router import router as UserRouter
 from routers.category_router import router as CategoryRouter
 from routers.lesson_router import router as LessonRouter
@@ -27,26 +26,6 @@ app.include_router(LessonRouter)
 app.include_router(ContentRouter)
 app.include_router(TeacherRouter)
 app.include_router(AdminRouter)
-
-# CORS-Konfiguration
-origins = [
-    "http://localhost:8080",  # Frontend-URL
-    "http://localhost:8000",  # Für direkte API-Aufrufe
-    "http://127.0.0.1:8080",
-    "http://localhost:5173",   # Vite-Entwicklungsserver
-    "https://freischule.info",  # Deine Produktions-Domain
-    "https://api.freischule.info",  # API Domain
-    "http://freischule.info",  # HTTP fallback
-    "http://api.freischule.info",   # HTTP API fallback
-    "*",  # Nur für die Entwicklung!
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 async def check_database_health(db: AsyncSession) -> Dict[str, Any]:
