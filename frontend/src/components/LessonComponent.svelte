@@ -41,8 +41,8 @@
   const offsetX = $derived($layout.imgOffsetX);
   const offsetY = $derived($layout.imgOffsetY);
   const scale   = $derived($layout.scale);
-  const screenX = $derived(lesson.position_x * scale);
-  const screenY = $derived(lesson.position_y * scale);
+  const screenX = $derived(lesson.position_x * scale + offsetX);
+  const screenY = $derived(lesson.position_y * scale + offsetY);
   const iconSize = $derived(80 * scale);
   const fontSize = $derived(14 * scale);
 
