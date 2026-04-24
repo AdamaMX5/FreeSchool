@@ -8,11 +8,12 @@
   let{
     currentCategory = null,
     isStudentLoggedIn = false,
-    imageSize = { width: 0, height: 0 },
     isMobile = false,
     menuVisible = true,
     lessons = []
   } = $props();
+
+  let imageSize = $state({ width: 0, height: 0 });
 
   const viewWidth = $derived($layout.viewWidth);
   const viewHeight = $derived($layout.viewHeight);
