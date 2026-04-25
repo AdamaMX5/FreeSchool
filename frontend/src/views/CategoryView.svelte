@@ -54,16 +54,50 @@
       const widthScale = availableWidth / imageSize.width;
       const heightScale = availableHeight / imageSize.height;
       const scale = Math.min(widthScale, heightScale);
+      const scaledImgWidth = imageSize.width * scale;
+      const scaledImgHeight = imageSize.height * scale;
+      const offsetX = (availableWidth - scaledImgWidth) / 2;
+      const offsetY = (availableHeight - scaledImgHeight) / 2;
+
+      console.log(
+        "%c[Layout]",       "color:#4af; font-weight:bold",
+        "\n  window.innerWidth      :", window.innerWidth,
+        "\n  window.innerHeight     :", window.innerHeight,
+        "\n  menuWidth              :", menuWidth,
+        "\n  navHeight              :", navHeight,
+        "\n  toolbarHeight          :", toolbarHeight,
+        "\n  availableWidth         :", availableWidth,
+        "\n  availableHeight        :", availableHeight,
+        "\n  imageSize (natural)    :", imageSize.width, "x", imageSize.height,
+        "\n  widthScale             :", widthScale.toFixed(4),
+        "\n  heightScale            :", heightScale.toFixed(4),
+        "\n  scale (min)            :", scale.toFixed(4),
+        "\n  scaledImgWidth         :", scaledImgWidth.toFixed(1),
+        "\n  scaledImgHeight        :", scaledImgHeight.toFixed(1),
+        "\n  imgOffsetX             :", offsetX.toFixed(1),
+        "\n  imgOffsetY             :", offsetY.toFixed(1),
+        "\n  isMobile               :", isMobile,
+        "\n  menuVisible            :", menuVisible,
+      );
 
       layout.update(prev => ({
         ...prev,
         viewWidth: availableWidth,
         viewHeight: availableHeight,
-        imgWidth: imageSize.width * scale,
-        imgHeight: imageSize.height * scale,
+        imgWidth: scaledImgWidth,
+        imgHeight: scaledImgHeight,
         scale
       }));
-    } 
+    } else {
+      console.warn(
+        "%c[Layout] updateLayout übersprungen – imageSize noch nicht bekannt",
+        "color:orange",
+        "\n  imageSize:", imageSize.width, "x", imageSize.height,
+        "\n  window.innerWidth:", window.innerWidth,
+        "\n  isMobile:", isMobile,
+        "\n  menuVisible:", menuVisible,
+      );
+    }
   }
 
   export async function loadLessons() {
