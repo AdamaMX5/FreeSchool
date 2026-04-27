@@ -43,7 +43,7 @@
   const scale   = $derived($layout.scale);
   const screenX = $derived(lesson.position_x * scale + offsetX);
   const screenY = $derived(lesson.position_y * scale + offsetY);
-  const iconSize = $derived(80 * scale);
+  const iconSize = $derived(40 * scale);
   const fontSize = $derived(14 * scale);
 
   let startX: number = 0;
@@ -426,8 +426,6 @@
     onmousedown={onMouseDown}
     ontouchstart={onTouchStart}
     style="
-      left: 0;
-      top: 0;
       width: {iconSize}px;
       height: {iconSize}px;
       font-size: {fontSize}px;
@@ -602,9 +600,8 @@
   }
 
   .lesson-icon {
-    position: absolute;
-    transform: translate(-50%, -50%);
     z-index: 2;
+    flex-shrink: 0;
   }
 
   .lesson-details {
