@@ -426,8 +426,8 @@
     onmousedown={onMouseDown}
     ontouchstart={onTouchStart}
     style="
-      left: {screenX}px;
-      top: {screenY}px;
+      left: 0;
+      top: 0;
       width: {iconSize}px;
       height: {iconSize}px;
       font-size: {fontSize}px;
