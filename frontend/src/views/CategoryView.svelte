@@ -209,6 +209,7 @@
 {:else}
   <div class="empty-state" class:mobile={isMobile}>
     <h1>Willkommen in der Freischule</h1>
+    <div class="version">v{__APP_VERSION__}</div>
     <div class="video-container">
       <iframe 
         width="{isMobile ? '100%' : '560'}" 
@@ -280,6 +281,13 @@
     justify-content: center;
     height: 100%;
     text-align: center;
+  }
+
+  .version {
+    font-size: 0.75rem;
+    color: #555;
+    margin-top: 0.5rem;
+    font-family: monospace;
   }
 
   .empty-state.mobile {
