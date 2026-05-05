@@ -111,6 +111,11 @@
     progressColor = getSmoothProgressColor(progress);
   }
 
+  function portal(node: HTMLElement) {
+    document.body.appendChild(node);
+    return { destroy() { node.remove(); } };
+  }
+
   function toggleOpen() {
     if (editable) {
       showEditDialog = true;
@@ -120,13 +125,10 @@
       if (isOpen && element) {
         const rect = element.getBoundingClientRect();
         const panelWidth = Math.min(600, window.innerWidth * 0.9);
-        let left = rect.left;
-        let top = rect.bottom + 10;
-        if (left + panelWidth > window.innerWidth) {
-          left = Math.max(0, window.innerWidth - panelWidth - 10);
-        }
-        if (top > window.innerHeight - 100) {
-          top = Math.max(10, window.innerHeight - 100);
+        let left = rect.left + window.scrollX;
+        let top = rect.bottom + window.scrollY + 10;
+        if (left + panelWidth > window.innerWidth + window.scrollX) {
+          left = Math.max(0, window.innerWidth + window.scrollX - panelWidth - 10);
         }
         detailsLeft = left;
         detailsTop = top;
@@ -454,9 +456,10 @@
       Keine Contents verfügbar für diese Lesson
     </div>
     <div
+      use:portal
       class="lesson-details"
       class:mobile={isMobile}
-      style={!isMobile ? `left: ${detailsLeft}px; top: ${detailsTop}px;` : ''}
+      style="left: {detailsLeft}px; top: {detailsTop}px;"
       onscroll={handleScroll}
     >
       <button class="close-button" onclick={() => isOpen = false}>
@@ -616,7 +619,7 @@
   }
 
   .lesson-details {
-    position: fixed;
+    position: absolute;
     background-color: #333;
     color: #fff;
     border-radius: 10px;

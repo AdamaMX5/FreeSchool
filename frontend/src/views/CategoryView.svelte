@@ -24,7 +24,6 @@
 
   let isLoading = $state(false);
   let error = $state(null);
-  let debugInfo = $state(null);
 
   $effect(() => {
     layout.update(prev => ({
@@ -60,39 +59,6 @@
       const offsetX = (availableWidth - scaledImgWidth) / 2;
       const offsetY = (availableHeight - scaledImgHeight) / 2;
 
-      console.log(
-        "%c[Layout]",       "color:#4af; font-weight:bold",
-        "\n  window.innerWidth      :", window.innerWidth,
-        "\n  window.innerHeight     :", window.innerHeight,
-        "\n  menuWidth              :", menuWidth,
-        "\n  navHeight              :", navHeight,
-        "\n  toolbarHeight          :", toolbarHeight,
-        "\n  availableWidth         :", availableWidth,
-        "\n  availableHeight        :", availableHeight,
-        "\n  imageSize (natural)    :", imageSize.width, "x", imageSize.height,
-        "\n  widthScale             :", widthScale.toFixed(4),
-        "\n  heightScale            :", heightScale.toFixed(4),
-        "\n  scale (min)            :", scale.toFixed(4),
-        "\n  scaledImgWidth         :", scaledImgWidth.toFixed(1),
-        "\n  scaledImgHeight        :", scaledImgHeight.toFixed(1),
-        "\n  imgOffsetX             :", offsetX.toFixed(1),
-        "\n  imgOffsetY             :", offsetY.toFixed(1),
-        "\n  isMobile               :", isMobile,
-        "\n  menuVisible            :", menuVisible,
-      );
-
-      debugInfo = {
-        windowW: window.innerWidth, windowH: window.innerHeight,
-        menuWidth, navHeight, toolbarHeight,
-        availableWidth, availableHeight,
-        imageSizeW: imageSize.width, imageSizeH: imageSize.height,
-        widthScale: widthScale.toFixed(4), heightScale: heightScale.toFixed(4),
-        scale: scale.toFixed(4),
-        scaledImgW: scaledImgWidth.toFixed(1), scaledImgH: scaledImgHeight.toFixed(1),
-        offsetX: offsetX.toFixed(1), offsetY: offsetY.toFixed(1),
-        isMobile, menuVisible,
-      };
-
       layout.update(prev => ({
         ...prev,
         viewWidth: availableWidth,
@@ -101,25 +67,6 @@
         imgHeight: scaledImgHeight,
         scale
       }));
-    } else {
-      console.warn(
-        "%c[Layout] updateLayout übersprungen – imageSize noch nicht bekannt",
-        "color:orange",
-        "\n  imageSize:", imageSize.width, "x", imageSize.height,
-        "\n  window.innerWidth:", window.innerWidth,
-        "\n  isMobile:", isMobile,
-        "\n  menuVisible:", menuVisible,
-      );
-      debugInfo = {
-        windowW: window.innerWidth, windowH: window.innerHeight,
-        menuWidth, navHeight, toolbarHeight,
-        availableWidth, availableHeight,
-        imageSizeW: imageSize.width, imageSizeH: imageSize.height,
-        widthScale: '—', heightScale: '—', scale: '— (imageSize=0!)',
-        scaledImgW: '—', scaledImgH: '—',
-        offsetX: '—', offsetY: '—',
-        isMobile, menuVisible,
-      };
     }
   }
 
@@ -180,21 +127,8 @@
       style="width: {imgWidth}px; height: {imgHeight}px; left: {imgOffsetX}px; top: {imgOffsetY}px; position: absolute;"
     />
 
-    {#if debugInfo}
-      <div class="debug-hud">
-        <div>window: {debugInfo.windowW} × {debugInfo.windowH}</div>
-        <div>menuWidth: {debugInfo.menuWidth} | nav: {debugInfo.navHeight} | toolbar: {debugInfo.toolbarHeight}</div>
-        <div>availableW: {debugInfo.availableWidth} | availableH: {debugInfo.availableHeight}</div>
-        <div>imageSize (natural): {debugInfo.imageSizeW} × {debugInfo.imageSizeH}</div>
-        <div>widthScale: {debugInfo.widthScale} | heightScale: {debugInfo.heightScale}</div>
-        <div><strong>scale: {debugInfo.scale}</strong></div>
-        <div>scaledImg: {debugInfo.scaledImgW} × {debugInfo.scaledImgH}</div>
-        <div>offsetX: {debugInfo.offsetX} | offsetY: {debugInfo.offsetY}</div>
-        <div>isMobile: {debugInfo.isMobile} | menuVisible: {debugInfo.menuVisible}</div>
-      </div>
-    {/if}
 
-    {#each lessons as lesson}
+{#each lessons as lesson}
       <LessonComponent
         {lesson}
         {isStudentLoggedIn}
@@ -239,28 +173,7 @@
     overflow: hidden;
   }
 
-  .debug-hud {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 9999;
-    background: rgba(0, 0, 0, 0.75);
-    color: #4af;
-    font-family: monospace;
-    font-size: 12px;
-    line-height: 1.6;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid #4af;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-
-  .debug-hud strong {
-    color: #ff0;
-  }
-
-  .category-view.mobile {
+.category-view.mobile {
     width: 100% !important;
     height: auto !important;
     min-height: 300px;
