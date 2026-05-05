@@ -43,8 +43,8 @@
   const scale   = $derived($layout.scale);
   const screenX = $derived(lesson.position_x * scale + offsetX);
   const screenY = $derived(lesson.position_y * scale + offsetY);
-  const iconSize = $derived(40 * scale);
-  const fontSize = $derived(14 * scale);
+  const iconSize = $derived(Math.max(28, 40 * scale));
+  const fontSize = $derived(Math.max(11, 14 * scale));
 
   let startX: number = 0;
   let startY: number = 0;
