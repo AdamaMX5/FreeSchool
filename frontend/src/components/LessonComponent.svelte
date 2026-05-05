@@ -266,6 +266,9 @@
     originalX = lesson.position_x;
     originalY = lesson.position_y;
 
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
     event.stopPropagation();
     event.preventDefault();
   }
@@ -278,35 +281,26 @@
     lesson.position_x = originalX + dx;
     lesson.position_y = originalY + dy;
 
-    // Sofort visualisieren
     lessonsRerender();
   }
 
   function lessonsRerender() {
-    // Trick: zwingt Svelte zu einem Re-Render, ohne Endlosschleife
     lesson = { ...lesson };
   }
 
   function onMouseUp() {
     if (!dragging) return;
     dragging = false;
+    cursor = "grab";
     window.removeEventListener("mousemove", onMouseMove);
     window.removeEventListener("mouseup", onMouseUp);
-    cursor = "grab";
 
-    dispatchEvent(new CustomEvent("positionChanged", {
-      detail: {
-        id: lesson.id,
-        x: Math.round(lesson.position_x),
-        y: Math.round(lesson.position_y)
-      }
-    }));
+    onPositionChanged({
+      id: lesson.id,
+      x: Math.round(lesson.position_x),
+      y: Math.round(lesson.position_y)
+    });
   }
-
-  onMount(() => {
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  });
 
   onDestroy(() => {
     window.removeEventListener("mousemove", onMouseMove);
