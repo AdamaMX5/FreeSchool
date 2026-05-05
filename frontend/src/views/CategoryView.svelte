@@ -174,7 +174,7 @@
   <!-- Width : 100% ist a Hotfix, when ContainerSize is not set... -->
     <img
       class="background-image"
-      src={currentCategory?.background_link ?? "ressources/background/learninghub.jpg"}
+      src={currentCategory?.background_link || "/ressources/background/learninghub.jpg"}
       alt={currentCategory?.name}
       onload={handleImageLoad}
       style="width: {imgWidth}px; height: {imgHeight}px; left: {imgOffsetX}px; top: {imgOffsetY}px; position: absolute;"
