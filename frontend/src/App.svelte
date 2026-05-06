@@ -4,12 +4,40 @@
   import NavigationView from './views/NavigationView.svelte';
   import TeacherView from './views/TeacherView.svelte';
   import { onMount } from 'svelte';
+  import { getCategoryPath } from './lib/categoryApi';
 
   let navCategory = $state(null);
   let currentCategory = $state(null);
   let currentPath = $state([]);
   let menuVisible = $state(true);
   let isMobile = $state(false);
+
+  // Beim URL-Start: welche Lesson/Content soll auto-geöffnet werden
+  let initialLessonId = $state(null);
+  let initialContentId = $state(null);
+
+  // Aktuell offene Lesson (für URL-Schreiben)
+  let activeLessonId = $state(null);
+  let activeContentId = $state(null);
+
+  // Verhindert URL-Überschreiben während der initialen URL-Auflösung
+  let urlReady = $state(false);
+
+  function updateUrl() {
+    const params = new URLSearchParams();
+    if (currentCategory?.id) params.set('category', currentCategory.id);
+    if (activeLessonId)      params.set('lesson', activeLessonId);
+    if (activeContentId)     params.set('content', activeContentId);
+    const search = params.toString() ? `?${params}` : '';
+    history.replaceState(null, '', search || window.location.pathname);
+  }
+
+  $effect(() => {
+    if (!urlReady) return;
+    // Zugriff auf alle relevanten States damit $effect sie trackt
+    currentCategory; activeLessonId; activeContentId;
+    updateUrl();
+  });
 
   function checkMobile() {
     isMobile = window.innerWidth <= 768;
@@ -18,21 +46,43 @@
     }
   }
 
-  onMount(() => {
+  onMount(async () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
+
+    const params = new URLSearchParams(window.location.search);
+    const categoryId = params.get('category');
+    const lessonId   = params.get('lesson');
+    const contentId  = params.get('content');
+
+    if (categoryId) {
+      const path = await getCategoryPath(categoryId);
+      if (path.length > 0) {
+        handleNavigate(path);
+        if (lessonId)  initialLessonId  = lessonId;
+        if (contentId) initialContentId = contentId;
+      }
+    }
+
+    urlReady = true;
   });
 
+  function handleUrlUpdate(lessonId, contentId) {
+    activeLessonId  = lessonId;
+    activeContentId = contentId;
+  }
+
   function handleCategorySelected(selected) {
-//    console.trace('handleCategorySelected wurde aufgerufen mit:', selected);
+    initialLessonId  = null;
+    initialContentId = null;
+    activeLessonId   = null;
+    activeContentId  = null;
 
     if (selected === null) {
-      // 🏠 Home geklickt
       currentCategory = null;
       navCategory = "__home__";
       currentPath = [];
     } else {
-      // Kategorie ausgewählt
       currentCategory = selected;
       navCategory = selected;
 
@@ -45,15 +95,11 @@
   }
 
   function handleNavigate(newPath) {
-    if (JSON.stringify(newPath) === JSON.stringify(currentPath)) return; 
+    if (JSON.stringify(newPath) === JSON.stringify(currentPath)) return;
 
-//    console.trace('handleNavigate wurde aufgerufen mit:', newPath);
-    if (JSON.stringify(newPath) !== JSON.stringify(currentPath)) {
-      currentPath = newPath;
-      navCategory = newPath.length > 0 ? newPath[newPath.length - 1] : "__home__"; // Wenn der Pfad leer ist, setzen wir das "__home__"-Flag, damit das Menü wieder die Lernbüros lädt
-
-      currentCategory = newPath.length > 0 ? newPath[newPath.length - 1] : null;
-    }
+    currentPath     = newPath;
+    navCategory     = newPath.length > 0 ? newPath[newPath.length - 1] : "__home__";
+    currentCategory = newPath.length > 0 ? newPath[newPath.length - 1] : null;
   }
 
   function handleToggleMenu() {
@@ -76,7 +122,13 @@
 />
 
 <!-- Content-Container: Nimmt immer die volle Breite ein -->
-<MainView {currentCategory} {menuVisible} />
+<MainView
+  {currentCategory}
+  {menuVisible}
+  {initialLessonId}
+  {initialContentId}
+  onUrlUpdate={handleUrlUpdate}
+/>
 
 <style>
   :global(html, #app) {

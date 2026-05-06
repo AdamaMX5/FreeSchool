@@ -10,8 +10,35 @@
     isStudentLoggedIn = false,
     isMobile = false,
     menuVisible = true,
-    lessons = []
+    lessons = [],
+    initialLessonId = null,
+    initialContentId = null,
+    onUrlUpdate = (_lessonId, _contentId) => {}
   } = $props();
+
+  // Map<lessonId, contentId> aller aktuell geöffneten Lessons
+  let openLessonsMap = new Map<string, string | null>();
+
+  function handleLessonOpen(lessonId: string, contentId: string | null) {
+    openLessonsMap.set(String(lessonId), contentId ?? null);
+    onUrlUpdate(lessonId, contentId);
+  }
+
+  function handleLessonClose(lessonId: string) {
+    openLessonsMap.delete(String(lessonId));
+    if (openLessonsMap.size > 0) {
+      const entries = [...openLessonsMap.entries()];
+      const [lastId, lastContentId] = entries[entries.length - 1];
+      onUrlUpdate(lastId, lastContentId);
+    } else {
+      onUrlUpdate(null, null);
+    }
+  }
+
+  function handleContentChange(lessonId: string, contentId: string | null) {
+    openLessonsMap.set(String(lessonId), contentId ?? null);
+    onUrlUpdate(lessonId, contentId);
+  }
 
   let imageSize = $state({ width: 0, height: 0 });
 
@@ -137,6 +164,11 @@
         draggable={$isMoveMode}
         onPositionChanged={({ id, x, y }) => handleLessonPositionUpdate({ id, x, y })}
         onLessonDeleted={loadLessons}
+        {initialLessonId}
+        {initialContentId}
+        onLessonOpen={handleLessonOpen}
+        onLessonClose={handleLessonClose}
+        onContentChange={handleContentChange}
       />
     {/each}
   </div>

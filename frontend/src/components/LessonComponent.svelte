@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from "svelte";
+  import { onMount, onDestroy, tick } from "svelte";
   import { Edit } from 'lucide-svelte';
   import MarkdownRenderer from "./MarkdownRenderer.svelte";
   import ContentNew from "../components/ContentNew.svelte";
@@ -21,11 +21,18 @@
     isStudentLoggedIn,
     onPositionChanged = () => {},
     onLessonDeleted = () => {},
+    onLessonOpen = (_lessonId, _contentId) => {},
+    onLessonClose = (_lessonId) => {},
+    onContentChange = (_lessonId, _contentId) => {},
     lesson,
     draggable = false,
     editable = false,
-    isMobile = false
+    isMobile = false,
+    initialLessonId = null,
+    initialContentId = null,
   } = $props();
+
+  let hasAutoOpened = false;
 
   let isOpen = $state(false);
   let showEditDialog = $state(false);
@@ -67,6 +74,38 @@
     if (contents.length > 0 && !selectedContentId) {
       selectedContentId = contents[0].id;
       updateSelectedContent();
+    }
+  });
+
+  // Auto-open wenn diese Lesson per URL angefragt wurde
+  $effect(() => {
+    if (!hasAutoOpened && initialLessonId && String(lesson.id) === String(initialLessonId)) {
+      hasAutoOpened = true;
+      tick().then(() => {
+        isOpen = true;
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const panelWidth = Math.min(600, window.innerWidth * 0.9);
+          let left = rect.left + window.scrollX;
+          let top  = rect.bottom + window.scrollY + 10;
+          if (left + panelWidth > window.innerWidth + window.scrollX)
+            left = Math.max(0, window.innerWidth + window.scrollX - panelWidth - 10);
+          detailsLeft = left;
+          detailsTop  = top;
+        }
+        onLessonOpen(lesson.id, selectedContentId);
+      });
+    }
+  });
+
+  // Initial-Content per URL setzen (sobald contents geladen)
+  $effect(() => {
+    if (isOpen && initialContentId && contents.length > 0) {
+      const match = contents.find(c => String(c.id) === String(initialContentId));
+      if (match && selectedContentId !== match.id) {
+        selectedContentId = match.id;
+        updateSelectedContent();
+      }
     }
   });
 
@@ -116,23 +155,33 @@
     return { destroy() { node.remove(); } };
   }
 
+  function openLesson() {
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    const panelWidth = Math.min(600, window.innerWidth * 0.9);
+    let left = rect.left + window.scrollX;
+    let top  = rect.bottom + window.scrollY + 10;
+    if (left + panelWidth > window.innerWidth + window.scrollX)
+      left = Math.max(0, window.innerWidth + window.scrollX - panelWidth - 10);
+    detailsLeft = left;
+    detailsTop  = top;
+    isOpen = true;
+    onLessonOpen(lesson.id, selectedContentId);
+  }
+
+  function closeLesson() {
+    isOpen = false;
+    onLessonClose(lesson.id);
+  }
+
   function toggleOpen() {
     if (editable) {
       showEditDialog = true;
     } else if (draggable) {
+    } else if (isOpen) {
+      closeLesson();
     } else {
-      isOpen = !isOpen;
-      if (isOpen && element) {
-        const rect = element.getBoundingClientRect();
-        const panelWidth = Math.min(600, window.innerWidth * 0.9);
-        let left = rect.left + window.scrollX;
-        let top = rect.bottom + window.scrollY + 10;
-        if (left + panelWidth > window.innerWidth + window.scrollX) {
-          left = Math.max(0, window.innerWidth + window.scrollX - panelWidth - 10);
-        }
-        detailsLeft = left;
-        detailsTop = top;
-      }
+      openLesson();
     }
   }
 
@@ -258,6 +307,7 @@
   function updateSelectedContent() {
     selectedContent = contents.find((c) => c.id === selectedContentId) || null;
     markdownContent = selectedContent?.text || "";
+    if (isOpen) onContentChange(lesson.id, selectedContentId);
   }
 
   function onEditSuccess(event) {
@@ -389,7 +439,7 @@
   // Close lesson details when clicking outside on mobile
   function handleOutsideClick(event) {
     if (isMobile && isOpen && !event.target.closest('.lesson-details') && !event.target.closest('.lesson-icon')) {
-      isOpen = false;
+      closeLesson();
     }
   }
 
@@ -462,7 +512,7 @@
       style="left: {detailsLeft}px; top: {detailsTop}px;"
       onscroll={handleScroll}
     >
-      <button class="close-button" onclick={() => isOpen = false}>
+      <button class="close-button" onclick={closeLesson}>
         ✕
       </button>
       

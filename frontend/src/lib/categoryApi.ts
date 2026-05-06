@@ -11,6 +11,25 @@ export interface CategoryDto {
   children: string[];
 }
 
+export async function getCategoryById(id: string | number): Promise<CategoryDto | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/category/${id}`);
+    if (!res.ok) throw new Error(`HTTP-Fehler: ${res.status}`);
+    return res.json();
+  } catch (e) {
+    console.error("Fehler beim Laden der Kategorie:", e);
+    return null;
+  }
+}
+
+export async function getCategoryPath(id: string | number): Promise<CategoryDto[]> {
+  const category = await getCategoryById(id);
+  if (!category) return [];
+  if (!category.parents || category.parents.length === 0) return [category];
+  const parentPath = await getCategoryPath(category.parents[0]);
+  return [...parentPath, category];
+}
+
 export async function getLearningHubs() {
   try {
     const res = await fetch(`${API_BASE_URL}/category/asLearningHubs`);

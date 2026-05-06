@@ -13,7 +13,10 @@
     imageSize = { width: 0, height: 0 },
     menuVisible = true,
     isMobile = false,
-    onSwipe = () => {}
+    onSwipe = () => {},
+    initialLessonId = null,
+    initialContentId = null,
+    onUrlUpdate = () => {}
   } = $props();
   
   let categoryViewRef = $state(null);
@@ -107,6 +110,9 @@
       {imageSize}
       {isMobile}
       {menuVisible}
+      {initialLessonId}
+      {initialContentId}
+      {onUrlUpdate}
     />
   {/if}
 
