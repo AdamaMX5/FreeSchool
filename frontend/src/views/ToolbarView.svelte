@@ -1,9 +1,10 @@
 <script lang="ts">
   import { isEditMode, toggleEditMode, isMoveMode, toggleMoveMode } from '../lib/global';
-  import { Edit, Move, PlusCircle, GraduationCap, Shield } from 'lucide-svelte';
+  import { Edit, Move, PlusCircle, GraduationCap, Shield, Bug } from 'lucide-svelte';
   import CreateLessonDialog from '../dialogs/CreateLessonDialog.svelte'; // <-- Dialog importieren
+  import CreateGitIssueDialog from '../dialogs/CreateGitIssueDialog.svelte';
   import { user } from '../lib/global';
-  import { get } from 'svelte/store'; 
+  import { get } from 'svelte/store';
 
 
   let isAdmin = $state(false);
@@ -24,7 +25,8 @@
   } = $props();
 
   let showCreateLessonDialog = $state(false);
-  
+  let showCreateGitIssueDialog = $state(false);
+
 
   function createLesson() {
     showCreateLessonDialog = true;
@@ -32,6 +34,14 @@
 
   function closeCreateLessonDialog() {
     showCreateLessonDialog = false;
+  }
+
+  function createGitIssue() {
+    showCreateGitIssueDialog = true;
+  }
+
+  function closeCreateGitIssueDialog() {
+    showCreateGitIssueDialog = false;
   }
 
   function lessonCreated(event) {
@@ -69,6 +79,12 @@
     <Shield size="24" />
   </button>
   {/if}
+
+  {#if isAdmin}
+  <button onclick={createGitIssue} title="Verbesserung als Issue melden">
+    <Bug size="24" />
+  </button>
+  {/if}
 </div>
 
 {#if showCreateLessonDialog}
@@ -83,6 +99,17 @@
     oncancel={() =>{
       showCreateLessonDialog = false;
     }}
+    onerror={(e) => alert(e.message)}
+  />
+{/if}
+
+{#if showCreateGitIssueDialog}
+  <CreateGitIssueDialog
+    onsuccess={() => {
+      closeCreateGitIssueDialog();
+      alert("Issue wurde erstellt.");
+    }}
+    oncancel={closeCreateGitIssueDialog}
     onerror={(e) => alert(e.message)}
   />
 {/if}
