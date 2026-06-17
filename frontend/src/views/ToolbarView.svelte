@@ -80,7 +80,7 @@
   </button>
   {/if}
 
-  {#if isAdmin}
+  {#if isAdmin || isModerator}
   <button onclick={createGitIssue} title="Verbesserung als Issue melden">
     <Bug size="24" />
   </button>
