@@ -20,8 +20,10 @@ logger = logging.getLogger(__name__)
 # Lade Umgebungsvariablen aus .env
 load_dotenv()
 
-# Diese Werte solltest du in einer Umgebungsvariable speichern oder konfigurieren!
-SECRET_KEY = os.getenv("SECRET_KEY", "1234567890abcdef1234567890abcdef")
+# SECRET_KEY must come from the environment; no in-repo default (would let JWTs be forged).
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY env var must be set (no default for security reasons)")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 1440 Minuten = 24 Stunden
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -89,15 +91,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    logger.info(f"Token: {token}")
-    logger.info(f"Email from token: {email}")
+    # Never log the raw token; keep identifying details at DEBUG only (no PII on INFO).
+    logger.debug("Resolving current user from token")
 
     user = await db.scalar(select(User).where(User.email == email))
 
-    logger.info(f"User from DB: {user}")
-    logger.info(f"User type: {type(user)}")
     if user:
-        logger.info(f"User ID: {user.id if hasattr(user, 'id') else 'No id attribute'}")
+        logger.debug(f"Resolved user id: {user.id if hasattr(user, 'id') else 'no id'}")
 
     if user is None:
         raise HTTPException(

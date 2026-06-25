@@ -1,4 +1,8 @@
 # tests/conftest.py
+# Ensure a SECRET_KEY exists before importing the app (auth.py fails fast without one).
+import os
+os.environ.setdefault("SECRET_KEY", "test-secret-key-not-for-production-0123456789abcdef")
+
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
