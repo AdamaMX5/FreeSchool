@@ -3,6 +3,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { execSync } from 'child_process'
 
 function getGitVersion() {
+  if (process.env.APP_VERSION && process.env.APP_VERSION !== "") return process.env.APP_VERSION;
   try {
     const hash = execSync('git rev-parse --short HEAD').toString().trim()
     const date = execSync('git log -1 --format=%cd --date=format:%Y-%m-%d').toString().trim()

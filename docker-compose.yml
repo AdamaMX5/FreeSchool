@@ -40,7 +40,10 @@ services:
     restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - APP_VERSION
     container_name: freeschool_frontend
     env_file: .env
     environment:

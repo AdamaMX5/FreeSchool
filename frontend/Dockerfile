@@ -1,34 +1,27 @@
 FROM node:23-alpine as builder
 
-# Install dependencies
+ARG APP_VERSION
+ENV APP_VERSION=$APP_VERSION
+
 RUN apk add --no-cache git python3 make g++
 
 WORKDIR /app
 
-# Configure npm
 RUN npm config set registry https://registry.npmjs.org/
 ENV HUSKY=0
 
-# Pakete installieren
 COPY package.json ./
 RUN npm install --legacy-peer-deps
 
-
-# Rest kopieren
 COPY . .
 
-# Build the app with production mode
 ENV NODE_ENV=production
 RUN npm run build
 
 FROM nginx:alpine
 
-# Copy nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built files from builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Ensure nginx can access the files
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /usr/share/nginx/html
+RUN chown -R nginx:nginx /usr/share/nginx/html &&     chmod -R 755 /usr/share/nginx/html
