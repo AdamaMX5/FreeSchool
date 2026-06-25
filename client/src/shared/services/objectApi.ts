@@ -52,7 +52,11 @@ export async function getCategoryBySelfId(selfId: string): Promise<Category | nu
   return docs.length ? mapCategory(docs[0]) : null;
 }
 
-/** Child categories of a category, resolved from its data.children array. */
+/**
+ * Child categories of a category, resolved from its data.children array.
+ * NOTE: known N+1 (one request per child) — acceptable for now; revisit with a
+ * batch/multi-ref query if categories grow wide.
+ */
 export async function getChildCategories(parentSelfId: string): Promise<Category[]> {
   const parent = await getCategoryBySelfId(parentSelfId);
   if (!parent || parent.children.length === 0) return [];
