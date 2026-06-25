@@ -1,5 +1,4 @@
-import { user } from "./global";
-import { get } from "svelte/store"
+import { authFetch } from "./authApi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -11,14 +10,12 @@ export async function postContent(
   lesson_id: string,
   teacher_id: string | null
 ) {
-  const jwt = get(user)?.jwt;
-  const res = await fetch(`${API_BASE_URL}/content`, {
+  const res = await authFetch(`${API_BASE_URL}/content`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`,
     },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       language, text, youtube_id, internal_video, lesson_id, teacher_id 
     })
   });

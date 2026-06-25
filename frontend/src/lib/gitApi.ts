@@ -1,5 +1,4 @@
-import { user } from "./global";
-import { get } from "svelte/store";
+import { authFetch } from "./authApi";
 
 const GIT_SERVICE_URL = import.meta.env.VITE_GIT_SERVICE_URL;
 
@@ -11,12 +10,7 @@ export interface RepoDto {
 
 export async function getRepos(): Promise<RepoDto[]> {
   try {
-    const jwt = get(user)?.jwt;
-    const res = await fetch(`${GIT_SERVICE_URL}/repos`, {
-      headers: {
-        "Authorization": `Bearer ${jwt}`
-      }
-    });
+    const res = await authFetch(`${GIT_SERVICE_URL}/repos`, {});
     if (!res.ok) throw new Error(`HTTP-Fehler: ${res.status}`);
     return res.json();
   } catch (e) {
@@ -26,12 +20,10 @@ export async function getRepos(): Promise<RepoDto[]> {
 }
 
 export async function createIssue(repo: string, title: string, body: string, labels: string[] = []) {
-  const jwt = get(user)?.jwt;
-  const res = await fetch(`${GIT_SERVICE_URL}/issue`, {
+  const res = await authFetch(`${GIT_SERVICE_URL}/issue`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({ repo, title, body, labels })
   });

@@ -1,9 +1,17 @@
 <script>
   import { onMount } from 'svelte';
-  import { user, setUser, unsetUser } from '../lib/global';
-  
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.freischule.info';
-  
+  import { user } from '../lib/global';
+  import {
+    checkEmail,
+    login,
+    registerComplete,
+    logout,
+    ensureValidToken,
+    applySession,
+    clearSession,
+    isExpired
+  } from '../lib/authApi';
+
   export const Roles = Object.freeze({
     STUDENT: 'STUDENT',
     TEACHER: 'TEACHER',
@@ -23,7 +31,8 @@
   let pathLoaded = false;
   let showLogin = $state(false);
 
-  let step = $state('login'); // login | register
+  // Email-first flow: 'email' -> ('login' | 'register')
+  let step = $state('email');
   let emailInput = $state(null);
   let passwordInput = $state(null);
   let passwordRepeatInput = $state(null);
@@ -31,217 +40,141 @@
   let errorMessage = $state('');
   let infoMessage = $state('');
 
-  let id = $state(0);
-  let email = $state("");
-  let jwt = $state("");
-  let roles = $state([]);
+  // Email currently being authenticated (preserved across the flow steps).
+  let pendingEmail = $state('');
 
-  onMount(() => {
-    id = Number(localStorage.getItem('user.id')) ?? 0;
-    email = localStorage.getItem('user.email') ?? '';
-    jwt = localStorage.getItem('user.jwt') ?? '';
-    roles = [];
-    const storedRoles = localStorage.getItem('user.roles');
-    const parsedRoles = storedRoles ? JSON.parse(storedRoles) : [];
+  // Mirror the auth store into local state so the template reacts to login/refresh/logout.
+  let email = $state('');
+  let jwt = $state('');
+  user.subscribe((value) => {
+    email = value.email;
+    jwt = value.jwt;
+  });
 
-    // JWT prüfen
-      if (jwt) {
+  onMount(async () => {
+    // Restore a still-valid session from localStorage; otherwise try a silent refresh.
+    const storedId = Number(localStorage.getItem('user.id')) || 0;
+    const storedEmail = localStorage.getItem('user.email') ?? '';
+    const storedJwt = localStorage.getItem('user.jwt') ?? '';
+    const storedRolesRaw = localStorage.getItem('user.roles');
+    const storedRoles = storedRolesRaw ? JSON.parse(storedRolesRaw) : [];
+
+    pendingEmail = storedEmail;
+
+    if (storedJwt && !isExpired(storedJwt)) {
+      // Re-use the persisted session and let the store mirror it.
+      applySession({
+        id: storedId,
+        email: storedEmail,
+        roles: storedRoles,
+        access_token: storedJwt,
+        status: 'login'
+      });
+    }
+
+    // If the stored token is missing/expired, this refreshes via the HttpOnly cookie.
+    await ensureValidToken();
+
+    // Restore the saved navigation path.
+    if (currentPath != null && currentPath.length === 0) {
+      const savedPath = localStorage.getItem('user.path');
+      if (savedPath) {
         try {
-          const payloadBase64 = jwt.split('.')[1];
-          const payload = JSON.parse(atob(payloadBase64));
-
-          const now = Math.floor(Date.now() / 1000); // aktuelle Zeit in Sekunden
-          if (payload.exp && payload.exp < now) {
-            // Token ist abgelaufen
-            jwt = "";
-            localStorage.removeItem('user.jwt');
-          }else{ 
-            roles = parsedRoles;
+          const parsedPath = JSON.parse(savedPath);
+          if (Array.isArray(parsedPath) && parsedPath.length > 0) {
+            onNavigate(parsedPath);
           }
         } catch (e) {
-          // Ungültiger Token, lieber entfernen
-          jwt = "";
-          localStorage.removeItem('user.jwt');
+          console.warn('Fehler beim Parsen des gespeicherten Pfads:', e);
         }
       }
-
-      // Path aus localStorage holen
-      if (currentPath != null && currentPath.length === 0) {
-        const savedPath = localStorage.getItem('user.path');
-        if (savedPath) {
-          try {
-            const parsedPath = JSON.parse(savedPath);
-            if (Array.isArray(parsedPath) && parsedPath.length > 0) {
-              onNavigate(parsedPath);
-            }
-          } catch (e) {
-            console.warn("Fehler beim Parsen des gespeicherten Pfads:", e);
-          }
-        }
-      }
-      pathLoaded = true; // Pfad wurde initial geladen
-
-      if(jwt && jwt.trim() !== '') setUser(id, email, jwt, roles);
-
+    }
+    pathLoaded = true;
   });
 
   function handleLoginClick() {
     showLogin = !showLogin;
     errorMessage = '';
     infoMessage = '';
-    step = 'login';
-
-    console.log('=== DEBUG API BASE URL ===');
-    console.log('API_BASE_URL Variable:', API_BASE_URL);
-    console.log('VITE_API_BASE_URL aus env:', import.meta.env.VITE_API_BASE_URL);
-    console.log('Typ von API_BASE_URL:', typeof API_BASE_URL);
-    console.log('Ist API_BASE_URL undefined?:', API_BASE_URL === undefined);
-    console.log('Ist API_BASE_URL "undefined"?:', API_BASE_URL === 'undefined');
-    console.log('Komplette import.meta.env:', import.meta.env);
-    console.log('==========================');
-    
-    // Test-URL zusammenbauen
-    const testUrl = `${API_BASE_URL}/user/login`;
-    console.log('Zusammengebaute Login-URL:', testUrl);
+    step = 'email';
   }
 
   function handleMenuToggle() {
     onToggleMenu();
   }
 
-  async function submitLogin() {
-    loginButton.disabled = true; // Button deaktivieren
+  // Step 1: decide whether this email logs in or registers.
+  async function submitEmail() {
+    loginButton.disabled = true;
     errorMessage = '';
     infoMessage = '';
-    // Werte aus den HTML-Inputs holen
-    
-    email = emailInput.value;
-    
     try {
-      const res = await fetch(`${API_BASE_URL}/user/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: email,
-          password: passwordInput.value
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        const details = Array.isArray(data.detail)
-        ? data.detail.map(d => d.msg).join(', ')
-        : data.detail;
-
-        throw new Error('Login fehlgeschlagen<br>' + details);
-      }
-      if (data.status === 'login' || data.status === 'login_with_verify_email_sended') {
-        infoMessage = 'Erfolgreich eingeloggt!';
-        if(data.status === 'login_with_verify_email_sended')
-          infoMessage += '<br>Verifikationsemail versendet';
-        id = data.id;
-        email = data.email;
-        jwt = data.jwt;
-        roles = data.roles;
-        if(jwt && jwt.trim() !== '') setUser(id, email, jwt, roles);
-        localStorage.setItem('user.id', data.id);
-        localStorage.setItem('user.email', data.email);
-        localStorage.setItem('user.jwt', data.jwt);
-        localStorage.setItem('user.roles', JSON.stringify(data.roles ?? []));
-      } else if (data.status === 'register') {
-        infoMessage = 'Benutzer registriert. Bitte Passwort erneut eingeben zur Bestätigung.';
-        id = data.id;
-        step = 'register';
-      }
+      pendingEmail = emailInput.value.trim();
+      const status = await checkEmail(pendingEmail);
+      step = status === 'register' ? 'register' : 'login';
     } catch (err) {
-      errorMessage = err.message;
+      errorMessage = 'Prüfung fehlgeschlagen\n' + err.message;
     }
-    loginButton.disabled = false; // Button aktivieren
+    loginButton.disabled = false;
   }
 
-  async function submitRegister() {
-    loginButton.disabled = true; // Button deaktivieren
+  // Step 2a: existing user -> login.
+  async function submitLogin() {
+    loginButton.disabled = true;
     errorMessage = '';
     infoMessage = '';
-    // Werte aus den HTML-Inputs holen
     try {
-      const res = await fetch(`${API_BASE_URL}/user/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: id,
-          repassword: passwordRepeatInput.value
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        const details = Array.isArray(data.detail)
-        ? data.detail.map(d => d.msg).join(', ')
-        : data.detail;
-
-        throw new Error('Registrierung fehlgeschlagen<br>' + details);
+      const session = await login(pendingEmail, passwordInput.value);
+      if (session.status === 'login' || session.status === 'login_with_verify_email_send') {
+        applySession(session);
+        infoMessage = 'Erfolgreich eingeloggt!';
+        if (session.status === 'login_with_verify_email_send') {
+          infoMessage += '\nVerifikationsemail versendet';
+        }
+      } else if (session.status === 'register') {
+        step = 'register';
+        infoMessage = 'Bitte Passwort zur Registrierung bestätigen.';
       }
-
-      infoMessage = 'Verifizierungs-E-Mail wurde gesendet. Du bist eingeloggt.';
-      localStorage.setItem('user.id', data.id);
-      localStorage.setItem('user.jwt', data.jwt);
-      
-      id = data.id;
-      jwt = data.jwt;
-      email = data.email;
-      roles = data.roles;
-
-      if(jwt && jwt.trim() !== '') setUser(id, email, jwt, roles);
     } catch (err) {
-      errorMessage = err.message;
+      errorMessage = 'Login fehlgeschlagen\n' + err.message;
     }
-    loginButton.disabled = false; // Button aktivieren
+    loginButton.disabled = false;
+  }
+
+  // Step 2b: new user -> register-complete.
+  async function submitRegister() {
+    loginButton.disabled = true;
+    errorMessage = '';
+    infoMessage = '';
+    try {
+      const session = await registerComplete(
+        pendingEmail,
+        passwordInput.value,
+        passwordRepeatInput.value
+      );
+      applySession(session);
+      infoMessage = 'Registrierung abgeschlossen. Du bist eingeloggt.';
+    } catch (err) {
+      errorMessage = 'Registrierung fehlgeschlagen\n' + err.message;
+    }
+    loginButton.disabled = false;
   }
 
   async function submitLogout() {
-    loginButton.disabled = true; // Button deaktivieren
+    loginButton.disabled = true;
     errorMessage = '';
     infoMessage = '';
     try {
-      const res = await fetch(`${API_BASE_URL}/user/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` }
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        const details = Array.isArray(data.detail)
-        ? data.detail.map(d => d.msg).join(', ')
-        : data.detail;
-
-        clearUser();
-        onHomeButton([]);
-        throw new Error('Abmeldung fehlgeschlagen<br>' + details);
-      }else{
-        infoMessage = 'Erfolgreich abgemeldet!';
-        clearUser();
-        onHomeButton([]);
-      }
+      await logout();
+      infoMessage = 'Erfolgreich abgemeldet!';
     } catch (err) {
-      errorMessage = err.message;
+      errorMessage = 'Abmeldung fehlgeschlagen\n' + err.message;
+    } finally {
+      clearSession();
+      step = 'email';
+      onHomeButton([]);
+      loginButton.disabled = false;
     }
-    loginButton.disabled = false; // Button aktivieren
-  }
-
-  function clearUser(){
-    id = 0;
-    email = '';
-    jwt = '';
-    roles = [];
-    unsetUser();
-    localStorage.removeItem('user.jwt');
-    localStorage.removeItem('user.id');
-    localStorage.removeItem('user.email');
-    localStorage.removeItem('user.roles');
   }
 
   $effect(() => {
@@ -253,7 +186,6 @@
         onNavigate(savedPath);
       }
     } else {
-      
       localStorage.setItem('user.path', JSON.stringify(currentPath));
     }
   });
@@ -300,27 +232,31 @@
 
     <div class="login-dropdown" class:visible={showLogin}>
       {#if !jwt || jwt.trim() === ''}
-        <input type="email" bind:this={emailInput} value={email} placeholder="Email" />
-        <input type="password" bind:this={passwordInput} value="" placeholder="Passwort" />
+        <input type="email" bind:this={emailInput} value={pendingEmail} placeholder="Email" readonly={step !== 'email'} />
 
+        {#if step !== 'email'}
+          <input type="password" bind:this={passwordInput} value="" placeholder="Passwort" />
+        {/if}
         {#if step === 'register'}
           <input type="password" bind:this={passwordRepeatInput} value="" placeholder="Passwort wiederholen" />
         {/if}
 
-        {#if step === 'login'}
-          <button onclick={submitLogin} bind:this={loginButton}>Anmelden / Registrieren</button>
+        {#if step === 'email'}
+          <button onclick={submitEmail} bind:this={loginButton}>Weiter</button>
+        {:else if step === 'login'}
+          <button onclick={submitLogin} bind:this={loginButton}>Anmelden</button>
         {:else if step === 'register'}
-          <button onclick={submitRegister} bind:this={loginButton}>Registrieren abschließen</button>
+          <button onclick={submitRegister} bind:this={loginButton}>Registrieren</button>
         {/if}
       {:else}
         <div class="login-info">Angemeldet als: {email} [später Name aus dem Profil]</div>
         <button onclick={submitLogout} bind:this={loginButton}>Abmelden</button>
       {/if}
       {#if errorMessage}
-        <div class="error-message">{@html errorMessage}</div>
+        <div class="error-message">{errorMessage}</div>
       {/if}
       {#if infoMessage}
-        <div class="info-message">{@html infoMessage}</div>
+        <div class="info-message">{infoMessage}</div>
       {/if}
     </div>
 
@@ -456,11 +392,13 @@
   .error-message {
     color: #ff6b6b;
     font-size: 14px;
+    white-space: pre-line; /* render \n as line breaks without @html */
   }
 
   .info-message {
     color: #72d572;
     font-size: 14px;
+    white-space: pre-line;
   }
 
   .login-info {

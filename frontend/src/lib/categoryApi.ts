@@ -1,5 +1,4 @@
-import { user } from "./global";
-import { get } from "svelte/store"
+import { authFetch } from "./authApi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -54,12 +53,10 @@ export async function getChildCategories(id: number){
 
 export async function postCategory(category: CategoryDto){
   try {
-    const jwt = get(user)?.jwt;
-    const res = await fetch(`${API_BASE_URL}/category`, {
+    const res = await authFetch(`${API_BASE_URL}/category`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${jwt}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(category)
     });
@@ -71,12 +68,10 @@ export async function postCategory(category: CategoryDto){
 }
 export async function putCategory(category: CategoryDto) {
   try {
-    const jwt = get(user)?.jwt;
-    const res = await fetch(`${API_BASE_URL}/category`, {
+    const res = await authFetch(`${API_BASE_URL}/category`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${jwt}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify(category)
     });
@@ -95,12 +90,10 @@ export async function putCategory(category: CategoryDto) {
 
 export async function deleteCategory(id: number) {
   try {
-    const jwt = get(user)?.jwt;
-    const res = await fetch(`${API_BASE_URL}/category/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/category/${id}`, {
       method: "DELETE",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${jwt}`
+        "Content-Type": "application/json"
       }
     });
     

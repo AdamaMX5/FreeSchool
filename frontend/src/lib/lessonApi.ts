@@ -1,5 +1,4 @@
-import { user } from "./global";
-import { get } from "svelte/store"
+import { authFetch } from "./authApi";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -17,18 +16,12 @@ export interface LessonDto {
 
 // GET - Lessons by Category
 export async function getLessonsByCategory(category_id: string): Promise<LessonDto[]> {
-  const jwt = get(user)?.jwt;
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json"
-  };
-  
-  if (jwt) {
-    headers["Authorization"] = `Bearer ${jwt}`;
-  }
-
-  const res = await fetch(`${API_BASE_URL}/lesson/by_category/${category_id}`, {
+  // authFetch sends the bearer token only when logged in and refreshes it on 401.
+  const res = await authFetch(`${API_BASE_URL}/lesson/by_category/${category_id}`, {
     method: "GET",
-    headers
+    headers: {
+      "Content-Type": "application/json"
+    }
   });
 
   const result = await res.json();
@@ -38,14 +31,10 @@ export async function getLessonsByCategory(category_id: string): Promise<LessonD
 
 // POST - Create new Lesson
 export async function postLesson(lessonData: Omit<LessonDto, 'id'>): Promise<LessonDto> {
-  const jwt = get(user)?.jwt;
-  if (!jwt) throw new Error("Nicht autorisiert");
-
-  const res = await fetch(`${API_BASE_URL}/lesson`, {
+  const res = await authFetch(`${API_BASE_URL}/lesson`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`,
     },
     body: JSON.stringify(lessonData)
   });
@@ -57,14 +46,10 @@ export async function postLesson(lessonData: Omit<LessonDto, 'id'>): Promise<Les
 
 // PUT - Update Lesson
 export async function putLesson(lesson_id: string, lessonData: LessonDto): Promise<LessonDto> {
-  const jwt = get(user)?.jwt;
-  if (!jwt) throw new Error("Nicht autorisiert");
-
-  const res = await fetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
+  const res = await authFetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`,
     },
     body: JSON.stringify(lessonData)
   });
@@ -76,15 +61,8 @@ export async function putLesson(lesson_id: string, lessonData: LessonDto): Promi
 
 // PUT - Update Lesson Position
 export async function updateLessonPosition(lesson_id: string, position: { x: number; y: number }): Promise<LessonDto> {
-  const jwt = get(user)?.jwt;
-  if (!jwt) throw new Error("Nicht autorisiert");
-
   // Zuerst die aktuelle Lesson laden
-  const currentLessonRes = await fetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
-    headers: {
-      "Authorization": `Bearer ${jwt}`,
-    }
-  });
+  const currentLessonRes = await authFetch(`${API_BASE_URL}/lesson/${lesson_id}`, {});
 
   if (!currentLessonRes.ok) {
     throw new Error("Fehler beim Laden der Lesson");
@@ -98,34 +76,23 @@ export async function updateLessonPosition(lesson_id: string, position: { x: num
     position_x: position.x,
     position_y: position.y
   };
-  console.log("Neue Informationen der lesson hochladen:", updatedLesson);
-  const res = await fetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
+  const res = await authFetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${jwt}`,
     },
     body: JSON.stringify(updatedLesson)
   });
 
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(error || "Fehler beim Aktualisieren der Lesson");
-  }
-  
-  return await res.json();
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.detail || "Fehler beim Aktualisieren der Lesson");
+  return result;
 }
 
 // DELETE - Delete Lesson
 export async function deleteLesson(lesson_id: string): Promise<{detail: string}> {
-  const jwt = get(user)?.jwt;
-  if (!jwt) throw new Error("Nicht autorisiert");
-
-  const res = await fetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
-    method: "DELETE",
-    headers: {
-      "Authorization": `Bearer ${jwt}`,
-    }
+  const res = await authFetch(`${API_BASE_URL}/lesson/${lesson_id}`, {
+    method: "DELETE"
   });
 
   const result = await res.json();

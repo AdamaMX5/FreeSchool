@@ -7,8 +7,9 @@ export type Role = 'STUDENT' | 'TEACHER' | 'TUTOR' | 'PROJECTMANAGER' | 'SCHOOLD
 export interface User {
   id: number;
   email: string;
-  jwt: string;
+  jwt: string; // AuthService access token (short-lived, kept under `jwt` for API-lib compatibility)
   roles: Role[];
+  permissions?: Record<string, unknown>;
 }
 
 export const isModerator = writable(false);
@@ -16,7 +17,8 @@ export const user = writable<User>({
   id: 0,
   email: '',
   jwt: '',
-  roles: []
+  roles: [],
+  permissions: {}
 });
 
 export const layout = writable({
@@ -29,12 +31,13 @@ export const layout = writable({
   scale: 1
 })
 
-export function setUser(setid: number, setemail: string, setjwt: string, setroles: Role[]){
+export function setUser(setid: number, setemail: string, setjwt: string, setroles: Role[], setpermissions: Record<string, unknown> = {}){
   user.set({
     id: setid,
     email: setemail,
     jwt: setjwt,
-    roles: setroles
+    roles: setroles,
+    permissions: setpermissions
   });
   const roles = get(user).roles ?? [];
   isModerator.set(roles.includes('MODERATOR'));
@@ -45,7 +48,8 @@ export function unsetUser(){
       id: 0,
       email: '',
       jwt: '',
-      roles: []
+      roles: [],
+      permissions: {}
     });
   isModerator.set(false);
   resetModes();
