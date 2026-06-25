@@ -1,6 +1,6 @@
 <script lang="ts">
   import Dialog from './Dialog.svelte';
-  import { user } from '../lib/global';
+  import { authFetch } from '../lib/authApi';
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -31,19 +31,14 @@
 
   async function submit() {
     try {
-      const headers = { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${$user.jwt}`
-      };
-      
       // Nur Rollen aktualisieren
       const payload = {
         roles: roles
       };
 
-      const res = await fetch(`${API_BASE_URL}/admin/user/${userEdit.id}/roles`, {
+      const res = await authFetch(`${API_BASE_URL}/admin/user/${userEdit.id}/roles`, {
         method: "PUT",
-        headers: headers,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
 

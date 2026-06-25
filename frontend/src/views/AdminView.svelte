@@ -2,7 +2,7 @@
   import { X } from "lucide-svelte";
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
-  import { user } from "../lib/global";
+  import { authFetch } from "../lib/authApi";
   import EditUserDialog from '../dialogs/EditUserDialog.svelte';
   import AdminDatabaseDialog from '../dialogs/AdminDatabaseDialog.svelte';
   import { Download } from "lucide-svelte";
@@ -23,12 +23,7 @@
 
   async function fetchUsers() {
     try {
-      const headers = {};
-      if ($user?.jwt) {
-        headers['Authorization'] = `Bearer ${$user.jwt}`;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/admin/users`, { headers });
+      const response = await authFetch(`${API_BASE_URL}/admin/users`, {});
       if (!response.ok) throw new Error("Fehler beim Laden der Benutzer");
       users = await response.json();
       error = null;
@@ -41,13 +36,8 @@
     try {
       downloading = true;
       error = null;
-      
-      const headers = {};
-      if ($user?.jwt) {
-        headers['Authorization'] = `Bearer ${$user.jwt}`;
-      }
 
-      const response = await fetch(`${API_BASE_URL}/admin/export/users`, { headers });
+      const response = await authFetch(`${API_BASE_URL}/admin/export/users`, {});
       
       if (!response.ok) {
         throw new Error(`Fehler beim Exportieren der Benutzer: ${response.statusText}`);

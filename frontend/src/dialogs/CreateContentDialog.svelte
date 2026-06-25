@@ -1,7 +1,7 @@
 <script lang="ts">
   import Dialog from "./Dialog.svelte";
   import { onMount } from "svelte";
-  import { user } from "../lib/global";
+  import { authFetch } from "../lib/authApi";
   import { getTeachersAll } from "../lib/teacherApi";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -41,11 +41,10 @@
         teacher_id: teacher_id
       };
       
-      const res = await fetch(`${API_BASE_URL}/content`, {
+      const res = await authFetch(`${API_BASE_URL}/content`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${$user.jwt}`,
         },
         body: JSON.stringify(payload),
       });

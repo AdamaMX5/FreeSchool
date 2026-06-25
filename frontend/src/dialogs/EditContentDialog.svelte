@@ -1,6 +1,6 @@
 <script lang="ts">
   import Dialog from "./Dialog.svelte";
-  import { user } from "../lib/global";
+  import { authFetch } from "../lib/authApi";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -31,13 +31,12 @@
     };
 
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${API_BASE_URL}/content/${content.id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${$user.jwt}`,
           },
           body: JSON.stringify(payload),
         }
@@ -59,13 +58,10 @@
     if (!confirmed) return;
 
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${API_BASE_URL}/content/${content.id}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${$user.jwt}`,
-          },
         }
       );
 

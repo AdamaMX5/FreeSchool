@@ -1,6 +1,6 @@
 <script lang="ts">
   import Dialog from './Dialog.svelte';
-  import { user } from '../lib/global';
+  import { authFetch } from '../lib/authApi';
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   let {
     onsuccess = () => {},
@@ -21,11 +21,7 @@
     importStats = null;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/backup`, {
-        headers: {
-          'Authorization': `Bearer ${$user.jwt}`
-        }
-      });
+      const response = await authFetch(`${API_BASE_URL}/admin/backup`, {});
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Backup fehlgeschlagen');
@@ -70,11 +66,10 @@
     statusMessage = 'Import wird durchgeführt...';
     importStats = null;
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/import`, {
+      const response = await authFetch(`${API_BASE_URL}/admin/import`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${$user.jwt}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ sql_content: sqlContent })
       });

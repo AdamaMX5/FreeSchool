@@ -7,6 +7,7 @@
   import EditContentDialog from "../dialogs/EditContentDialog.svelte";
   import { user } from "../lib/global";
   import { layout } from "../lib/global";
+  import { authFetch } from "../lib/authApi";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -203,18 +204,14 @@
 
   async function updateProgress(newProgress: number) {
     if (!$user?.jwt) return;
-    const headers = {};
-    headers['Content-Type'] = `application/json`;
-    headers['Authorization'] = `Bearer ${$user.jwt}`;
-    
     const payload = {
       lesson_id: lesson.id,
       progress: newProgress
     };
     try {
-      const response = await fetch(`${API_BASE_URL}/lesson/progress`, {
+      const response = await authFetch(`${API_BASE_URL}/lesson/progress`, {
         method: "POST",
-        headers: headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -238,14 +235,7 @@
     //console.log('📡 Fetching contents for lesson:', lesson.id);
     //console.log('🔗 API URL:', `${API_BASE_URL}/content/by_lesson/${lesson.id}`);
     try {
-      const headers = {};
-      if ($user?.jwt) {
-        headers['Authorization'] = `Bearer ${$user.jwt}`;
-      }
-
-      const res = await fetch(`${API_BASE_URL}/content/by_lesson/${lesson.id}`, {
-        headers: headers
-      });
+      const res = await authFetch(`${API_BASE_URL}/content/by_lesson/${lesson.id}`, {});
       
       //console.log('📊 Response status:', res.status);
       

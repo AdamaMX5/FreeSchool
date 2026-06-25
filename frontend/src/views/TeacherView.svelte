@@ -2,7 +2,7 @@
     import { X } from "lucide-svelte";
     import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
-    import { user } from "../lib/global";
+    import { authFetch } from "../lib/authApi";
 
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     const dispatch = createEventDispatcher();
@@ -34,11 +34,10 @@
 
     async function addTeacher() {
         try {
-            const response = await fetch(`${API_BASE_URL}/teacher`, {
+            const response = await authFetch(`${API_BASE_URL}/teacher`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${$user.jwt}`, // JWT-Token hinzufügen
                 },
                 body: JSON.stringify(newTeacher),
             });
