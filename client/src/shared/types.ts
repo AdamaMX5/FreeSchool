@@ -42,3 +42,21 @@ export interface Category {
   parents: string[];
   children: string[];
 }
+
+export interface Lesson {
+  id: string;
+  name: string;
+  description: string;
+  display_order: string;
+  position_x: number;
+  position_y: number;
+}
+
+export interface Content {
+  id: string;
+  language: string;
+  text: string;
+  youtube_id: string;
+  internal_video: string;
+  teacherId?: string;
+}
