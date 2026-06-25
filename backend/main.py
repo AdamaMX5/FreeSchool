@@ -1,5 +1,7 @@
 import uvicorn
 import os
+import logging
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles  # Favicon
 from fastapi.responses import FileResponse  # Favicon
@@ -11,11 +13,31 @@ from routers.teacher_router import router as TeacherRouter
 from routers.admin_router import router as AdminRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import inspect
-from database import get_async_db, engine, create_tables
+from database import get_async_db, engine, create_tables, async_session
 from typing import Dict, Any
 from models import *
 
-app = FastAPI()
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # One-off, idempotent migration of FreeSchool entities into the ObjectService.
+    # Opt-in via env so normal restarts are unaffected; failures never block startup.
+    if os.getenv("RUN_OBJECTSERVICE_MIGRATION", "false").lower() == "true":
+        from migrations_objectservice.migrator import run_migration
+        from services.object_service_client import ObjectServiceClient
+        try:
+            async with ObjectServiceClient() as client:
+                async with async_session() as session:
+                    summary = await run_migration(session, client)
+                    logger.info("ObjectService migration done: %s", summary)
+        except Exception as e:
+            logger.error("ObjectService migration failed (server continues): %s", e)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 # Statische Dateien verfügbar machen (z.B. für Favicon)
 app.mount("/static", StaticFiles(directory="static"), name="static")

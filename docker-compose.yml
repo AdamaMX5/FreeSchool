@@ -26,6 +26,10 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      # ObjectService migration (issue #16); secrets come from .env, never hardcoded.
+      OBJECT_SERVICE_URL: ${OBJECT_SERVICE_URL:-https://object.freischule.info}
+      OBJECT_SERVICE_API_KEY: ${OBJECT_SERVICE_API_KEY:-}
+      RUN_OBJECTSERVICE_MIGRATION: ${RUN_OBJECTSERVICE_MIGRATION:-false}
     ports:
       - "127.0.0.1:8000:8000"  # Wichtig: Port-Mapping hinzufügen
     depends_on:
