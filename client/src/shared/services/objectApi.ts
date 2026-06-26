@@ -35,22 +35,28 @@ function mapCategory(doc: ObjectDoc): Category {
   };
 }
 
+/** Editable fields of a category (data sub-document). */
+export interface CategoryUpdate {
+  name?: string;
+  background_link?: string;
+  parents?: string[];
+  children?: string[];
+}
+
 /**
- * Persist a new background image link on a category. Uses a shallow merge PATCH so
- * only data.background_link changes; the rest of the category document is untouched.
- * Requires a JWT with an edit-eligible role (enforced server-side by ObjectService).
+ * Persist editable category fields. Uses a shallow merge PATCH so only the supplied
+ * data keys change; arrays (parents/children) are replaced wholesale. The rest of the
+ * category document is untouched. Requires a JWT with an edit-eligible role (enforced
+ * server-side by ObjectService).
  */
-export async function updateCategoryBackground(
-  docId: string,
-  background_link: string
-): Promise<void> {
+export async function updateCategoryData(docId: string, data: CategoryUpdate): Promise<void> {
   if (!docId) throw new Error("Category ohne docId kann nicht gespeichert werden.");
   const res = await authFetch(
     `${OBJECT_BASE_URL}/objects/categories/${encodeURIComponent(docId)}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: { background_link }, merge: true }),
+      body: JSON.stringify({ data, merge: true }),
     }
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
@@ -63,6 +69,15 @@ export async function listLearningHubs(): Promise<Category[]> {
   return extractList(await res.json())
     .map(mapCategory)
     .filter((c) => c.id && c.parents.length === 0);
+}
+
+/** All categories (for parent/children pickers). Capped at the ObjectService max limit. */
+export async function listAllCategories(): Promise<Category[]> {
+  const res = await authFetch(`${OBJECT_BASE_URL}/objects/categories?limit=100`);
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+  return extractList(await res.json())
+    .map(mapCategory)
+    .filter((c) => c.id);
 }
 
 export async function getCategoryBySelfId(selfId: string): Promise<Category | null> {
