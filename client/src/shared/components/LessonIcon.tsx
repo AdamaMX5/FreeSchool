@@ -17,7 +17,10 @@ interface Props {
   offsetX: number;
   offsetY: number;
   moveMode: boolean;
+  editMode?: boolean;
   isMobile?: boolean;
+  /** Open this lesson's edit modal (edit mode). */
+  onEdit?: () => void;
   /** Live position while dragging (original-image pixels). */
   onMove: (x: number, y: number) => void;
   /** Persist the final position on drag release. */
@@ -30,7 +33,9 @@ export default function LessonIcon({
   offsetX,
   offsetY,
   moveMode,
+  editMode = false,
   isMobile = false,
+  onEdit,
   onMove,
   onCommit,
 }: Props) {
@@ -93,6 +98,11 @@ export default function LessonIcon({
   function onClick() {
     // In move mode a click is the tail end of a drag — never open the popover.
     if (moveMode || moved.current) return;
+    // In edit mode a click opens the lesson's edit modal instead of the content.
+    if (editMode) {
+      onEdit?.();
+      return;
+    }
     setOpen((o) => !o);
   }
 

@@ -42,6 +42,7 @@ export default function HomeView() {
             childCategories={b.categories}
             lessons={b.lessons}
             onOpenCategory={b.openCategory}
+            onLessonsChanged={b.reloadLessons}
             canEdit={canManageCategories}
             isMobile
           />

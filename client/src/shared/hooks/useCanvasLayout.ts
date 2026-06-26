@@ -18,6 +18,9 @@ export interface CanvasLayout {
   offsetY: number;
   scaledWidth: number;
   scaledHeight: number;
+  /** Natural (original) image dimensions, 0 until the image has loaded. */
+  naturalWidth: number;
+  naturalHeight: number;
   /** True once both the container and the image natural size are known. */
   ready: boolean;
 }
@@ -58,6 +61,8 @@ export function useCanvasLayout(): CanvasLayout {
     offsetY,
     scaledWidth,
     scaledHeight,
+    naturalWidth: natural.w,
+    naturalHeight: natural.h,
     ready: scale > 0,
   };
 }

@@ -69,6 +69,17 @@ export function useContentBrowser() {
     await openCategory(target);
   }
 
+  /** Reload the current category's lessons (after a create/edit/delete). */
+  async function reloadLessons() {
+    const cat = path[path.length - 1];
+    if (!cat) return;
+    try {
+      setLessons(await listLessonsByCategory(cat.id));
+    } catch (e) {
+      setError(msg(e));
+    }
+  }
+
   /** Update one category in the currently displayed list (e.g. after an edit). */
   function updateCategory(updated: Category) {
     setCategories((cs) => cs.map((c) => (c.id === updated.id ? updated : c)));
@@ -92,6 +103,7 @@ export function useContentBrowser() {
     goHome,
     openCategory,
     goToDepth,
+    reloadLessons,
     updateCategory,
   };
 }

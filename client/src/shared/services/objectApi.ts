@@ -85,6 +85,93 @@ export async function updateLessonPosition(
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
 }
 
+/** Generate a fresh identity for a new object (used for legacyId / refs.selfId). */
+function newId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export interface LessonInput {
+  name: string;
+  description: string;
+  display_order: string;
+  position_x: number;
+  position_y: number;
+}
+
+/**
+ * Create a lesson in a category. Mirrors the migrated shape: self id in both
+ * data.legacyId and refs.selfId, the category foreign key in refs.categoryId, and
+ * isPublic:true so logged-out students can read it (matches the migrated data).
+ * Returns the new lesson's id (legacyId), needed as refs.lessonId for its contents.
+ */
+export async function createLesson(categoryId: string, input: LessonInput): Promise<string> {
+  const id = newId();
+  const res = await authFetch(`${OBJECT_BASE_URL}/objects/lessons`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: { legacyId: id, ...input },
+      refs: { selfId: id, categoryId },
+      isPublic: true,
+    }),
+  });
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+  return id;
+}
+
+export interface LessonEdit {
+  name?: string;
+  description?: string;
+  display_order?: string;
+}
+
+/** Update a lesson's editable text fields (shallow merge). */
+export async function updateLesson(docId: string, data: LessonEdit): Promise<void> {
+  if (!docId) throw new Error("Lesson ohne docId kann nicht gespeichert werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/lessons/${encodeURIComponent(docId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data, merge: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
+/** Delete a lesson. NOTE: its contents are not cascaded server-side here. */
+export async function deleteLesson(docId: string): Promise<void> {
+  if (!docId) throw new Error("Lesson ohne docId kann nicht gelöscht werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/lessons/${encodeURIComponent(docId)}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
+export interface ContentInput {
+  language: string;
+  text: string;
+  youtube_id: string;
+  internal_video: string;
+  teacherId?: string;
+}
+
+/** Create a content for a lesson (lessonId = the lesson's legacyId, not its docId). */
+export async function createContent(lessonId: string, input: ContentInput): Promise<string> {
+  const id = newId();
+  const { teacherId, ...data } = input;
+  const refs: Record<string, string> = { selfId: id, lessonId };
+  if (teacherId) refs.teacherId = teacherId;
+  const res = await authFetch(`${OBJECT_BASE_URL}/objects/contents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data: { legacyId: id, ...data }, refs, isPublic: true }),
+  });
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+  return id;
+}
+
 /** Learning hubs = categories without parents. */
 export async function listLearningHubs(): Promise<Category[]> {
   const res = await authFetch(`${OBJECT_BASE_URL}/objects/categories?limit=100`);
