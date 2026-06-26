@@ -5,6 +5,8 @@ export const OBJECT_BASE_URL =
   import.meta.env.VITE_OBJECT_BASE_URL || "https://object.freischule.info";
 export const MEDIA_BASE_URL =
   import.meta.env.VITE_MEDIA_BASE_URL || "https://media.freischule.info";
+export const GIT_BASE_URL =
+  import.meta.env.VITE_GIT_BASE_URL || "https://git.freischule.info";
 
 // Fallback background for categories that have no own background_link. Upload an
 // image once via the category edit dialog (it lands in MediaService), then paste

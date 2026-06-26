@@ -16,3 +16,12 @@ export function cssBackgroundImage(link: string): string | undefined {
 export function categoryBackgroundImage(link: string): string | undefined {
   return cssBackgroundImage(link || DEFAULT_CATEGORY_BG);
 }
+
+// Resolve a category's background to a plain URL for an <img src> (same default
+// fallback as categoryBackgroundImage, but for the canvas which needs the natural
+// image dimensions via the loaded <img>, not a CSS background). Only http(s) links
+// are accepted — mirrors cssBackgroundImage's whitelist so a non-http link (data:,
+// relative, …) can never be loaded; everything else falls back to the default.
+export function categoryBackgroundSrc(link: string): string {
+  return /^https?:\/\//i.test(link) ? link : DEFAULT_CATEGORY_BG;
+}

@@ -47,10 +47,13 @@ export interface Category {
 }
 
 export interface Lesson {
+  /** ObjectService document _id — needed to PATCH the lesson (e.g. position). */
+  docId: string;
   id: string;
   name: string;
   description: string;
   display_order: string;
+  /** Pixel coordinates on the *original* (unscaled) category background image. */
   position_x: number;
   position_y: number;
 }

@@ -62,6 +62,29 @@ export async function updateCategoryData(docId: string, data: CategoryUpdate): P
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
 }
 
+/**
+ * Persist a lesson's position on the category background. x/y are pixel coordinates
+ * on the *original* (unscaled) image — the view scales them at render time. Shallow
+ * merge so only the two position keys change. Requires an edit-eligible role
+ * (enforced server-side by ObjectService).
+ */
+export async function updateLessonPosition(
+  docId: string,
+  position_x: number,
+  position_y: number
+): Promise<void> {
+  if (!docId) throw new Error("Lesson ohne docId kann nicht gespeichert werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/lessons/${encodeURIComponent(docId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: { position_x, position_y }, merge: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
 /** Learning hubs = categories without parents. */
 export async function listLearningHubs(): Promise<Category[]> {
   const res = await authFetch(`${OBJECT_BASE_URL}/objects/categories?limit=100`);
@@ -92,6 +115,7 @@ export async function getCategoryBySelfId(selfId: string): Promise<Category | nu
 function mapLesson(doc: ObjectDoc): Lesson {
   const d = (doc.data ?? {}) as Record<string, unknown>;
   return {
+    docId: String(doc._id ?? doc.id ?? ""),
     id: String(d.legacyId ?? ""),
     name: String(d.name ?? ""),
     description: String(d.description ?? ""),
