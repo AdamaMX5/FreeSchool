@@ -1,11 +1,18 @@
+import { useState } from "react";
 import { useContentBrowser } from "../../shared/hooks/useContentBrowser";
+import { useAuth } from "../../shared/context/AuthContext";
 import { cssBackgroundImage } from "../../shared/utils/css";
+import CategoryEditModal from "../../shared/components/CategoryEditModal";
+import PencilIcon from "../../shared/components/PencilIcon";
+import type { Category } from "../../shared/types";
 import ContentView from "./ContentView";
 
 // Desktop: learning hubs / child categories as a card grid, lessons as a list below;
 // selecting a lesson opens its contents.
 export default function HomeView() {
   const b = useContentBrowser();
+  const { canManageCategories } = useAuth();
+  const [editing, setEditing] = useState<Category | null>(null);
 
   if (b.selectedLesson) {
     return (
@@ -42,19 +49,30 @@ export default function HomeView() {
               {b.categories.map((cat) => {
                 const bg = cssBackgroundImage(cat.background_link);
                 return (
-                  <button
-                    key={cat.id}
-                    onClick={() => b.openCategory(cat)}
-                    className="group relative h-32 overflow-hidden rounded-lg bg-neutral-700 text-left shadow"
-                  >
-                    {bg && (
-                      <div
-                        className="absolute inset-0 bg-cover bg-center opacity-70 transition group-hover:opacity-90"
-                        style={{ backgroundImage: bg }}
-                      />
+                  <div key={cat.id} className="group relative h-32 overflow-hidden rounded-lg bg-neutral-700 shadow">
+                    <button
+                      onClick={() => b.openCategory(cat)}
+                      className="absolute inset-0 h-full w-full text-left"
+                    >
+                      {bg && (
+                        <div
+                          className="absolute inset-0 bg-cover bg-center opacity-70 transition group-hover:opacity-90"
+                          style={{ backgroundImage: bg }}
+                        />
+                      )}
+                      <h3 className="relative z-10 bg-black/60 p-2 text-sm font-semibold">{cat.name}</h3>
+                    </button>
+                    {canManageCategories && (
+                      <button
+                        onClick={() => setEditing(cat)}
+                        title="Bild bearbeiten"
+                        aria-label="Bild bearbeiten"
+                        className="absolute right-2 top-2 z-20 rounded-full bg-black/60 p-1.5 text-red-500 hover:bg-black/80 hover:text-red-400"
+                      >
+                        <PencilIcon />
+                      </button>
                     )}
-                    <h3 className="relative z-10 bg-black/60 p-2 text-sm font-semibold">{cat.name}</h3>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -80,6 +98,14 @@ export default function HomeView() {
             <div className="text-neutral-500">Keine Einträge.</div>
           )}
         </>
+      )}
+
+      {editing && (
+        <CategoryEditModal
+          category={editing}
+          onClose={() => setEditing(null)}
+          onSaved={b.updateCategory}
+        />
       )}
     </div>
   );

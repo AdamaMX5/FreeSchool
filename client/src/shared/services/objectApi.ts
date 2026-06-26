@@ -26,12 +26,34 @@ function extractList(body: unknown): ObjectDoc[] {
 function mapCategory(doc: ObjectDoc): Category {
   const d = (doc.data ?? {}) as Record<string, unknown>;
   return {
+    docId: String(doc._id ?? doc.id ?? ""),
     id: String(d.legacyId ?? ""),
     name: String(d.name ?? ""),
     background_link: String(d.background_link ?? ""),
     parents: Array.isArray(d.parents) ? (d.parents as string[]) : [],
     children: Array.isArray(d.children) ? (d.children as string[]) : [],
   };
+}
+
+/**
+ * Persist a new background image link on a category. Uses a shallow merge PATCH so
+ * only data.background_link changes; the rest of the category document is untouched.
+ * Requires a JWT with an edit-eligible role (enforced server-side by ObjectService).
+ */
+export async function updateCategoryBackground(
+  docId: string,
+  background_link: string
+): Promise<void> {
+  if (!docId) throw new Error("Category ohne docId kann nicht gespeichert werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/categories/${encodeURIComponent(docId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: { background_link }, merge: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
 }
 
 /** Learning hubs = categories without parents. */

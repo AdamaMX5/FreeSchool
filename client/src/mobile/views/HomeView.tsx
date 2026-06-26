@@ -1,11 +1,18 @@
+import { useState } from "react";
 import { useContentBrowser } from "../../shared/hooks/useContentBrowser";
+import { useAuth } from "../../shared/context/AuthContext";
 import { cssBackgroundImage } from "../../shared/utils/css";
+import CategoryEditModal from "../../shared/components/CategoryEditModal";
+import PencilIcon from "../../shared/components/PencilIcon";
+import type { Category } from "../../shared/types";
 import ContentView from "./ContentView";
 
 // Mobile: categories and lessons as full-width vertical lists; selecting a lesson
 // opens its contents.
 export default function HomeView() {
   const b = useContentBrowser();
+  const { canManageCategories } = useAuth();
+  const [editing, setEditing] = useState<Category | null>(null);
 
   if (b.selectedLesson) {
     return (
@@ -34,7 +41,7 @@ export default function HomeView() {
               {b.categories.map((cat) => {
                 const bg = cssBackgroundImage(cat.background_link);
                 return (
-                  <li key={cat.id}>
+                  <li key={cat.id} className="relative">
                     <button
                       onClick={() => b.openCategory(cat)}
                       className="relative flex h-20 w-full items-end overflow-hidden rounded-xl bg-neutral-700 text-left"
@@ -49,6 +56,15 @@ export default function HomeView() {
                         {cat.name}
                       </h3>
                     </button>
+                    {canManageCategories && (
+                      <button
+                        onClick={() => setEditing(cat)}
+                        aria-label="Bild bearbeiten"
+                        className="absolute right-2 top-2 z-20 rounded-full bg-black/60 p-1.5 text-red-500 active:bg-black/80"
+                      >
+                        <PencilIcon />
+                      </button>
+                    )}
                   </li>
                 );
               })}
@@ -75,6 +91,14 @@ export default function HomeView() {
             <div className="text-neutral-500">Keine Einträge.</div>
           )}
         </>
+      )}
+
+      {editing && (
+        <CategoryEditModal
+          category={editing}
+          onClose={() => setEditing(null)}
+          onSaved={b.updateCategory}
+        />
       )}
     </div>
   );

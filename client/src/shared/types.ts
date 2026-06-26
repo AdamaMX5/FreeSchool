@@ -36,6 +36,9 @@ export interface JwtPayload {
 
 /** Category as used by the UI (mapped from an ObjectService document). */
 export interface Category {
+  /** ObjectService document _id — needed to PATCH the category. */
+  docId: string;
+  /** Legacy id used as the foreign key in refs.selfId / parents / children. */
   id: string;
   name: string;
   background_link: string;

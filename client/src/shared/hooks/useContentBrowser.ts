@@ -74,6 +74,12 @@ export function useContentBrowser() {
     setContents([]);
   }
 
+  /** Update one category in the currently displayed list (e.g. after an edit). */
+  function updateCategory(updated: Category) {
+    setCategories((cs) => cs.map((c) => (c.id === updated.id ? updated : c)));
+    setPath((p) => p.map((c) => (c.id === updated.id ? updated : c)));
+  }
+
   useEffect(() => {
     goHome();
   }, []);
@@ -90,5 +96,6 @@ export function useContentBrowser() {
     openCategory,
     openLesson,
     closeLesson,
+    updateCategory,
   };
 }

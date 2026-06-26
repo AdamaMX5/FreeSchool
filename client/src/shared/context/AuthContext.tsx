@@ -15,6 +15,9 @@ interface AuthContextValue {
   user: SessionUser;
   isLoggedIn: boolean;
   isModerator: boolean;
+  isAdmin: boolean;
+  /** May edit categories (ADMIN or MODERATOR). */
+  canManageCategories: boolean;
   checkEmail: (email: string) => Promise<"login" | "register">;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, repassword: string) => Promise<void>;
@@ -38,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isLoggedIn: !!user.accessToken,
       isModerator: user.roles.includes("MODERATOR"),
+      isAdmin: user.roles.includes("ADMIN"),
+      canManageCategories:
+        user.roles.includes("ADMIN") || user.roles.includes("MODERATOR"),
       checkEmail,
       login: async (email, password) => {
         applySession(await apiLogin(email, password));
