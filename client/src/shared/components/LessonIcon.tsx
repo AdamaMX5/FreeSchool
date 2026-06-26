@@ -5,11 +5,18 @@
 //   - move (admins/moderators via the toolbar): the icon is draggable; dragging
 //     reports new *original-image* pixel coordinates live (onMove) and persists on
 //     release (onCommit).
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import type { Content, Lesson } from "../types";
 import { listContentsByLesson } from "../services/objectApi";
 import Markdown from "./Markdown";
 import VideoEmbed from "./VideoEmbed";
+import ContentEditModal from "./ContentEditModal";
 
 interface Props {
   lesson: Lesson;
@@ -19,6 +26,8 @@ interface Props {
   moveMode: boolean;
   editMode?: boolean;
   isMobile?: boolean;
+  /** ADMIN/MODERATOR: show add/edit/delete controls for the lesson's contents. */
+  canManageContent?: boolean;
   /** Open this lesson's edit modal (edit mode). */
   onEdit?: () => void;
   /** Live position while dragging (original-image pixels). */
@@ -35,6 +44,7 @@ export default function LessonIcon({
   moveMode,
   editMode = false,
   isMobile = false,
+  canManageContent = false,
   onEdit,
   onMove,
   onCommit,
@@ -43,6 +53,9 @@ export default function LessonIcon({
   const [contents, setContents] = useState<Content[] | null>(null);
   const [selectedId, setSelectedId] = useState<string>("");
   const [error, setError] = useState("");
+  // Content management modals (admins/moderators).
+  const [addingContent, setAddingContent] = useState(false);
+  const [editingContent, setEditingContent] = useState<Content | null>(null);
 
   // Drag bookkeeping kept in refs so pointer moves don't trigger re-renders.
   const drag = useRef<{ startX: number; startY: number; px: number; py: number } | null>(null);
@@ -50,16 +63,22 @@ export default function LessonIcon({
   // Latest dragged position — committed on release (props lag a render behind).
   const last = useRef<{ x: number; y: number } | null>(null);
 
+  // Load (or reload, after a content change) the lesson's contents, keeping the
+  // current selection if it still exists.
+  const loadContents = useCallback(() => {
+    return listContentsByLesson(lesson.id)
+      .then((cs) => {
+        setContents(cs);
+        setSelectedId((prev) => (cs.some((c) => c.id === prev) ? prev : cs[0]?.id ?? ""));
+      })
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+  }, [lesson.id]);
+
   // Lazy-load contents the first time the popover opens.
   useEffect(() => {
     if (!open || contents !== null) return;
-    listContentsByLesson(lesson.id)
-      .then((cs) => {
-        setContents(cs);
-        if (cs.length > 0) setSelectedId(cs[0].id);
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)));
-  }, [open, contents, lesson.id]);
+    loadContents();
+  }, [open, contents, loadContents]);
 
   const screenX = lesson.position_x * scale + offsetX;
   const screenY = lesson.position_y * scale + offsetY;
@@ -163,6 +182,25 @@ export default function LessonIcon({
 
           {error && <div className="mb-2 text-sm text-red-400">{error}</div>}
 
+          {canManageContent && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => setAddingContent(true)}
+                className="rounded-lg bg-neutral-700 px-2.5 py-1 text-xs font-medium hover:bg-neutral-600"
+              >
+                ＋ Inhalt
+              </button>
+              {selected && (
+                <button
+                  onClick={() => setEditingContent(selected)}
+                  className="rounded-lg bg-neutral-700 px-2.5 py-1 text-xs font-medium hover:bg-neutral-600"
+                >
+                  ✏️ Inhalt bearbeiten
+                </button>
+              )}
+            </div>
+          )}
+
           {contents === null ? (
             <div className="text-sm text-neutral-400">Lädt…</div>
           ) : contents.length === 0 ? (
@@ -195,6 +233,25 @@ export default function LessonIcon({
             </>
           )}
         </div>
+      )}
+
+      {addingContent && (
+        <ContentEditModal
+          mode="create"
+          lessonId={lesson.id}
+          onClose={() => setAddingContent(false)}
+          onSaved={loadContents}
+        />
+      )}
+
+      {editingContent && (
+        <ContentEditModal
+          mode="edit"
+          lessonId={lesson.id}
+          content={editingContent}
+          onClose={() => setEditingContent(null)}
+          onSaved={loadContents}
+        />
       )}
     </>
   );

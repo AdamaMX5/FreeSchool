@@ -59,7 +59,11 @@ export interface Lesson {
 }
 
 export interface Content {
+  /** ObjectService document _id — needed to PATCH/DELETE the content. */
+  docId: string;
   id: string;
+  /** The lesson this content belongs to (refs.lessonId, scalar = single lesson). */
+  lessonId: string;
   language: string;
   text: string;
   youtube_id: string;

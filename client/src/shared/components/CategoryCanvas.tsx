@@ -16,6 +16,8 @@ interface Props {
   moveMode: boolean;
   /** Edit mode (admins/moderators): clicking a lesson opens its edit modal. */
   editMode?: boolean;
+  /** ADMIN/MODERATOR: content add/edit/delete controls in the lesson popover. */
+  canManageContent?: boolean;
   isMobile?: boolean;
   onEditLesson?: (lesson: Lesson) => void;
   /** Reports the original image dimensions once loaded (for default placement). */
@@ -27,6 +29,7 @@ export default function CategoryCanvas({
   lessons,
   moveMode,
   editMode = false,
+  canManageContent = false,
   isMobile = false,
   onEditLesson,
   onNaturalSize,
@@ -82,6 +85,7 @@ export default function CategoryCanvas({
             offsetY={layout.offsetY}
             moveMode={moveMode}
             editMode={editMode}
+            canManageContent={canManageContent}
             isMobile={isMobile}
             onEdit={() => onEditLesson?.(lesson)}
             onMove={(x, y) => moveLesson(lesson.id, x, y)}

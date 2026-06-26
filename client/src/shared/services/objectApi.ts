@@ -139,7 +139,7 @@ export async function updateLesson(docId: string, data: LessonEdit): Promise<voi
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
 }
 
-/** Delete a lesson. NOTE: its contents are not cascaded server-side here. */
+/** Delete a lesson document only (see deleteLessonAndOwnContents for the cascade). */
 export async function deleteLesson(docId: string): Promise<void> {
   if (!docId) throw new Error("Lesson ohne docId kann nicht gelöscht werden.");
   const res = await authFetch(
@@ -170,6 +170,59 @@ export async function createContent(lessonId: string, input: ContentInput): Prom
   });
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
   return id;
+}
+
+export interface ContentEdit {
+  language?: string;
+  text?: string;
+  youtube_id?: string;
+  internal_video?: string;
+}
+
+/** Update a content's editable fields (shallow merge). */
+export async function updateContent(docId: string, data: ContentEdit): Promise<void> {
+  if (!docId) throw new Error("Content ohne docId kann nicht gespeichert werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/contents/${encodeURIComponent(docId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data, merge: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
+/** Delete a single content document. */
+export async function deleteContent(docId: string): Promise<void> {
+  if (!docId) throw new Error("Content ohne docId kann nicht gelöscht werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/contents/${encodeURIComponent(docId)}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
+/**
+ * Delete a lesson and the contents that belong *exclusively* to it. Content→lesson
+ * is a scalar refs.lessonId, so a content has exactly one lesson; we still filter
+ * defensively on lessonId so that — should the schema ever allow a content to be
+ * shared with another lesson — such a content would be kept, not orphaned/deleted.
+ * Contents are removed first; the lesson itself is deleted last.
+ */
+export async function deleteLessonAndOwnContents(lessonDocId: string, lessonId: string): Promise<void> {
+  const contents = await listContentsByLesson(lessonId);
+  const ownContents = contents.filter((c) => c.lessonId === lessonId && c.docId);
+  // Attempt every content delete (allSettled, not fail-fast), then only remove the
+  // lesson if all of them succeeded — so a partial failure never leaves the lesson
+  // deleted with some contents orphaned. A retry is safe: the still-present contents
+  // are re-listed and re-deleted.
+  const results = await Promise.allSettled(ownContents.map((c) => deleteContent(c.docId)));
+  const failed = results.filter((r) => r.status === "rejected").length;
+  if (failed > 0) {
+    throw new Error(`${failed} Inhalt(e) konnten nicht gelöscht werden – Lektion bleibt erhalten.`);
+  }
+  await deleteLesson(lessonDocId);
 }
 
 /** Learning hubs = categories without parents. */
@@ -216,7 +269,9 @@ function mapContent(doc: ObjectDoc): Content {
   const d = (doc.data ?? {}) as Record<string, unknown>;
   const refs = (doc.refs ?? {}) as Record<string, unknown>;
   return {
+    docId: String(doc._id ?? doc.id ?? ""),
     id: String(d.legacyId ?? ""),
+    lessonId: refs.lessonId ? String(refs.lessonId) : "",
     language: String(d.language ?? ""),
     text: String(d.text ?? ""),
     youtube_id: String(d.youtube_id ?? ""),

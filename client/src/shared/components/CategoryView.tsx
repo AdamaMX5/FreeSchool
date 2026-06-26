@@ -112,6 +112,7 @@ export default function CategoryView({
           lessons={lessons}
           moveMode={moveMode}
           editMode={editMode}
+          canManageContent={canEdit}
           isMobile={isMobile}
           onEditLesson={setEditingLesson}
           onNaturalSize={onNaturalSize}

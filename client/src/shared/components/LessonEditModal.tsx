@@ -3,14 +3,16 @@
 // pre-fills from the clipboard: a copied http(s) link goes into the YouTube field,
 // other copied text goes into the markdown field. Create writes the lesson to
 // ObjectService and, if a video/text was given, an attached content document.
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { Category, Lesson } from "../types";
 import {
   createLesson,
   updateLesson,
-  deleteLesson,
+  deleteLessonAndOwnContents,
   createContent,
 } from "../services/objectApi";
+import { errMessage as msg } from "../utils/errors";
+import { useClipboardPrefill } from "../hooks/useClipboardPrefill";
 
 interface Props {
   mode: "create" | "edit";
@@ -22,10 +24,6 @@ interface Props {
   defaultOrder?: string;
   onClose: () => void;
   onSaved: () => void;
-}
-
-function msg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
 }
 
 export default function LessonEditModal({
@@ -53,24 +51,7 @@ export default function LessonEditModal({
   const createdLessonId = useRef<string | null>(null);
 
   // Clipboard convenience: link -> YouTube field, plain text -> markdown field.
-  // Only fills empty fields and only on create; failures (no permission) are silent.
-  useEffect(() => {
-    if (mode !== "create") return;
-    let alive = true;
-    navigator.clipboard
-      ?.readText?.()
-      .then((raw) => {
-        if (!alive) return;
-        const t = raw.trim();
-        if (!t) return;
-        if (/^https?:\/\//i.test(t)) setYoutube((p) => p || t);
-        else setText((p) => p || t);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [mode]);
+  useClipboardPrefill(mode === "create", setYoutube, setText);
 
   async function onSubmit() {
     if (!name.trim()) {
@@ -119,11 +100,11 @@ export default function LessonEditModal({
 
   async function onDelete() {
     if (!lesson) return;
-    if (!window.confirm(`Lektion „${lesson.name}" wirklich löschen?`)) return;
+    if (!window.confirm(`Lektion „${lesson.name}" inkl. ihrer Inhalte wirklich löschen?`)) return;
     setBusy(true);
     setError("");
     try {
-      await deleteLesson(lesson.docId);
+      await deleteLessonAndOwnContents(lesson.docId, lesson.id);
       onSaved();
       onClose();
     } catch (e) {

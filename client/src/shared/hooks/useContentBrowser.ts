@@ -9,10 +9,7 @@ import {
   listLessonsByCategory,
 } from "../services/objectApi";
 import type { Category, Lesson } from "../types";
-
-function msg(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}
+import { errMessage as msg } from "../utils/errors";
 
 export function useContentBrowser() {
   const [categories, setCategories] = useState<Category[]>([]);
