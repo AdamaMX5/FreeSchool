@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useContentBrowser } from "../../shared/hooks/useContentBrowser";
 import { useAuth } from "../../shared/context/AuthContext";
-import { cssBackgroundImage } from "../../shared/utils/css";
+import { categoryBackgroundImage } from "../../shared/utils/css";
 import CategoryEditModal from "../../shared/components/CategoryEditModal";
 import PencilIcon from "../../shared/components/PencilIcon";
 import type { Category } from "../../shared/types";
@@ -47,7 +47,7 @@ export default function HomeView() {
           {b.categories.length > 0 && (
             <div className="mb-8 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
               {b.categories.map((cat) => {
-                const bg = cssBackgroundImage(cat.background_link);
+                const bg = categoryBackgroundImage(cat.background_link);
                 return (
                   <div key={cat.id} className="group relative h-32 overflow-hidden rounded-lg bg-neutral-700 shadow">
                     <button

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useContentBrowser } from "../../shared/hooks/useContentBrowser";
 import { useAuth } from "../../shared/context/AuthContext";
-import { cssBackgroundImage } from "../../shared/utils/css";
+import { categoryBackgroundImage } from "../../shared/utils/css";
 import CategoryEditModal from "../../shared/components/CategoryEditModal";
 import PencilIcon from "../../shared/components/PencilIcon";
 import type { Category } from "../../shared/types";
@@ -39,7 +39,7 @@ export default function HomeView() {
           {b.categories.length > 0 && (
             <ul className="mb-4 flex flex-col gap-2">
               {b.categories.map((cat) => {
-                const bg = cssBackgroundImage(cat.background_link);
+                const bg = categoryBackgroundImage(cat.background_link);
                 return (
                   <li key={cat.id} className="relative">
                     <button
