@@ -243,6 +243,35 @@ export async function listAllCategories(): Promise<Category[]> {
     .filter((c) => c.id);
 }
 
+/**
+ * Create a category. A learning hub has no parent (parents: []); a sub-category gets
+ * the parent's id in `parents` and is registered in the parent's `children` array so
+ * getChildCategories (which resolves via parent.children) finds it. The parent's
+ * current children are re-fetched first so concurrent/successive creates don't drop
+ * each other. Mirrors the migrated shape: self id in data.legacyId and refs.selfId,
+ * isPublic:true for public reads. Returns the new category's id (legacyId).
+ */
+export async function createCategory(parent: Category | null, name: string): Promise<string> {
+  const id = newId();
+  const parents = parent ? [parent.id] : [];
+  const res = await authFetch(`${OBJECT_BASE_URL}/objects/categories`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      data: { legacyId: id, name, background_link: "", parents, children: [] },
+      refs: { selfId: id },
+      isPublic: true,
+    }),
+  });
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+  if (parent) {
+    const fresh = await getCategoryBySelfId(parent.id);
+    const existing = fresh?.children ?? parent.children;
+    await updateCategoryData(parent.docId, { children: [...existing, id] });
+  }
+  return id;
+}
+
 export async function getCategoryBySelfId(selfId: string): Promise<Category | null> {
   const res = await authFetch(
     `${OBJECT_BASE_URL}/objects/categories?ref[selfId]=${encodeURIComponent(selfId)}&limit=1`

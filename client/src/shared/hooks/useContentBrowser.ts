@@ -77,6 +77,17 @@ export function useContentBrowser() {
     }
   }
 
+  /** Reload the visible category list — child categories, or learning hubs at the root
+   *  (after creating a new category/learning hub). */
+  async function reloadCategories() {
+    const cat = path[path.length - 1];
+    try {
+      setCategories(cat ? await getChildCategories(cat.id) : await listLearningHubs());
+    } catch (e) {
+      setError(msg(e));
+    }
+  }
+
   /** Update one category in the currently displayed list (e.g. after an edit). */
   function updateCategory(updated: Category) {
     setCategories((cs) => cs.map((c) => (c.id === updated.id ? updated : c)));
@@ -101,6 +112,7 @@ export function useContentBrowser() {
     openCategory,
     goToDepth,
     reloadLessons,
+    reloadCategories,
     updateCategory,
   };
 }
