@@ -2,7 +2,7 @@
   import MenuView from './views/MenuView.svelte';
   import MainView from './views/MainView.svelte';
   import NavigationView from './views/NavigationView.svelte';
-  import TeacherView from './views/TeacherView.svelte';
+  import ToolbarView from './views/ToolbarView.svelte';
   import { onMount } from 'svelte';
   import { getCategoryPath } from './lib/categoryApi';
 
@@ -11,6 +11,10 @@
   let currentPath = $state([]);
   let menuVisible = $state(true);
   let isMobile = $state(false);
+
+  // Refs to coordinate the bottom toolbar (rendered here) with the menu/main views.
+  let mainViewRef = $state(null);
+  let menuViewRef = $state(null);
 
   // Beim URL-Start: welche Lesson/Content soll auto-geöffnet werden
   let initialLessonId = $state(null);
@@ -115,19 +119,30 @@
 />
 
 <!-- Menü: fixiert links, außerhalb des Content-Containers -->
-<MenuView 
-  {navCategory} 
+<MenuView
+  bind:this={menuViewRef}
+  {navCategory}
   oncategorySelected={handleCategorySelected}
   {menuVisible}
 />
 
 <!-- Content-Container: Nimmt immer die volle Breite ein -->
 <MainView
+  bind:this={mainViewRef}
   {currentCategory}
   {menuVisible}
   {initialLessonId}
   {initialContentId}
   onUrlUpdate={handleUrlUpdate}
+/>
+
+<!-- Toolbar für Moderatoren/Admins: fixiert ganz unten -->
+<ToolbarView
+  {currentCategory}
+  onlessonCreated={() => mainViewRef?.reloadLessons()}
+  onshowTeacherView={() => mainViewRef?.toggleTeacherView()}
+  onshowAdminView={() => mainViewRef?.toggleAdminView()}
+  onCategoryCreated={() => menuViewRef?.reload()}
 />
 
 <style>

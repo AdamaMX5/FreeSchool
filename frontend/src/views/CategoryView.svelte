@@ -70,9 +70,9 @@
   });
 
   function updateLayout() {
-    const menuWidth = (isMobile || !menuVisible) ? 0 : 260;
+    const menuWidth = (isMobile || !menuVisible) ? 0 : 200;
     const navHeight = 50;
-    const toolbarHeight = isMobile ? 80 : 66;
+    const toolbarHeight = 56;
 
     const availableWidth = window.innerWidth - menuWidth;
     const availableHeight = window.innerHeight - navHeight - toolbarHeight;

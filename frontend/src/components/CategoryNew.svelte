@@ -40,11 +40,11 @@
 
 {#if parent}
   <button class="icon-button create" onclick={open} title="Neue Kategorie">
-    <PlusCircle size="48" />
+    <PlusCircle size="24" />
   </button>
 {:else}
   <button class="icon-button create" onclick={open} title="Neues Lernbüro">
-    <PlusCircle size="48" />
+    <PlusCircle size="24" />
   </button>
 {/if}
 
@@ -59,17 +59,12 @@
 <style>
   .icon-button.create {
     border: none;
-    border-radius: 50%;
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    padding: 0.6em 0.6em;
+    padding: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: white;
-    background-color: rgba(255, 0, 0, 0.5);
-    z-index: 10;
+    background: none;
   }
 </style>

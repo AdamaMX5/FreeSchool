@@ -1,5 +1,4 @@
 <script lang="ts">
-  import ToolbarView from './ToolbarView.svelte';
   import CategoryView from './CategoryView.svelte';
   import TeacherView from './TeacherView.svelte';
   import AdminView from './AdminView.svelte';
@@ -55,18 +54,19 @@
     return () => ro.disconnect();
   });
 
-  function handleLessonCreated() {
+  // Exposed to App.svelte so the bottom toolbar (now rendered outside MainView)
+  // can reload lessons and toggle the teacher/admin views.
+  export function reloadLessons() {
     if (categoryViewRef && categoryViewRef.loadLessons) {
       categoryViewRef.loadLessons();
     }
   }
 
-  function handleTeacherView(){
+  export function toggleTeacherView(){
     activeView = activeView === 'teacher' ? 'category' : 'teacher';
   }
 
-  function handleAdminView() {
-    console.log('Admin View wurde aufgerufen');
+  export function toggleAdminView() {
     activeView = activeView === 'admin' ? 'category' : 'admin';
   }
 
@@ -115,14 +115,6 @@
       {onUrlUpdate}
     />
   {/if}
-
-  <ToolbarView
-    {currentCategory}
-    {imageSize}
-    onlessonCreated={handleLessonCreated}
-    onshowTeacherView={handleTeacherView}
-    onshowAdminView={handleAdminView}
-  />
 </div>
 
 <style>
@@ -131,7 +123,7 @@
     top: 50px; /* Höhe der Navigationsleiste */
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 56px; /* Höhe der Toolbar */
     width: 100%;
     display: flex;
     justify-content: center;
@@ -143,8 +135,8 @@
   }
 
   .main-view.menu-visible {
-    left: 260px; /* Breite des Menüs */
-    width: calc(100% - 260px);
+    left: 200px; /* Breite des Menüs */
+    width: calc(100% - 200px);
   }
 
   .main-view.mobile {
@@ -155,7 +147,7 @@
   }
 
   .main-view.mobile.menu-visible {
-    transform: translateX(260px);
+    transform: translateX(200px);
     width: 100% !important;
   }
 
@@ -167,7 +159,7 @@
     }
 
     .main-view.menu-visible {
-      transform: translateX(260px);
+      transform: translateX(200px);
       box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
       width: 100% !important;
     }

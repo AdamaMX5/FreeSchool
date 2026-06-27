@@ -1,7 +1,6 @@
 <script lang="ts">
   import { user } from '../lib/global';
   import CategoryEdit from '../components/CategoryEdit.svelte';
-  import CategoryNew from '../components/CategoryNew.svelte';
   import { getLearningHubs, getChildCategories } from "../lib/categoryApi";
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -52,6 +51,15 @@
   async function setCurrentCategory(category){
     currentCategory = category;
     await loadChildCategories(category.id);
+  }
+
+  // Reload the menu after the toolbar created a new category/learning hub.
+  export function reload() {
+    if (currentCategory) {
+      loadChildCategories(currentCategory.id);
+    } else {
+      loadLearningHubs();
+    }
   }
 
   function isHomeButton(category) {
@@ -114,13 +122,6 @@
 
     <div class="scroll-spacer"></div>
   </div>
-  {#if isModerator}
-    {#if currentCategory}
-      <CategoryNew parent={currentCategory} onsuccess={() => loadChildCategories(currentCategory?.id)} />
-    {:else}
-      <CategoryNew onsuccess={loadLearningHubs} />
-    {/if}
-  {/if}
 </aside>
 {/if}
 
@@ -131,8 +132,8 @@
     position: fixed;
     top: 50px; /* Unter der Navigationsleiste */
     left: 0;
-    bottom: 0;
-    width: 260px;
+    bottom: 56px; /* Über der Toolbar */
+    width: 200px;
     background-color: #1e1e1e;
     display: flex;
     flex-direction: column;
@@ -178,7 +179,7 @@
 
   /* Lernbüro-Karten */
   .learning-hub {
-    width: 250px;
+    width: 190px;
     margin: 5px;
     background: rgb(209, 209, 209);
     border-radius: 4px;

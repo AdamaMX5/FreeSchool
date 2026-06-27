@@ -3,6 +3,7 @@
   import { Edit, Move, PlusCircle, GraduationCap, Shield, Bug } from 'lucide-svelte';
   import CreateLessonDialog from '../dialogs/CreateLessonDialog.svelte'; // <-- Dialog importieren
   import CreateGitIssueDialog from '../dialogs/CreateGitIssueDialog.svelte';
+  import CategoryNew from '../components/CategoryNew.svelte';
   import { user } from '../lib/global';
   import { get } from 'svelte/store';
 
@@ -21,7 +22,8 @@
     imageSize = { width: 0, height: 0 },
     onlessonCreated = () => {},
     onshowTeacherView = () => {},
-    onshowAdminView = () => {}
+    onshowAdminView = () => {},
+    onCategoryCreated = () => {}
   } = $props();
 
   let showCreateLessonDialog = $state(false);
@@ -53,38 +55,47 @@
 </script>
 
 <div class="toolbar">
-  {#if isModerator}
-  <button onclick={(e) => onshowTeacherView(e)} title="Lehrer-Ansicht öffnen">
-    <GraduationCap size="24" />
-  </button>
-  {/if}
-  {#if isModerator}
-  <button class:active={$isMoveMode} onclick={toggleMoveMode} title="Verschiebemodus">
-    <Move size="24" />
-  </button>
-  {/if}
-  {#if isModerator}
-  <button class:active={$isEditMode} onclick={toggleEditMode} title="Bearbeitungsmodus">
-    <Edit size="24" />
-  </button>
-  {/if}
-  {#if isModerator}
-  <button onclick={createLesson} title="Neue Lesson erstellen">
-    <PlusCircle size="24" />
-  </button>
-  {/if}  
+  <!-- Links: neue Kategorie / neues Lernbüro -->
+  <div class="toolbar-zone left">
+    {#if isModerator}
+    <CategoryNew
+      parent={currentCategory}
+      onsuccess={onCategoryCreated}
+      onerror={(e) => alert(e.message)} />
+    {/if}
+  </div>
 
-  {#if isAdmin}
-  <button onclick={(e) => onshowAdminView(e)} title="Admin-Ansicht öffnen">
-    <Shield size="24" />
-  </button>
-  {/if}
+  <!-- Mitte: Aktionen rund um die Lektionen -->
+  <div class="toolbar-zone center">
+    {#if isModerator}
+    <button onclick={(e) => onshowTeacherView(e)} title="Lehrer-Ansicht öffnen">
+      <GraduationCap size="24" />
+    </button>
+    <button class:active={$isMoveMode} onclick={toggleMoveMode} title="Verschiebemodus">
+      <Move size="24" />
+    </button>
+    <button class:active={$isEditMode} onclick={toggleEditMode} title="Bearbeitungsmodus">
+      <Edit size="24" />
+    </button>
+    <button onclick={createLesson} title="Neue Lektion erstellen">
+      <PlusCircle size="24" />
+    </button>
+    {/if}
+    {#if isAdmin}
+    <button onclick={(e) => onshowAdminView(e)} title="Admin-Ansicht öffnen">
+      <Shield size="24" />
+    </button>
+    {/if}
+  </div>
 
-  {#if isAdmin || isModerator}
-  <button onclick={createGitIssue} title="Verbesserung als Issue melden">
-    <Bug size="24" />
-  </button>
-  {/if}
+  <!-- Rechts: Verbesserung senden -->
+  <div class="toolbar-zone right">
+    {#if isAdmin || isModerator}
+    <button onclick={createGitIssue} title="Verbesserung als Issue melden">
+      <Bug size="24" />
+    </button>
+    {/if}
+  </div>
 </div>
 
 {#if showCreateLessonDialog}
@@ -118,17 +129,40 @@
   .toolbar {
     position: fixed;
     bottom: 0;
-    left: 260px;
+    left: 0;
     right: 0;
-    background: rgba(0, 0, 0, 0);
+    height: 56px;
+    box-sizing: border-box;
+    background-color: #252526;
+    border-top: 1px solid #333;
     display: flex;
-    justify-content: flex-end;
-    gap: 1rem;
-    padding: 0.75rem 1rem;
+    align-items: center;
+    padding: 0 1rem;
     z-index: 50;
   }
 
-  .toolbar button {
+  /* Drei gleich breite Zonen: links | mitte | rechts */
+  .toolbar-zone {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .toolbar-zone.left {
+    justify-content: flex-start;
+  }
+
+  .toolbar-zone.center {
+    justify-content: center;
+  }
+
+  .toolbar-zone.right {
+    justify-content: flex-end;
+  }
+
+  .toolbar button,
+  .toolbar :global(.icon-button.create) {
     background: none;
     border: none;
     padding: 0.5rem;
@@ -136,9 +170,13 @@
     color: white;
     border-radius: 6px;
     transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .toolbar button:hover {
+  .toolbar button:hover,
+  .toolbar :global(.icon-button.create):hover {
     background-color: rgba(255, 255, 255, 0.1);
   }
 

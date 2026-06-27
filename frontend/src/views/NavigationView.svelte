@@ -207,20 +207,25 @@
   <!-- Breadcrumb-Navigation -->
   <div class="breadcrumbs">
       <button class="home-button" onclick={() => onHomeButton([])}>🏠</button>
-      {#each currentPath as category, index}
-        {#if category}
-          <span class="breadcrumb-separator">&gt;</span>
-          {#if index < currentPath.length - 1}
-            <button
-              class="breadcrumb"
-              onclick={() => onNavigate(currentPath.slice(0, index + 1))}>
-              {category.name}
-            </button>
-          {:else}
-            <span class="current-category">{category.name}</span>
+      {#if currentPath.length === 0}
+        <!-- Kein Lernbüro aktiv: Startseite -> "FreeSchool" -->
+        <span class="current-category">FreeSchool</span>
+      {:else}
+        {#each currentPath as category, index}
+          {#if category}
+            <span class="breadcrumb-separator">&gt;</span>
+            {#if index < currentPath.length - 1}
+              <button
+                class="breadcrumb"
+                onclick={() => onNavigate(currentPath.slice(0, index + 1))}>
+                {category.name}
+              </button>
+            {:else}
+              <span class="current-category">{category.name}</span>
+            {/if}
           {/if}
-        {/if}
-      {/each}
+        {/each}
+      {/if}
   </div>
 
   <!-- Login-Bereich -->
