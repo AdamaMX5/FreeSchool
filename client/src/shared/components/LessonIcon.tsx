@@ -8,6 +8,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
@@ -17,6 +18,12 @@ import { listContentsByLesson } from "../services/objectApi";
 import Markdown from "./Markdown";
 import VideoEmbed from "./VideoEmbed";
 import ContentEditModal from "./ContentEditModal";
+
+// Desktop popover geometry: nominal width (matches the `w-[360px]` class) and the
+// gap kept to the icon and the canvas edges. Used both for clamping and for the
+// pre-measure anchor so the two stay in sync.
+const POPOVER_WIDTH = 360;
+const POPOVER_MARGIN = 8;
 
 interface Props {
   lesson: Lesson;
@@ -57,6 +64,15 @@ export default function LessonIcon({
   const [addingContent, setAddingContent] = useState(false);
   const [editingContent, setEditingContent] = useState<Content | null>(null);
 
+  // Desktop popover placement, computed after render so the panel always stays
+  // inside the (overflow-hidden) canvas — see the useLayoutEffect below.
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [desktopPos, setDesktopPos] = useState<{
+    left: number;
+    top: number;
+    maxHeight: number;
+  } | null>(null);
+
   // Drag bookkeeping kept in refs so pointer moves don't trigger re-renders.
   const drag = useRef<{ startX: number; startY: number; px: number; py: number } | null>(null);
   const moved = useRef(false);
@@ -84,6 +100,40 @@ export default function LessonIcon({
   const screenY = lesson.position_y * scale + offsetY;
   const iconSize = Math.max(28, 40 * scale);
   const fontSize = Math.max(11, 14 * scale);
+
+  // Place the desktop popover so it stays within the canvas: open below the icon
+  // by default, flip above when it would overflow the bottom, and clamp to the
+  // container with a max-height so the body scrolls instead of running off-screen.
+  // Runs before paint (useLayoutEffect) to avoid a visible jump; re-measures when
+  // the content (and thus the panel height) changes.
+  useLayoutEffect(() => {
+    if (!open || isMobile) {
+      setDesktopPos(null);
+      return;
+    }
+    const el = popoverRef.current;
+    const parent = el?.offsetParent as HTMLElement | null;
+    if (!el || !parent) return;
+    const margin = POPOVER_MARGIN;
+    const containerH = parent.clientHeight;
+    const containerW = parent.clientWidth;
+    const maxHeight = containerH - margin * 2;
+    const popH = Math.min(el.offsetHeight, maxHeight);
+    const left = Math.max(
+      margin,
+      Math.min(screenX - el.offsetWidth / 2, containerW - el.offsetWidth - margin),
+    );
+    let top = screenY + iconSize / 2 + margin;
+    if (top + popH > containerH - margin) {
+      const aboveTop = screenY - iconSize / 2 - margin - popH;
+      top = aboveTop >= margin ? aboveTop : margin;
+    }
+    top = Math.max(margin, Math.min(top, containerH - margin - popH));
+    setDesktopPos({ left, top, maxHeight });
+    // `error` is included because it can appear asynchronously after open and
+    // changes the panel height (and thus the flip/clamp decision). Container
+    // resizes are covered indirectly via screenX/screenY (useCanvasLayout).
+  }, [open, isMobile, screenX, screenY, iconSize, contents, selectedId, error]);
 
   function onPointerDown(e: ReactPointerEvent<HTMLButtonElement>) {
     if (!moveMode) return;
@@ -153,23 +203,29 @@ export default function LessonIcon({
 
       {open && !moveMode && (
         <div
+          ref={popoverRef}
           className={
             isMobile
-              ? "fixed inset-x-2 top-14 z-30 mx-auto max-w-md rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
-              : "absolute z-30 w-[360px] max-w-[90vw] rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
+              ? "fixed inset-x-2 top-14 z-30 mx-auto flex max-h-[calc(100vh-5rem)] max-w-md flex-col rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
+              : "absolute z-30 flex w-[360px] max-w-[90vw] flex-col rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
           }
           style={
             isMobile
               ? undefined
-              : {
-                  // Anchor near the icon but keep the 360px panel off the left edge.
-                  // Right overflow is handled by max-w-[90vw].
-                  left: Math.max(8, screenX - 180),
-                  top: screenY + iconSize / 2 + 8,
-                }
+              : desktopPos
+                ? {
+                    left: desktopPos.left,
+                    top: desktopPos.top,
+                    maxHeight: desktopPos.maxHeight,
+                  }
+                : {
+                    // Pre-measure anchor; corrected in useLayoutEffect before paint.
+                    left: Math.max(POPOVER_MARGIN, screenX - POPOVER_WIDTH / 2),
+                    top: screenY + iconSize / 2 + POPOVER_MARGIN,
+                  }
           }
         >
-          <div className="mb-2 flex items-start justify-between gap-2">
+          <div className="mb-2 flex shrink-0 items-start justify-between gap-2">
             <h3 className="text-base font-semibold">{lesson.name}</h3>
             <button
               onClick={() => setOpen(false)}
@@ -180,10 +236,10 @@ export default function LessonIcon({
             </button>
           </div>
 
-          {error && <div className="mb-2 text-sm text-red-400">{error}</div>}
+          {error && <div className="mb-2 shrink-0 text-sm text-red-400">{error}</div>}
 
           {canManageContent && (
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-3 flex shrink-0 flex-wrap gap-2">
               <button
                 onClick={() => setAddingContent(true)}
                 className="rounded-lg bg-neutral-700 px-2.5 py-1 text-xs font-medium hover:bg-neutral-600"
@@ -211,7 +267,7 @@ export default function LessonIcon({
                 <select
                   value={selectedId}
                   onChange={(e) => setSelectedId(e.target.value)}
-                  className="mb-3 w-full rounded-lg border border-neutral-600 bg-neutral-900 px-2 py-1.5 text-sm"
+                  className="mb-3 w-full shrink-0 rounded-lg border border-neutral-600 bg-neutral-900 px-2 py-1.5 text-sm"
                 >
                   {contents.map((c, i) => (
                     <option key={c.id} value={c.id}>
@@ -221,7 +277,7 @@ export default function LessonIcon({
                 </select>
               )}
               {selected && (
-                <div className="max-h-[60vh] overflow-y-auto">
+                <div className="min-h-0 flex-1 overflow-y-auto">
                   <VideoEmbed youtubeId={selected.youtube_id} internalVideo={selected.internal_video} />
                   {selected.text && (
                     <div className="mt-3">
