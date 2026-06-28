@@ -281,6 +281,19 @@ export async function getCategoryBySelfId(selfId: string): Promise<Category | nu
   return docs.length ? mapCategory(docs[0]) : null;
 }
 
+/**
+ * Resolve the breadcrumb path [root … category] for a category id, by walking up the
+ * first parent at each level. Used to restore the navigation from a ?ca=<id> URL (deep
+ * link / browser back). Returns [] if the category can't be found.
+ */
+export async function getCategoryPath(selfId: string): Promise<Category[]> {
+  const cat = await getCategoryBySelfId(selfId);
+  if (!cat) return [];
+  if (cat.parents.length === 0) return [cat];
+  const parentPath = await getCategoryPath(cat.parents[0]);
+  return [...parentPath, cat];
+}
+
 function mapLesson(doc: ObjectDoc): Lesson {
   const d = (doc.data ?? {}) as Record<string, unknown>;
   return {

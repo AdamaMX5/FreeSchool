@@ -83,7 +83,7 @@ export default function DesktopLayout() {
 
       {/* Left sidebar: the category menu (collapsible). */}
       {sidebarOpen && (
-        <aside className="fixed bottom-14 left-0 top-14 z-40 w-[200px] overflow-y-auto border-r border-neutral-700 bg-neutral-900">
+        <aside className="scrollbar-hide fixed bottom-14 left-0 top-14 z-40 w-[200px] overflow-y-auto border-r border-neutral-700 bg-neutral-900">
           <CategorySidebar
             categories={b.categories}
             loading={b.loading}
