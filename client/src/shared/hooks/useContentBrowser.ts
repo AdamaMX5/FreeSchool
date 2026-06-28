@@ -12,21 +12,39 @@ import {
   getChildCategories,
   listLessonsByCategory,
   getCategoryPath,
+  getContentBySelfId,
 } from "../services/objectApi";
 import type { Category, Lesson } from "../types";
 import { errMessage as msg } from "../utils/errors";
+
+/** A content opened from / reflected in the URL (?co=<id>), with its owning lesson. */
+export interface OpenContent {
+  lessonId: string;
+  contentId: string;
+}
 
 /** Read the current category id from the URL (?ca=<id>), or null at the root. */
 function categoryIdFromUrl(): string | null {
   return new URLSearchParams(window.location.search).get("ca");
 }
 
-/** Write the current category id to the URL, pushing a new history entry or replacing it. */
-function syncUrl(categoryId: string | null, push: boolean) {
-  const url = categoryId
-    ? `${window.location.pathname}?ca=${encodeURIComponent(categoryId)}`
-    : window.location.pathname;
-  const state = { ca: categoryId };
+/** Read the open content id from the URL (?co=<id>), or null when none is open. */
+function contentIdFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get("co");
+}
+
+/**
+ * Write the current category and open content to the URL. Category navigation pushes a
+ * new history entry; opening/closing a content replaces the current one (so it stays
+ * shareable without polluting the back stack).
+ */
+function syncUrl(categoryId: string | null, contentId: string | null, push: boolean) {
+  const params = new URLSearchParams();
+  if (categoryId) params.set("ca", categoryId);
+  if (contentId) params.set("co", contentId);
+  const qs = params.toString();
+  const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+  const state = { ca: categoryId, co: contentId };
   if (push) window.history.pushState(state, "", url);
   else window.history.replaceState(state, "", url);
 }
@@ -37,6 +55,8 @@ export function useContentBrowser() {
   const [path, setPath] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  // The content whose popover is open (mirrored to ?co=<id>), or null when none is.
+  const [openContent, setOpenContent] = useState<OpenContent | null>(null);
 
   // Load the content for a given breadcrumb path and apply it. The deepest entry is the
   // open category (null/empty = learning-hub root). Does not touch the URL itself.
@@ -64,13 +84,16 @@ export function useContentBrowser() {
     }
   }
 
+  // Navigating to another category always closes an open content popover.
   function goHome() {
-    syncUrl(null, true);
+    setOpenContent(null);
+    syncUrl(null, null, true);
     return loadPath([]);
   }
 
   function openCategory(cat: Category) {
-    syncUrl(cat.id, true);
+    setOpenContent(null);
+    syncUrl(cat.id, null, true);
     return loadPath([...path, cat]);
   }
 
@@ -78,8 +101,21 @@ export function useContentBrowser() {
   function goToDepth(index: number) {
     const target = path[index];
     if (!target) return goHome();
-    syncUrl(target.id, true);
+    setOpenContent(null);
+    syncUrl(target.id, null, true);
     return loadPath(path.slice(0, index + 1));
+  }
+
+  /** Open (or switch to) a content's popover and mirror it to ?co=<id>. */
+  function selectContent(lessonId: string, contentId: string) {
+    setOpenContent({ lessonId, contentId });
+    syncUrl(path[path.length - 1]?.id ?? null, contentId, false);
+  }
+
+  /** Close the open content popover and drop ?co from the URL. */
+  function closeContent() {
+    setOpenContent(null);
+    syncUrl(path[path.length - 1]?.id ?? null, null, false);
   }
 
   /** Reload the current category's lessons (after a create/edit/delete). */
@@ -116,17 +152,41 @@ export function useContentBrowser() {
   useEffect(() => {
     async function restoreFromUrl() {
       const id = categoryIdFromUrl();
-      if (!id) {
-        await loadPath([]);
-        return;
+      const co = contentIdFromUrl();
+      try {
+        if (!id) {
+          await loadPath([]);
+          setOpenContent(null);
+          return;
+        }
+        const catPath = await getCategoryPath(id);
+        await loadPath(catPath);
+        // If the id was stale (category gone), reflect the fallback-to-root in the URL.
+        if (catPath.length === 0) {
+          setOpenContent(null);
+          syncUrl(null, null, false);
+          return;
+        }
+        if (!co) {
+          setOpenContent(null);
+          return;
+        }
+        // Restore the open content from ?co: the content carries its lesson
+        // (refs.lessonId), so the lesson it belongs to need not be in the URL.
+        const content = await getContentBySelfId(co);
+        if (content?.lessonId) {
+          setOpenContent({ lessonId: content.lessonId, contentId: co });
+        } else {
+          // Stale ?co (content gone): drop it, mirroring the stale-?ca cleanup above.
+          setOpenContent(null);
+          syncUrl(id, null, false);
+        }
+      } catch (e) {
+        setError(msg(e));
       }
-      const catPath = await getCategoryPath(id);
-      await loadPath(catPath);
-      // If the id was stale (category gone), reflect the fallback-to-root in the URL.
-      if (catPath.length === 0) syncUrl(null, false);
     }
     // Ensure the initial entry carries a state object so the first back press is handled.
-    syncUrl(categoryIdFromUrl(), false);
+    syncUrl(categoryIdFromUrl(), contentIdFromUrl(), false);
     restoreFromUrl();
     window.addEventListener("popstate", restoreFromUrl);
     return () => window.removeEventListener("popstate", restoreFromUrl);
@@ -143,9 +203,12 @@ export function useContentBrowser() {
     currentCategory,
     loading,
     error,
+    openContent,
     goHome,
     openCategory,
     goToDepth,
+    selectContent,
+    closeContent,
     reloadLessons,
     reloadCategories,
     updateCategory,

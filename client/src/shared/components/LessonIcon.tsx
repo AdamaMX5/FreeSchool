@@ -19,10 +19,10 @@ import Markdown from "./Markdown";
 import VideoEmbed from "./VideoEmbed";
 import ContentEditModal from "./ContentEditModal";
 
-// Desktop popover geometry: nominal width (matches the `w-[360px]` class) and the
+// Desktop popover geometry: nominal width (matches the `w-[540px]` class) and the
 // gap kept to the icon and the canvas edges. Used both for clamping and for the
 // pre-measure anchor so the two stay in sync.
-const POPOVER_WIDTH = 360;
+const POPOVER_WIDTH = 540;
 const POPOVER_MARGIN = 8;
 
 interface Props {
@@ -35,6 +35,12 @@ interface Props {
   isMobile?: boolean;
   /** ADMIN/MODERATOR: show add/edit/delete controls for the lesson's contents. */
   canManageContent?: boolean;
+  /** When set (shared ?co=<id> link), auto-open the popover with this content selected. */
+  openContentId?: string;
+  /** Report the currently open content so the URL can mirror it (?co=<id>). */
+  onOpenContent?: (contentId: string) => void;
+  /** Report that the popover was closed so ?co can be dropped from the URL. */
+  onCloseContent?: () => void;
   /** Open this lesson's edit modal (edit mode). */
   onEdit?: () => void;
   /** Live position while dragging (original-image pixels). */
@@ -52,6 +58,9 @@ export default function LessonIcon({
   editMode = false,
   isMobile = false,
   canManageContent = false,
+  openContentId,
+  onOpenContent,
+  onCloseContent,
   onEdit,
   onMove,
   onCommit,
@@ -95,6 +104,29 @@ export default function LessonIcon({
     if (!open || contents !== null) return;
     loadContents();
   }, [open, contents, loadContents]);
+
+  // Auto-open from a shared URL (?co=<id>): open this lesson's popover and preselect
+  // the requested content. loadContents keeps the selection if the id exists.
+  useEffect(() => {
+    if (openContentId) {
+      setSelectedId(openContentId);
+      setOpen(true);
+    }
+  }, [openContentId]);
+
+  // Mirror the open content into the URL (?co=<id>) whenever the selection changes
+  // while the popover is open; closing reports via closePopover() below.
+  useEffect(() => {
+    if (open && selectedId) onOpenContent?.(selectedId);
+    // onOpenContent is a fresh closure each render; the open/selectedId pair is the
+    // real trigger, so it is intentionally excluded.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedId]);
+
+  function closePopover() {
+    setOpen(false);
+    onCloseContent?.();
+  }
 
   const screenX = lesson.position_x * scale + offsetX;
   const screenY = lesson.position_y * scale + offsetY;
@@ -172,7 +204,8 @@ export default function LessonIcon({
       onEdit?.();
       return;
     }
-    setOpen((o) => !o);
+    if (open) closePopover();
+    else setOpen(true);
   }
 
   const selected = contents?.find((c) => c.id === selectedId) ?? null;
@@ -206,8 +239,8 @@ export default function LessonIcon({
           ref={popoverRef}
           className={
             isMobile
-              ? "fixed inset-x-2 top-14 z-30 mx-auto flex max-h-[calc(100vh-5rem)] max-w-md flex-col rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
-              : "absolute z-30 flex w-[360px] max-w-[90vw] flex-col rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
+              ? "fixed inset-x-2 top-14 z-30 mx-auto flex max-h-[calc(100vh-5rem)] max-w-lg flex-col rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
+              : "absolute z-30 flex w-[540px] max-w-[90vw] flex-col rounded-xl bg-neutral-800 p-4 text-neutral-100 shadow-2xl ring-1 ring-black/40"
           }
           style={
             isMobile
@@ -228,7 +261,7 @@ export default function LessonIcon({
           <div className="mb-2 flex shrink-0 items-start justify-between gap-2">
             <h3 className="text-base font-semibold">{lesson.name}</h3>
             <button
-              onClick={() => setOpen(false)}
+              onClick={closePopover}
               aria-label="Schließen"
               className="text-neutral-400 hover:text-white"
             >
@@ -277,7 +310,7 @@ export default function LessonIcon({
                 </select>
               )}
               {selected && (
-                <div className="min-h-0 flex-1 overflow-y-auto">
+                <div className="scrollbar-subtle min-h-0 flex-1 overflow-y-auto">
                   <VideoEmbed youtubeId={selected.youtube_id} internalVideo={selected.internal_video} />
                   {selected.text && (
                     <div className="mt-3">

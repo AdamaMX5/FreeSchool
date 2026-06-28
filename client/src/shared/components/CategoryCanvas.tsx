@@ -4,6 +4,7 @@
 // re-renders smoothly; on release the new position is persisted via ObjectService.
 import { useEffect, useState } from "react";
 import type { Category, Lesson } from "../types";
+import type { OpenContent } from "../hooks/useContentBrowser";
 import { updateLessonPosition } from "../services/objectApi";
 import { categoryBackgroundSrc } from "../utils/css";
 import { useCanvasLayout } from "../hooks/useCanvasLayout";
@@ -22,6 +23,12 @@ interface Props {
   onEditLesson?: (lesson: Lesson) => void;
   /** Reports the original image dimensions once loaded (for default placement). */
   onNaturalSize?: (width: number, height: number) => void;
+  /** Content opened via the URL (?co=<id>); its lesson's popover auto-opens. */
+  openContent?: OpenContent | null;
+  /** Report a content as opened (URL sync). */
+  onOpenContent?: (lessonId: string, contentId: string) => void;
+  /** Report the open content as closed (URL sync). */
+  onCloseContent?: () => void;
 }
 
 export default function CategoryCanvas({
@@ -33,6 +40,9 @@ export default function CategoryCanvas({
   isMobile = false,
   onEditLesson,
   onNaturalSize,
+  openContent,
+  onOpenContent,
+  onCloseContent,
 }: Props) {
   const layout = useCanvasLayout();
   // Local, mutable copy so a drag updates the rendered position immediately.
@@ -87,6 +97,9 @@ export default function CategoryCanvas({
             editMode={editMode}
             canManageContent={canManageContent}
             isMobile={isMobile}
+            openContentId={openContent?.lessonId === lesson.id ? openContent.contentId : undefined}
+            onOpenContent={(contentId) => onOpenContent?.(lesson.id, contentId)}
+            onCloseContent={onCloseContent}
             onEdit={() => onEditLesson?.(lesson)}
             onMove={(x, y) => moveLesson(lesson.id, x, y)}
             onCommit={(x, y) => commitLesson(lesson, x, y)}

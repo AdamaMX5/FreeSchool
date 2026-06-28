@@ -111,6 +111,9 @@ export default function DesktopLayout() {
               canManageContent={canManageCategories}
               onEditLesson={setEditingLesson}
               onNaturalSize={onNaturalSize}
+              openContent={b.openContent}
+              onOpenContent={b.selectContent}
+              onCloseContent={b.closeContent}
             />
           </div>
         ) : (

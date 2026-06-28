@@ -45,6 +45,9 @@ export default function HomeView() {
             onLessonsChanged={b.reloadLessons}
             canEdit={canManageCategories}
             isMobile
+            openContent={b.openContent}
+            onOpenContent={b.selectContent}
+            onCloseContent={b.closeContent}
           />
         </div>
       </div>

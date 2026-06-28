@@ -9,6 +9,7 @@
 // there in move mode.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Category, Lesson } from "../types";
+import type { OpenContent } from "../hooks/useContentBrowser";
 import { categoryBackgroundImage } from "../utils/css";
 import CategoryCanvas from "./CategoryCanvas";
 import CategoryToolbar from "./CategoryToolbar";
@@ -25,6 +26,12 @@ interface Props {
   /** ADMIN or MODERATOR — gets the editing toolbar. */
   canEdit: boolean;
   isMobile?: boolean;
+  /** Content opened via the URL (?co=<id>); forwarded to the canvas. */
+  openContent?: OpenContent | null;
+  /** Report a content as opened (URL sync). */
+  onOpenContent?: (lessonId: string, contentId: string) => void;
+  /** Report the open content as closed (URL sync). */
+  onCloseContent?: () => void;
 }
 
 export default function CategoryView({
@@ -35,6 +42,9 @@ export default function CategoryView({
   onLessonsChanged,
   canEdit,
   isMobile = false,
+  openContent,
+  onOpenContent,
+  onCloseContent,
 }: Props) {
   const [moveMode, setMoveMode] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -116,6 +126,9 @@ export default function CategoryView({
           isMobile={isMobile}
           onEditLesson={setEditingLesson}
           onNaturalSize={onNaturalSize}
+          openContent={openContent}
+          onOpenContent={onOpenContent}
+          onCloseContent={onCloseContent}
         />
       </div>
 

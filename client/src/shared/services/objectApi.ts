@@ -339,6 +339,20 @@ export async function listLessonsByCategory(categoryId: string): Promise<Lesson[
     });
 }
 
+/**
+ * Resolve a single content by its legacy id (refs.selfId). Used to restore a shared
+ * ?co=<id> deep link: the content carries its owning lesson in refs.lessonId, so the
+ * lesson need not be in the URL. Returns null if the content can't be found.
+ */
+export async function getContentBySelfId(selfId: string): Promise<Content | null> {
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/contents?ref[selfId]=${encodeURIComponent(selfId)}&limit=1`
+  );
+  if (!res.ok) return null;
+  const docs = extractList(await res.json());
+  return docs.length ? mapContent(docs[0]) : null;
+}
+
 /** Contents of a lesson. */
 export async function listContentsByLesson(lessonId: string): Promise<Content[]> {
   const res = await authFetch(
