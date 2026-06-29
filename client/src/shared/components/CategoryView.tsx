@@ -154,7 +154,13 @@ export default function CategoryView({
           defaultPosition={newLessonPosition()}
           defaultOrder={String(lessons.length + 1)}
           onClose={() => setCreating(false)}
-          onSaved={onLessonsChanged}
+          // After creating a lesson, switch straight into move mode so the new
+          // lesson (placed at the image centre) can be dragged to its spot.
+          onSaved={() => {
+            onLessonsChanged();
+            setMoveMode(true);
+            setEditMode(false);
+          }}
         />
       )}
 
