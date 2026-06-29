@@ -100,7 +100,13 @@ export async function registerComplete(
   return res.json();
 }
 
-export async function refresh(): Promise<string | null> {
+// Shared in-flight refresh: when several requests notice an expired token at
+// once, they must not each POST /user/refresh. The AuthService rotates the
+// refresh cookie on every call, so concurrent refreshes would invalidate each
+// other and log the user out. Funnelling them through one promise fixes that.
+let inflightRefresh: Promise<string | null> | null = null;
+
+async function doRefresh(): Promise<string | null> {
   try {
     const res = await fetch(`${AUTH_BASE_URL}/user/refresh`, {
       method: "POST",
@@ -113,6 +119,16 @@ export async function refresh(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** Silent refresh; concurrent callers share a single in-flight request. */
+export async function refresh(): Promise<string | null> {
+  if (!inflightRefresh) {
+    inflightRefresh = doRefresh().finally(() => {
+      inflightRefresh = null;
+    });
+  }
+  return inflightRefresh;
 }
 
 export async function logout(): Promise<void> {
