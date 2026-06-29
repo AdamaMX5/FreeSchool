@@ -13,6 +13,7 @@ import {
 } from "../services/objectApi";
 import { errMessage as msg } from "../utils/errors";
 import { useClipboardPrefill } from "../hooks/useClipboardPrefill";
+import { useYoutubeMetaPrefill } from "../hooks/useYoutubeMetaPrefill";
 
 interface Props {
   mode: "create" | "edit";
@@ -52,6 +53,8 @@ export default function LessonEditModal({
 
   // Clipboard convenience: link -> YouTube field, plain text -> markdown field.
   useClipboardPrefill(mode === "create", setYoutube, setText);
+  // Pull the video title from YouTube into the still-empty lesson-title field.
+  useYoutubeMetaPrefill(mode === "create", youtube, setName);
 
   async function onSubmit() {
     if (!name.trim()) {
