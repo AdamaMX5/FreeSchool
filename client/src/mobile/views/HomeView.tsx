@@ -72,7 +72,7 @@ export default function HomeView() {
               <li key={cat.id} className="relative">
                 <button
                   onClick={() => b.openCategory(cat)}
-                  className="relative flex h-20 w-full items-end overflow-hidden rounded-xl bg-neutral-700 text-left"
+                  className="relative flex h-20 w-full items-start overflow-hidden rounded-xl bg-neutral-700 text-left"
                 >
                   {bg && (
                     <div
@@ -88,7 +88,7 @@ export default function HomeView() {
                   <button
                     onClick={() => setEditing(cat)}
                     aria-label="Bild bearbeiten"
-                    className="absolute right-2 top-2 z-20 rounded-full bg-black/60 p-1.5 text-red-500 active:bg-black/80"
+                    className="absolute bottom-2 right-2 z-20 rounded-full bg-black/60 p-1.5 text-red-500 active:bg-black/80"
                   >
                     <PencilIcon />
                   </button>

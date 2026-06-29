@@ -33,7 +33,7 @@ export default function CategorySidebar({ categories, loading, canEdit, onOpen, 
                     style={{ backgroundImage: bg }}
                   />
                 )}
-                <h3 className="absolute inset-x-0 bottom-0 z-10 truncate bg-black/60 px-2 py-1 text-sm font-semibold">
+                <h3 className="absolute inset-x-0 top-0 z-10 truncate bg-black/60 px-2 py-1 text-sm font-semibold">
                   {cat.name}
                 </h3>
               </button>
@@ -42,7 +42,7 @@ export default function CategorySidebar({ categories, loading, canEdit, onOpen, 
                   onClick={() => onEdit(cat)}
                   title="Bild bearbeiten"
                   aria-label="Bild bearbeiten"
-                  className="absolute right-1.5 top-1.5 z-20 rounded-full bg-black/60 p-1.5 text-red-500 opacity-0 transition hover:bg-black/80 hover:text-red-400 group-hover:opacity-100"
+                  className="absolute bottom-1.5 right-1.5 z-20 rounded-full bg-black/60 p-1.5 text-red-500 opacity-0 transition hover:bg-black/80 hover:text-red-400 group-hover:opacity-100"
                 >
                   <PencilIcon />
                 </button>
