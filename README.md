@@ -2,133 +2,69 @@
 
 FreeSchool is a free online school that offers courses to anyone who wants to learn.
 We offer courses in a wide range of topics, from computer programming to history to art.
-Our goal is to make high-quality education accessible to everyone, regardless of their background or financial situation.
+Our goal is to make high-quality education accessible to everyone, regardless of their
+background or financial situation.
 
 ---
 
-## Git installieren und projekt klonen:
+## Architecture
 
-```bash
-sudo apt update && sudo apt install -y git python3 python3-pip nodejs npm nginx docker.io docker-compose curl
+The app is a **React single-page client** (`client/`) that talks **directly to the
+microservices** — there is no FreeSchool-specific backend. Persistence, auth and media
+are provided by:
 
-git clone https://github.com/AdamaMX5/FreeSchool.git
-cd FreeSchool # && git pull
-./build.sh # wird beim ersten Versuch fehlschlagen. Die .env Datei wurde erstellt
-nano .env
+| Service       | Base URL                          | Purpose                          |
+|---------------|-----------------------------------|----------------------------------|
+| AuthService   | `https://auth.freischule.info`    | Login, JWT, roles                |
+| ObjectService | `https://object.freischule.info`  | Categories / lessons / contents  |
+| MediaService  | `https://media.freischule.info`   | Images and videos                |
+| GitService    | `https://git.freischule.info`     | Issue creation from the client   |
 
-
-# Frontend Envirement Variable
-cd FreeSchool/frontend	# in den Frontend Ordner gehen
-nano .env		# erstellt oder öffnet die .env Datei
-VITE_API_BASE_URL=http://domain:8000	# URL, wo das Backend läuft
-Strg+X j Enter		# zum Beenden mit Speichern
-
-docker logs freeschool_backend 							# ausgabe anzeigen
-docker logs -f freeschool_backend        					# Folgt den Logs in Echtzeit (wie tail -f)
-docker exec -it freeschool_db psql -U freeschool -d freeschool -c "\dt"		# Datenbank Tabellenausgabe
-```
-
-## Trubbleshoting
-
-# Test Docker:
-docker ps
-permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock: Get "http://%2Fvar%2Frun%2Fdocker.sock/v1.24/containers/json": dial unix /var/run/docker.sock: connect: permission denied
-
-sudo usermod -aG docker $USER		# Benutzer zur Docker-Gruppe hinzufügen
-newgrp docker						# Danach neu anmelden oder diese Session aktualisieren
-docker ps
-
-# Docker-Compose komando nicht gefunden:
-sudo apt update
-sudo apt install docker-compose
-docker-compose --version
----
-
-## Installation
-
-To install FreeSchool, download the latest version from our website or GitHub and install the required dependencies:
-
-```bash
-pip install fastapi[all]
-```
+The built SPA is served by a thin Node/Express static server (`client/server/index.js`).
 
 ---
 
-## Run Backend Development
-
-Start the server with:
+## Run the client (development)
 
 ```bash
-uvicorn main:app --reload
+cd client
+cp .env.example .env   # adjust the VITE_*_BASE_URL values if needed
+npm install
+npm run dev            # Vite dev server on http://localhost:5173
 ```
 
-Or, in PyCharm, set up a run/debug configuration:
+Environment variables (see `client/.env.example`):
 
-- **Script**: `C:/Users/Kurt/Python/FreeSchool/main.py`  
-- **Parameters** (example): `uvicorn main:app --reload --host 127.0.0.1 --port 8000 --workers 1`
+```
+VITE_AUTH_BASE_URL=https://auth.freischule.info
+VITE_OBJECT_BASE_URL=https://object.freischule.info
+```
 
-Alternatively, run from the command line:
+`VITE_MEDIA_BASE_URL` and `VITE_GIT_BASE_URL` can be overridden the same way; they
+default to the production URLs above.
+
+---
+
+## Build & type-check
 
 ```bash
-uvicorn main:app --reload --host 127.0.0.1 --port 8000 --workers 1
+cd client
+npm run build       # production build into client/dist
+npm run typecheck   # tsc --noEmit
+npm run preview     # preview the production build locally
 ```
 
 ---
 
-## Run Frontend Development
+## Deployment (Docker)
 
-From the frontend directory, start the dev server:
-
-```bash
-cd C:\Users\Kurt\Python\FreeSchool\frontend
-npm run dev
-```
-
----
-
-## Wenn die SQL Datenbank nicht aktuell ist nutze Alembic
-
-To update the SQL database, use Alembic.
-
-1. Install Alembic:
+The client ships with its own multi-stage `Dockerfile` that builds the SPA and serves
+it via the Express static server on port `3000`:
 
 ```bash
-pip install alembic
+cd client
+docker build -t freeschool-client .
+docker run -p 3000:3000 freeschool-client
 ```
 
-2. Navigate to the directory containing your Alembic configuration (usually where `alembic.ini` is) and run:
-
-```bash
-alembic upgrade head
-```
-
-
-### you want to run the backend tests with
-pytest tests
-# before you have to create the test DB:
-CREATE USER testuser WITH PASSWORD 'testpass';
-CREATE DATABASE test_freeschool OWNER testuser;
-GRANT ALL PRIVILEGES ON DATABASE test_freeschool TO testuser;
-GRANT CREATE ON SCHEMA public TO testuser;
-
-
-
----
-
-### Wenn wir die Modelle erweitert haben und noch keine version dafür existiert
-
-Create a new migration script:
-
-```bash
-alembic revision --autogenerate -m "Add new models"
-```
-
-This will create a new migration script in the migrations directory. Review and edit the script if necessary, then apply it with:
-
-```bash
-alembic upgrade head
-```
-
----
-
-If you want a German-only version or additional sections (Usage, Contributing, License, etc.), tell me and I’ll add them.
+Put a reverse proxy (e.g. nginx) with TLS in front of port `3000`.

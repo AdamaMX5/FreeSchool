@@ -1,5 +1,0 @@
-# um das Frontend auf dem localen PC im Development Modus starten:
-cd C:\Users\Kurt\Python\FreeSchool\frontend
-npm run dev
-
-URL: http://localhost:5173/
