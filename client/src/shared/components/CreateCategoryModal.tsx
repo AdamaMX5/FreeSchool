@@ -35,11 +35,9 @@ export default function CreateCategoryModal({ parent, onClose, onCreated }: Prop
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-md rounded-xl bg-neutral-800 p-5 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    // No backdrop click-to-close: it would discard entered content. Use ✕ / Abbrechen.
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+      <div className="w-full max-w-md rounded-xl bg-neutral-800 p-5 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{title}</h2>
           <button className="text-neutral-400 hover:text-white" onClick={onClose} aria-label="Schließen">
