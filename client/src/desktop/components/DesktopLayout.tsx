@@ -150,6 +150,7 @@ export default function DesktopLayout() {
           category={editingCategory}
           onClose={() => setEditingCategory(null)}
           onSaved={b.updateCategory}
+          onDeleted={() => b.removeCategory(editingCategory)}
         />
       )}
 

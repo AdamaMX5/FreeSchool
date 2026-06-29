@@ -23,6 +23,16 @@ function extractList(body: unknown): ObjectDoc[] {
   return [];
 }
 
+/**
+ * A soft-deleted document carries data.deleted === true. Until ObjectService filters
+ * these out server-side (see the ObjectService soft-delete issue referenced by #24),
+ * the client hides them on read; once the service stops delivering them by default this
+ * filter simply becomes a harmless no-op.
+ */
+function isDeleted(doc: ObjectDoc): boolean {
+  return Boolean((doc.data as Record<string, unknown> | undefined)?.deleted);
+}
+
 function mapCategory(doc: ObjectDoc): Category {
   const d = (doc.data ?? {}) as Record<string, unknown>;
   return {
@@ -57,6 +67,25 @@ export async function updateCategoryData(docId: string, data: CategoryUpdate): P
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data, merge: true }),
+    }
+  );
+  if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
+/**
+ * Soft-delete a category: set data.deleted = true instead of removing the document, so
+ * an accidental or malicious deletion can be undone. Deleted categories are hidden from
+ * the read helpers (see isDeleted). Requires an edit-eligible role (enforced server-side
+ * by ObjectService).
+ */
+export async function softDeleteCategory(docId: string): Promise<void> {
+  if (!docId) throw new Error("Category ohne docId kann nicht gelöscht werden.");
+  const res = await authFetch(
+    `${OBJECT_BASE_URL}/objects/categories/${encodeURIComponent(docId)}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: { deleted: true }, merge: true }),
     }
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
@@ -230,6 +259,7 @@ export async function listLearningHubs(): Promise<Category[]> {
   const res = await authFetch(`${OBJECT_BASE_URL}/objects/categories?limit=100`);
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
   return extractList(await res.json())
+    .filter((d) => !isDeleted(d))
     .map(mapCategory)
     .filter((c) => c.id && c.parents.length === 0);
 }
@@ -239,6 +269,7 @@ export async function listAllCategories(): Promise<Category[]> {
   const res = await authFetch(`${OBJECT_BASE_URL}/objects/categories?limit=100`);
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
   return extractList(await res.json())
+    .filter((d) => !isDeleted(d))
     .map(mapCategory)
     .filter((c) => c.id);
 }
@@ -277,7 +308,7 @@ export async function getCategoryBySelfId(selfId: string): Promise<Category | nu
     `${OBJECT_BASE_URL}/objects/categories?ref[selfId]=${encodeURIComponent(selfId)}&limit=1`
   );
   if (!res.ok) return null;
-  const docs = extractList(await res.json());
+  const docs = extractList(await res.json()).filter((d) => !isDeleted(d));
   return docs.length ? mapCategory(docs[0]) : null;
 }
 

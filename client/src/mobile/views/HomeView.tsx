@@ -104,6 +104,7 @@ export default function HomeView() {
           category={editing}
           onClose={() => setEditing(null)}
           onSaved={b.updateCategory}
+          onDeleted={() => b.removeCategory(editing)}
         />
       )}
     </div>

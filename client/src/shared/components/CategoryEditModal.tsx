@@ -9,7 +9,7 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import type { Category } from "../types";
 import { uploadImageFile, uploadImageFromUrl } from "../services/mediaApi";
-import { updateCategoryData, listAllCategories } from "../services/objectApi";
+import { updateCategoryData, listAllCategories, softDeleteCategory } from "../services/objectApi";
 import { cssBackgroundImage } from "../utils/css";
 import CategoryMultiSelect from "./CategoryMultiSelect";
 
@@ -17,6 +17,8 @@ interface Props {
   category: Category;
   onClose: () => void;
   onSaved: (updated: Category) => void;
+  /** Called after the category was soft-deleted, so the view can navigate away. */
+  onDeleted: () => void;
 }
 
 function msg(e: unknown): string {
@@ -30,7 +32,7 @@ function sameIds(a: string[], b: string[]): boolean {
   return [...a].sort().every((v, i) => v === sb[i]);
 }
 
-export default function CategoryEditModal({ category, onClose, onSaved }: Props) {
+export default function CategoryEditModal({ category, onClose, onSaved, onDeleted }: Props) {
   const [name, setName] = useState(category.name);
   // Link currently staged for saving (starts from the existing background).
   const [link, setLink] = useState(category.background_link);
@@ -92,6 +94,22 @@ export default function CategoryEditModal({ category, onClose, onSaved }: Props)
     try {
       await updateCategoryData(category.docId, { name, background_link: link, parents, children });
       onSaved({ ...category, name, background_link: link, parents, children });
+      onClose();
+    } catch (e) {
+      setError(msg(e));
+      setBusy(false);
+    }
+  }
+
+  // Soft delete: ObjectService keeps the document with data.deleted = true, so a
+  // wrongly/maliciously deleted category can be restored later.
+  async function onDelete() {
+    if (!window.confirm(`Kategorie „${category.name}" wirklich löschen?`)) return;
+    setBusy(true);
+    setError("");
+    try {
+      await softDeleteCategory(category.docId);
+      onDeleted();
       onClose();
     } catch (e) {
       setError(msg(e));
@@ -187,6 +205,13 @@ export default function CategoryEditModal({ category, onClose, onSaved }: Props)
         {error && <div className="mb-3 text-sm text-red-400">{error}</div>}
 
         <div className="flex justify-end gap-2">
+          <button
+            disabled={busy}
+            onClick={onDelete}
+            className="mr-auto rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+          >
+            Löschen
+          </button>
           <button
             disabled={busy}
             onClick={onClose}

@@ -146,6 +146,17 @@ export function useContentBrowser() {
     setPath((p) => p.map((c) => (c.id === updated.id ? updated : c)));
   }
 
+  /**
+   * Reflect a (soft-)deleted category in the UI. If we're currently inside it (or a
+   * descendant), navigate up to its parent; otherwise it was a card in the current
+   * list, so just reload that list (which now excludes the deleted category).
+   */
+  function removeCategory(cat: Category) {
+    const idx = path.findIndex((c) => c.id === cat.id);
+    if (idx >= 0) return goToDepth(idx - 1); // idx-1 === -1 falls back to goHome()
+    return reloadCategories();
+  }
+
   // Restore the navigation from the URL on first load, and follow browser back/forward
   // (popstate) afterwards. Both rebuild the full path from the ?ca id without writing
   // the URL (the URL is already where it should be).
@@ -212,5 +223,6 @@ export function useContentBrowser() {
     reloadLessons,
     reloadCategories,
     updateCategory,
+    removeCategory,
   };
 }
