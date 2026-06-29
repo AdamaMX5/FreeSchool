@@ -129,11 +129,13 @@ export async function registerComplete(
   return res.json();
 }
 
-/**
- * Silent refresh: exchanges the HttpOnly refresh cookie (+ CSRF token) for a
- * fresh access token. Returns the new token or null if the session is gone.
- */
-export async function refresh(): Promise<string | null> {
+// Shared in-flight refresh: when several requests notice an expired token at
+// once, they must not each POST /user/refresh. The AuthService rotates the
+// refresh cookie on every call, so concurrent refreshes would invalidate each
+// other and log the user out. Funnelling them through one promise fixes that.
+let inflightRefresh: Promise<string | null> | null = null;
+
+async function doRefresh(): Promise<string | null> {
   try {
     const res = await fetch(`${AUTH_BASE_URL}/user/refresh`, {
       method: 'POST',
@@ -146,6 +148,20 @@ export async function refresh(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Silent refresh: exchanges the HttpOnly refresh cookie (+ CSRF token) for a
+ * fresh access token. Returns the new token or null if the session is gone.
+ * Concurrent callers share a single in-flight request (see above).
+ */
+export async function refresh(): Promise<string | null> {
+  if (!inflightRefresh) {
+    inflightRefresh = doRefresh().finally(() => {
+      inflightRefresh = null;
+    });
+  }
+  return inflightRefresh;
 }
 
 export async function logout(): Promise<void> {
@@ -237,10 +253,22 @@ export async function authFetch(input: string, init: RequestInit = {}): Promise<
   });
 
   let token = get(user)?.jwt;
+
+  // Proactive refresh: the 15-min access token expires while the tab stays open,
+  // so a stored-but-expired token would otherwise guarantee a 401 on the next
+  // request (e.g. adding content). Refresh up front instead of failing first.
+  if (token && isExpired(token)) {
+    const refreshed = await refresh();
+    if (refreshed) {
+      applyToken(refreshed);
+      token = get(user)?.jwt;
+    }
+  }
+
   let res = await fetch(input, buildInit(token));
   if (res.status !== 401) return res;
 
-  // Access token likely expired – try a single silent refresh + retry.
+  // Reactive fallback: an unexpected 401 (e.g. token revoked) – refresh once and retry.
   const newToken = await refresh();
   if (!newToken) {
     clearSession();
