@@ -8,7 +8,7 @@ import type { Category, Lesson } from "../types";
 import {
   createLesson,
   updateLesson,
-  deleteLessonAndOwnContents,
+  softDeleteLesson,
   createContent,
 } from "../services/objectApi";
 import { errMessage as msg } from "../utils/errors";
@@ -103,11 +103,13 @@ export default function LessonEditModal({
 
   async function onDelete() {
     if (!lesson) return;
-    if (!window.confirm(`Lektion „${lesson.name}" inkl. ihrer Inhalte wirklich löschen?`)) return;
+    // Soft delete: the lesson is only hidden (data.deleted = true) and can be restored,
+    // so the confirmation is deliberately low-stakes.
+    if (!window.confirm(`Lektion „${lesson.name}" wirklich löschen? Sie wird ausgeblendet und kann wiederhergestellt werden.`)) return;
     setBusy(true);
     setError("");
     try {
-      await deleteLessonAndOwnContents(lesson.docId, lesson.id);
+      await softDeleteLesson(lesson.docId);
       onSaved();
       onClose();
     } catch (e) {

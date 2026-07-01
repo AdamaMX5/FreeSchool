@@ -168,12 +168,23 @@ export async function updateLesson(docId: string, data: LessonEdit): Promise<voi
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
 }
 
-/** Delete a lesson document only (see deleteLessonAndOwnContents for the cascade). */
-export async function deleteLesson(docId: string): Promise<void> {
+/**
+ * Soft-delete a lesson: set data.deleted = true instead of removing the document, so an
+ * accidental deletion can be undone. Mirrors softDeleteCategory. Soft-deleted lessons are
+ * hidden from listLessonsByCategory (see isDeleted). The lesson's contents are left in
+ * place — they're only reachable through the lesson, so hiding the lesson hides them too
+ * (same non-cascading behaviour as softDeleteCategory). Requires an edit-eligible role
+ * (enforced server-side by ObjectService).
+ */
+export async function softDeleteLesson(docId: string): Promise<void> {
   if (!docId) throw new Error("Lesson ohne docId kann nicht gelöscht werden.");
   const res = await authFetch(
     `${OBJECT_BASE_URL}/objects/lessons/${encodeURIComponent(docId)}`,
-    { method: "DELETE" }
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: { deleted: true }, merge: true }),
+    }
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
 }
@@ -230,28 +241,6 @@ export async function deleteContent(docId: string): Promise<void> {
     { method: "DELETE" }
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
-}
-
-/**
- * Delete a lesson and the contents that belong *exclusively* to it. Content→lesson
- * is a scalar refs.lessonId, so a content has exactly one lesson; we still filter
- * defensively on lessonId so that — should the schema ever allow a content to be
- * shared with another lesson — such a content would be kept, not orphaned/deleted.
- * Contents are removed first; the lesson itself is deleted last.
- */
-export async function deleteLessonAndOwnContents(lessonDocId: string, lessonId: string): Promise<void> {
-  const contents = await listContentsByLesson(lessonId);
-  const ownContents = contents.filter((c) => c.lessonId === lessonId && c.docId);
-  // Attempt every content delete (allSettled, not fail-fast), then only remove the
-  // lesson if all of them succeeded — so a partial failure never leaves the lesson
-  // deleted with some contents orphaned. A retry is safe: the still-present contents
-  // are re-listed and re-deleted.
-  const results = await Promise.allSettled(ownContents.map((c) => deleteContent(c.docId)));
-  const failed = results.filter((r) => r.status === "rejected").length;
-  if (failed > 0) {
-    throw new Error(`${failed} Inhalt(e) konnten nicht gelöscht werden – Lektion bleibt erhalten.`);
-  }
-  await deleteLesson(lessonDocId);
 }
 
 /** Learning hubs = categories without parents. */
@@ -360,6 +349,7 @@ export async function listLessonsByCategory(categoryId: string): Promise<Lesson[
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
   return extractList(await res.json())
+    .filter((d) => !isDeleted(d))
     .map(mapLesson)
     .filter((l) => l.id)
     .sort((a, b) => {
