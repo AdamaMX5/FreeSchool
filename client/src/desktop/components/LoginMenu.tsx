@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useLoginFlow } from "../../shared/hooks/useLoginFlow";
+import AdminUsersModal from "../../shared/components/AdminUsersModal";
 
 // Desktop login: dropdown panel. Behaviour comes from the shared useLoginFlow hook;
 // this file only owns the desktop markup.
 export default function LoginMenu() {
   const f = useLoginFlow();
   const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   return (
     <div className="relative">
@@ -58,6 +60,17 @@ export default function LoginMenu() {
           ) : (
             <>
               <div className="text-sm">Angemeldet als: {f.user.email}</div>
+              {f.isAdmin && (
+                <button
+                  className="rounded bg-neutral-700 py-2 text-sm font-medium hover:bg-neutral-600"
+                  onClick={() => {
+                    setOpen(false);
+                    setAdminOpen(true);
+                  }}
+                >
+                  Nutzerverwaltung
+                </button>
+              )}
               <button
                 className="rounded bg-sky-600 py-2 text-sm font-medium hover:bg-sky-500 disabled:opacity-50"
                 disabled={f.busy}
@@ -71,6 +84,8 @@ export default function LoginMenu() {
           {f.info && <div className="text-sm text-green-400">{f.info}</div>}
         </div>
       )}
+
+      {adminOpen && <AdminUsersModal onClose={() => setAdminOpen(false)} />}
     </div>
   );
 }

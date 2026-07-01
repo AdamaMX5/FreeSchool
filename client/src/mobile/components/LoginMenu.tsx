@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLoginFlow } from "../../shared/hooks/useLoginFlow";
+import AdminUsersModal from "../../shared/components/AdminUsersModal";
 
 // Mobile login: full-width bottom sheet. Behaviour from the shared useLoginFlow hook;
 // this file only owns the mobile markup.
 export default function LoginSheet() {
   const f = useLoginFlow();
   const [open, setOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   // Close the sheet once a login/registration succeeds.
   useEffect(() => {
@@ -67,6 +69,17 @@ export default function LoginSheet() {
             ) : (
               <>
                 <div className="text-base">Angemeldet als: {f.user.email}</div>
+                {f.isAdmin && (
+                  <button
+                    className="rounded-lg bg-neutral-700 py-3 text-base font-medium active:bg-neutral-600"
+                    onClick={() => {
+                      setOpen(false);
+                      setAdminOpen(true);
+                    }}
+                  >
+                    Nutzerverwaltung
+                  </button>
+                )}
                 <button
                   className="rounded-lg bg-sky-600 py-3 text-base font-medium active:bg-sky-500 disabled:opacity-50"
                   disabled={f.busy}
@@ -80,6 +93,8 @@ export default function LoginSheet() {
           </div>
         </div>
       )}
+
+      {adminOpen && <AdminUsersModal onClose={() => setAdminOpen(false)} />}
     </>
   );
 }

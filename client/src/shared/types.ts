@@ -26,6 +26,21 @@ export interface AuthSession {
   last_login?: string;
 }
 
+/**
+ * Full user object as returned by AuthService GET /admin/users (admin user management).
+ * Only the fields the UI renders are typed; the untouched server object is kept in `raw`
+ * so the client-side JSON export mirrors AuthService 1:1.
+ */
+export interface AdminUser {
+  id: number;
+  email: string;
+  roles: Role[];
+  permissions: Record<string, unknown>;
+  is_email_verify: boolean;
+  last_login: string | null;
+  raw: Record<string, unknown>;
+}
+
 export interface JwtPayload {
   sub?: string;
   email?: string;

@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export type LoginStep = "email" | "login" | "register";
 
 export function useLoginFlow() {
-  const { isLoggedIn, user, checkEmail, login, register, logout } = useAuth();
+  const { isLoggedIn, isAdmin, user, checkEmail, login, register, logout } = useAuth();
   const [step, setStep] = useState<LoginStep>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,6 +66,7 @@ export function useLoginFlow() {
 
   return {
     isLoggedIn,
+    isAdmin,
     user,
     step,
     email,
