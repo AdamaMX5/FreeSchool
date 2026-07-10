@@ -175,8 +175,8 @@ export default function DesktopLayout() {
         />
       )}
 
-      {improving && current && (
-        <SendImprovementModal categoryName={current.name} onClose={() => setImproving(false)} />
+      {improving && (
+        <SendImprovementModal categoryName={current?.name ?? "Startseite"} onClose={() => setImproving(false)} />
       )}
     </div>
   );
