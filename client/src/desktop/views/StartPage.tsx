@@ -25,6 +25,8 @@ export default function StartPage() {
         <a
           href={KONZEPT_PDF_DE}
           download
+          target="_blank"
+          rel="noopener noreferrer"
           className="rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 hover:text-white"
         >
           📥 Freischul-Konzept herunterladen
@@ -32,6 +34,8 @@ export default function StartPage() {
         <a
           href={KONZEPT_PDF_EN}
           download
+          target="_blank"
+          rel="noopener noreferrer"
           className="rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 hover:text-white"
         >
           📥 Download Free School Conception
