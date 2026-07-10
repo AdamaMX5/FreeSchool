@@ -130,8 +130,11 @@ export default function LessonIcon({
 
   const screenX = lesson.position_x * scale + offsetX;
   const screenY = lesson.position_y * scale + offsetY;
-  const iconSize = Math.max(28, 40 * scale);
-  const fontSize = Math.max(11, 14 * scale);
+  // Clamped both ways: the floor keeps icons legible when the canvas shrinks
+  // (mobile), the ceiling keeps them from ballooning when a category's
+  // background image happens to have a low natural resolution (scale > 1).
+  const iconSize = Math.min(40, Math.max(28, 40 * scale));
+  const fontSize = Math.min(14, Math.max(11, 14 * scale));
 
   // Place the desktop popover so it stays within the canvas: open below the icon
   // by default, flip above when it would overflow the bottom, and clamp to the
