@@ -7,7 +7,7 @@
 // Move and edit are mutually exclusive modes. New lessons are placed at the centre
 // of the original image (once its natural size is known) and can be dragged from
 // there in move mode.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Category, Lesson } from "../types";
 import type { OpenContent } from "../hooks/useContentBrowser";
 import { categoryBackgroundImage } from "../utils/css";
@@ -51,12 +51,6 @@ export default function CategoryView({
   const [improving, setImproving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
-  // Original image size (kept in a ref; only needed at create time).
-  const natural = useRef({ w: 0, h: 0 });
-
-  const onNaturalSize = useCallback((w: number, h: number) => {
-    natural.current = { w, h };
-  }, []);
 
   // Reset transient modes/modals when navigating to another category, so a stale
   // edit modal can't point at a lesson from the previous category.
@@ -77,16 +71,12 @@ export default function CategoryView({
     setMoveMode(false);
   };
 
-  // Centre of the original image (with a small cascade so successive new lessons
-  // don't land exactly on top of each other), or a default before the image loaded.
+  // Centre of the background image, in percent (issue #31: positions are
+  // resolution-independent, so no need to wait for the image to load) — with a
+  // small cascade so successive new lessons don't land exactly on top of each other.
   const newLessonPosition = () => {
-    const cascade = (lessons.length % 6) * 24;
-    return natural.current.w > 0
-      ? {
-          x: Math.round(natural.current.w / 2) + cascade,
-          y: Math.round(natural.current.h / 2) + cascade,
-        }
-      : { x: 20 + cascade, y: 20 + cascade };
+    const cascade = (lessons.length % 6) * 3;
+    return { x: 50 + cascade, y: 50 + cascade };
   };
 
   return (
@@ -125,7 +115,6 @@ export default function CategoryView({
           canManageContent={canEdit}
           isMobile={isMobile}
           onEditLesson={setEditingLesson}
-          onNaturalSize={onNaturalSize}
           openContent={openContent}
           onOpenContent={onOpenContent}
           onCloseContent={onCloseContent}

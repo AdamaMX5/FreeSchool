@@ -25,10 +25,22 @@ export interface CanvasLayout {
   ready: boolean;
 }
 
-export function useCanvasLayout(): CanvasLayout {
+/**
+ * @param resetKey Identifies the current background image (e.g. its src). CategoryCanvas
+ *   is never remounted when navigating between categories, so without this the hook would
+ *   keep reporting the *previous* category's natural size — and `ready` would stay true —
+ *   until the new image's onLoad fires, which is exactly the stale-size window that made
+ *   the position migration (issue #31) briefly persist wrong coordinates. Changing it
+ *   drops back to "not ready" until the new image reports its own size.
+ */
+export function useCanvasLayout(resetKey?: string): CanvasLayout {
   const containerRef = useRef<HTMLDivElement>(null);
   const [container, setContainer] = useState({ w: 0, h: 0 });
   const [natural, setNatural] = useState({ w: 0, h: 0 });
+
+  useEffect(() => {
+    setNatural({ w: 0, h: 0 });
+  }, [resetKey]);
 
   useEffect(() => {
     const el = containerRef.current;

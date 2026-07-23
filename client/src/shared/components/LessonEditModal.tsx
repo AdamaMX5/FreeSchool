@@ -19,7 +19,7 @@ interface Props {
   mode: "create" | "edit";
   category: Category;
   lesson?: Lesson;
-  /** Position for a newly created lesson (original-image pixels). */
+  /** Position for a newly created lesson (percentage of the background image, 0-100). */
   defaultPosition?: { x: number; y: number };
   /** Pre-filled display order for a new lesson (defaults it to the end). */
   defaultOrder?: string;
@@ -65,7 +65,7 @@ export default function LessonEditModal({
     setError("");
     try {
       if (mode === "create") {
-        const pos = defaultPosition ?? { x: 20, y: 20 };
+        const pos = defaultPosition ?? { x: 50, y: 50 };
         // Reuse an already-created lesson on retry (e.g. after a content failure).
         if (!createdLessonId.current) {
           createdLessonId.current = await createLesson(category.id, {

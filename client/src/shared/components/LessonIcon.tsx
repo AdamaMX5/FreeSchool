@@ -3,8 +3,8 @@
 //   - normal: clicking toggles a popover that lazily loads the lesson's contents
 //     (videos + markdown), mirroring the old Svelte LessonComponent.
 //   - move (admins/moderators via the toolbar): the icon is draggable; dragging
-//     reports new *original-image* pixel coordinates live (onMove) and persists on
-//     release (onCommit).
+//     reports the new position live (onMove), as a percentage of the background
+//     image (issue #31), and persists it on release (onCommit).
 import {
   useCallback,
   useEffect,
@@ -30,6 +30,10 @@ interface Props {
   scale: number;
   offsetX: number;
   offsetY: number;
+  /** Screen size (px) of the scaled background image — used to convert the lesson's
+   *  percentage position to/from screen pixels during drag. */
+  scaledWidth: number;
+  scaledHeight: number;
   moveMode: boolean;
   editMode?: boolean;
   isMobile?: boolean;
@@ -43,7 +47,7 @@ interface Props {
   onCloseContent?: () => void;
   /** Open this lesson's edit modal (edit mode). */
   onEdit?: () => void;
-  /** Live position while dragging (original-image pixels). */
+  /** Live position while dragging (percentage of the background image, 0-100). */
   onMove: (x: number, y: number) => void;
   /** Persist the final position on drag release. */
   onCommit: (x: number, y: number) => void;
@@ -54,6 +58,8 @@ export default function LessonIcon({
   scale,
   offsetX,
   offsetY,
+  scaledWidth,
+  scaledHeight,
   moveMode,
   editMode = false,
   isMobile = false,
@@ -128,8 +134,11 @@ export default function LessonIcon({
     onCloseContent?.();
   }
 
-  const screenX = lesson.position_x * scale + offsetX;
-  const screenY = lesson.position_y * scale + offsetY;
+  // position_x/y are a percentage (0-100) of the background image (issue #31), so
+  // they map onto the *scaled* image size directly — no dependency on the image's
+  // natural resolution, which is what breaks when the background is swapped.
+  const screenX = offsetX + (lesson.position_x / 100) * scaledWidth;
+  const screenY = offsetY + (lesson.position_y / 100) * scaledHeight;
   // Clamped both ways: the floor keeps icons legible when the canvas shrinks
   // (mobile), the ceiling keeps them from ballooning when a category's
   // background image happens to have a low natural resolution (scale > 1).
@@ -182,12 +191,14 @@ export default function LessonIcon({
 
   function onPointerMove(e: ReactPointerEvent<HTMLButtonElement>) {
     const d = drag.current;
-    if (!d || scale <= 0) return;
-    const dx = (e.clientX - d.startX) / scale;
-    const dy = (e.clientY - d.startY) / scale;
-    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) moved.current = true;
-    const x = Math.round(d.px + dx);
-    const y = Math.round(d.py + dy);
+    if (!d || scaledWidth <= 0 || scaledHeight <= 0) return;
+    const dxScreen = e.clientX - d.startX;
+    const dyScreen = e.clientY - d.startY;
+    if (Math.abs(dxScreen) > 1 || Math.abs(dyScreen) > 1) moved.current = true;
+    // Percentage deltas, clamped to the image bounds so a lesson can never be
+    // dragged back out of the visible canvas.
+    const x = Math.min(100, Math.max(0, d.px + (dxScreen / scaledWidth) * 100));
+    const y = Math.min(100, Math.max(0, d.py + (dyScreen / scaledHeight) * 100));
     last.current = { x, y };
     onMove(x, y);
   }

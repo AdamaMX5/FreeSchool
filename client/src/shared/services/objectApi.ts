@@ -92,10 +92,13 @@ export async function softDeleteCategory(docId: string): Promise<void> {
 }
 
 /**
- * Persist a lesson's position on the category background. x/y are pixel coordinates
- * on the *original* (unscaled) image — the view scales them at render time. Shallow
- * merge so only the two position keys change. Requires an edit-eligible role
- * (enforced server-side by ObjectService).
+ * Persist a lesson's position on the category background. x/y are a percentage
+ * (0-100) of the background image's natural width/height (issue #31) — the view
+ * scales them at render time, so the position survives the background being
+ * swapped for a differently-sized image. Always stamps position_unit: "percent",
+ * since any explicit write (a drag, or the legacy-position migration) leaves the
+ * lesson in the new scheme. Shallow merge so only these keys change. Requires an
+ * edit-eligible role (enforced server-side by ObjectService).
  */
 export async function updateLessonPosition(
   docId: string,
@@ -108,10 +111,37 @@ export async function updateLessonPosition(
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: { position_x, position_y }, merge: true }),
+      body: JSON.stringify({
+        data: { position_x, position_y, position_unit: "percent" },
+        merge: true,
+      }),
     }
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
+}
+
+/**
+ * Convert a lesson still stored in legacy absolute-pixel coordinates into the
+ * percentage scheme (issue #31). Positions that fall outside the *current*
+ * background image (e.g. because the background was swapped for a smaller one,
+ * which is exactly what broke the layout) are clamped to the image edge first —
+ * so a "lost" lesson lands at the 100% edge instead of off-canvas. Returns null
+ * when the lesson is already migrated or the image size isn't known yet.
+ */
+export function migrateLegacyLessonPosition(
+  lesson: Lesson,
+  naturalWidth: number,
+  naturalHeight: number
+): { x: number; y: number } | null {
+  if (lesson.position_unit === "percent") return null;
+  if (naturalWidth <= 0 || naturalHeight <= 0) return null;
+  const clampedX = Math.min(Math.max(lesson.position_x, 0), naturalWidth);
+  const clampedY = Math.min(Math.max(lesson.position_y, 0), naturalHeight);
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  return {
+    x: round2((clampedX / naturalWidth) * 100),
+    y: round2((clampedY / naturalHeight) * 100),
+  };
 }
 
 /** Generate a fresh identity for a new object (used for legacyId / refs.selfId). */
@@ -123,6 +153,7 @@ export interface LessonInput {
   name: string;
   description: string;
   display_order: string;
+  /** Percentage (0-100) of the background image's natural width/height. */
   position_x: number;
   position_y: number;
 }
@@ -131,6 +162,7 @@ export interface LessonInput {
  * Create a lesson in a category. Mirrors the migrated shape: self id in both
  * data.legacyId and refs.selfId, the category foreign key in refs.categoryId, and
  * isPublic:true so logged-out students can read it (matches the migrated data).
+ * Always stored in the percentage position scheme (issue #31).
  * Returns the new lesson's id (legacyId), needed as refs.lessonId for its contents.
  */
 export async function createLesson(categoryId: string, input: LessonInput): Promise<string> {
@@ -139,7 +171,7 @@ export async function createLesson(categoryId: string, input: LessonInput): Prom
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      data: { legacyId: id, ...input },
+      data: { legacyId: id, ...input, position_unit: "percent" },
       refs: { selfId: id, categoryId },
       isPublic: true,
     }),
@@ -324,6 +356,7 @@ function mapLesson(doc: ObjectDoc): Lesson {
     display_order: String(d.display_order ?? ""),
     position_x: Number(d.position_x ?? 0),
     position_y: Number(d.position_y ?? 0),
+    position_unit: d.position_unit === "percent" ? "percent" : "px",
   };
 }
 

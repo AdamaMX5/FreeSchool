@@ -5,7 +5,7 @@
 //   - bottom toolbar (admins/moderators): new category | lesson tools | send improvement
 // All cross-cutting state (navigation, sidebar, edit modes, modals) lives here so the
 // header/sidebar/main/toolbar can stay presentational.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useContentBrowser } from "../../shared/hooks/useContentBrowser";
 import { useAuth } from "../../shared/context/AuthContext";
 import CategoryCanvas from "../../shared/components/CategoryCanvas";
@@ -33,12 +33,6 @@ export default function DesktopLayout() {
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [improving, setImproving] = useState(false);
 
-  // Original image size, captured from the canvas; only needed when placing a new lesson.
-  const natural = useRef({ w: 0, h: 0 });
-  const onNaturalSize = useCallback((w: number, h: number) => {
-    natural.current = { w, h };
-  }, []);
-
   const current = b.currentCategory;
 
   // Reset transient modes/modals when navigating to another category (or back home),
@@ -60,16 +54,12 @@ export default function DesktopLayout() {
     setMoveMode(false);
   };
 
-  // Centre of the original image (with a small cascade so successive new lessons don't
-  // land exactly on top of each other), or a default before the image has loaded.
+  // Centre of the background image, in percent (issue #31: positions are
+  // resolution-independent, so no need to wait for the image to load) — with a
+  // small cascade so successive new lessons don't land exactly on top of each other.
   const newLessonPosition = () => {
-    const cascade = (b.lessons.length % 6) * 24;
-    return natural.current.w > 0
-      ? {
-          x: Math.round(natural.current.w / 2) + cascade,
-          y: Math.round(natural.current.h / 2) + cascade,
-        }
-      : { x: 20 + cascade, y: 20 + cascade };
+    const cascade = (b.lessons.length % 6) * 3;
+    return { x: 50 + cascade, y: 50 + cascade };
   };
 
   return (
@@ -110,7 +100,6 @@ export default function DesktopLayout() {
               editMode={editMode}
               canManageContent={canManageCategories}
               onEditLesson={setEditingLesson}
-              onNaturalSize={onNaturalSize}
               openContent={b.openContent}
               onOpenContent={b.selectContent}
               onCloseContent={b.closeContent}

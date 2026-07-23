@@ -68,9 +68,19 @@ export interface Lesson {
   name: string;
   description: string;
   display_order: string;
-  /** Pixel coordinates on the *original* (unscaled) category background image. */
+  /**
+   * Position on the category background image, as a percentage (0-100) of its
+   * natural width/height — resolution-independent, so it survives the background
+   * being swapped for an image of a different size (issue #31).
+   */
   position_x: number;
   position_y: number;
+  /**
+   * "percent" once migrated to the scheme above. Lessons created before issue #31
+   * still carry "px" (absolute pixel coordinates on whatever background image was
+   * current when they were placed) until CategoryCanvas migrates them on next view.
+   */
+  position_unit: "px" | "percent";
 }
 
 export interface Content {
