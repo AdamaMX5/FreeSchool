@@ -180,12 +180,16 @@ export default function LessonIcon({
   }, [open, isMobile, screenX, screenY, iconSize, contents, selectedId, error]);
 
   function onPointerDown(e: ReactPointerEvent<HTMLButtonElement>) {
+    // Reset unconditionally: otherwise a drag committed while moveMode was on
+    // leaves `moved` stuck true after moveMode toggles off, and the next
+    // (non-drag) click is mistaken for the tail of that old drag and swallowed
+    // — the lesson could never be opened again after being moved.
+    moved.current = false;
+    last.current = null;
     if (!moveMode) return;
     e.stopPropagation();
     e.preventDefault();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
-    moved.current = false;
-    last.current = null;
     drag.current = { startX: e.clientX, startY: e.clientY, px: lesson.position_x, py: lesson.position_y };
   }
 

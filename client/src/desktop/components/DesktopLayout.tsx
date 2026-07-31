@@ -150,7 +150,13 @@ export default function DesktopLayout() {
           defaultPosition={newLessonPosition()}
           defaultOrder={String(b.lessons.length + 1)}
           onClose={() => setCreatingLesson(false)}
-          onSaved={b.reloadLessons}
+          // After creating a lesson, switch straight into move mode so the new
+          // lesson (placed at the image centre) can be dragged to its spot.
+          onSaved={() => {
+            b.reloadLessons();
+            setMoveMode(true);
+            setEditMode(false);
+          }}
         />
       )}
 
