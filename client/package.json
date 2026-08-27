@@ -16,7 +16,8 @@
     "react-router-dom": "^6.26.2",
     "express": "^4.21.0",
     "marked": "^14.1.2",
-    "dompurify": "^3.1.7"
+    "dompurify": "^3.1.7",
+    "@forumservice/frontend": "file:vendor/forumservice-frontend-1.0.0.tgz"
   },
   "devDependencies": {
     "@types/node": "^20.16.10",

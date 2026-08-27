@@ -13,6 +13,7 @@ import CategoryEditModal from "../../shared/components/CategoryEditModal";
 import CreateCategoryModal from "../../shared/components/CreateCategoryModal";
 import LessonEditModal from "../../shared/components/LessonEditModal";
 import SendImprovementModal from "../../shared/components/SendImprovementModal";
+import DiscussionForumOverlay from "../../shared/components/DiscussionForumOverlay";
 import type { Category, Lesson } from "../../shared/types";
 import DesktopHeader from "./DesktopHeader";
 import CategorySidebar from "./CategorySidebar";
@@ -32,6 +33,7 @@ export default function DesktopLayout() {
   const [creatingLesson, setCreatingLesson] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [improving, setImproving] = useState(false);
+  const [forumOpen, setForumOpen] = useState(false);
 
   const current = b.currentCategory;
 
@@ -69,60 +71,67 @@ export default function DesktopLayout() {
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
         onHome={b.goHome}
         onGoToDepth={b.goToDepth}
+        onOpenForum={() => setForumOpen(true)}
       />
 
-      {/* Left sidebar: the category menu (collapsible). */}
-      {sidebarOpen && (
-        <aside className="scrollbar-hide fixed bottom-14 left-0 top-14 z-40 w-[200px] overflow-y-auto border-r border-neutral-700 bg-neutral-900">
-          <CategorySidebar
-            categories={b.categories}
-            loading={b.loading}
-            canEdit={canManageCategories}
-            onOpen={b.openCategory}
-            onEdit={setEditingCategory}
-          />
-        </aside>
-      )}
+      {forumOpen ? (
+        <DiscussionForumOverlay onClose={() => setForumOpen(false)} />
+      ) : (
+        <>
+          {/* Left sidebar: the category menu (collapsible). */}
+          {sidebarOpen && (
+            <aside className="scrollbar-hide fixed bottom-14 left-0 top-14 z-40 w-[200px] overflow-y-auto border-r border-neutral-700 bg-neutral-900">
+              <CategorySidebar
+                categories={b.categories}
+                loading={b.loading}
+                canEdit={canManageCategories}
+                onOpen={b.openCategory}
+                onEdit={setEditingCategory}
+              />
+            </aside>
+          )}
 
-      {/* Main area: gets the rest of the screen between sidebar and toolbar. */}
-      <main
-        className={`fixed bottom-14 right-0 top-14 overflow-auto transition-[left] ${
-          sidebarOpen ? "left-[200px]" : "left-0"
-        }`}
-      >
-        {b.error && <div className="p-3 text-red-400">{b.error}</div>}
-        {current ? (
-          <div className="h-full w-full p-2">
-            <CategoryCanvas
-              category={current}
-              lessons={b.lessons}
+          {/* Main area: gets the rest of the screen between sidebar and toolbar. */}
+          <main
+            className={`fixed bottom-14 right-0 top-14 overflow-auto transition-[left] ${
+              sidebarOpen ? "left-[200px]" : "left-0"
+            }`}
+          >
+            {b.error && <div className="p-3 text-red-400">{b.error}</div>}
+            {current ? (
+              <div className="h-full w-full p-2">
+                <CategoryCanvas
+                  category={current}
+                  lessons={b.lessons}
+                  moveMode={moveMode}
+                  editMode={editMode}
+                  canManageContent={canManageCategories}
+                  onEditLesson={setEditingLesson}
+                  openContent={b.openContent}
+                  onOpenContent={b.selectContent}
+                  onCloseContent={b.closeContent}
+                />
+              </div>
+            ) : (
+              <StartPage />
+            )}
+          </main>
+
+          {/* Bottom toolbar for admins/moderators. */}
+          {canManageCategories && (
+            <DesktopToolbar
+              inCategory={!!current}
               moveMode={moveMode}
               editMode={editMode}
-              canManageContent={canManageCategories}
-              onEditLesson={setEditingLesson}
-              openContent={b.openContent}
-              onOpenContent={b.selectContent}
-              onCloseContent={b.closeContent}
+              addCategoryLabel={current ? "Neue Kategorie" : "Neues Lernbüro"}
+              onAddCategory={() => setCreatingCategory(true)}
+              onToggleMove={toggleMove}
+              onToggleEdit={toggleEdit}
+              onAddLesson={() => setCreatingLesson(true)}
+              onSendImprovement={() => setImproving(true)}
             />
-          </div>
-        ) : (
-          <StartPage />
-        )}
-      </main>
-
-      {/* Bottom toolbar for admins/moderators. */}
-      {canManageCategories && (
-        <DesktopToolbar
-          inCategory={!!current}
-          moveMode={moveMode}
-          editMode={editMode}
-          addCategoryLabel={current ? "Neue Kategorie" : "Neues Lernbüro"}
-          onAddCategory={() => setCreatingCategory(true)}
-          onToggleMove={toggleMove}
-          onToggleEdit={toggleEdit}
-          onAddLesson={() => setCreatingLesson(true)}
-          onSendImprovement={() => setImproving(true)}
-        />
+          )}
+        </>
       )}
 
       {/* Modals */}

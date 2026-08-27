@@ -3,6 +3,7 @@
 // hub is open the breadcrumb shows "FreeSchool"; once a category is active only the
 // category path is shown.
 import LoginMenu from "./LoginMenu";
+import ChatBubblesIcon from "../../shared/components/ChatBubblesIcon";
 import type { Category } from "../../shared/types";
 
 interface Props {
@@ -10,9 +11,16 @@ interface Props {
   onToggleSidebar: () => void;
   onHome: () => void;
   onGoToDepth: (index: number) => void;
+  onOpenForum: () => void;
 }
 
-export default function DesktopHeader({ path, onToggleSidebar, onHome, onGoToDepth }: Props) {
+export default function DesktopHeader({
+  path,
+  onToggleSidebar,
+  onHome,
+  onGoToDepth,
+  onOpenForum,
+}: Props) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b border-neutral-700 bg-neutral-800 px-3">
       <button
@@ -45,6 +53,15 @@ export default function DesktopHeader({ path, onToggleSidebar, onHome, onGoToDep
           ))
         )}
       </nav>
+
+      <button
+        onClick={onOpenForum}
+        title="Diskussionsforum"
+        aria-label="Diskussionsforum öffnen"
+        className="rounded px-2 py-1 hover:bg-neutral-700"
+      >
+        <ChatBubblesIcon />
+      </button>
 
       <LoginMenu />
     </header>
