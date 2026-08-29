@@ -27,7 +27,8 @@ export default function DiscussionForumOverlay({ onClose, topClassName = "top-14
 
   return (
     <div className={`fixed inset-x-0 bottom-0 ${topClassName} z-40 overflow-y-auto bg-white dark:bg-neutral-900`}>
-      <div className="sticky top-0 z-10 flex justify-end bg-white/90 px-3 py-2 backdrop-blur dark:bg-neutral-900/90">
+      <div className="sticky top-0 z-10 flex items-center justify-between bg-white/90 px-4 py-2 backdrop-blur dark:bg-neutral-900/90">
+        <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-50">Diskussionsforum</h1>
         <button
           onClick={onClose}
           title="Schließen"
@@ -38,18 +39,15 @@ export default function DiscussionForumOverlay({ onClose, topClassName = "top-14
         </button>
       </div>
 
-      {FORUM_ROOT_NODE_ID ? (
-        <ForumThread
-          nodeId={FORUM_ROOT_NODE_ID}
-          forumApiBaseUrl={FORUM_BASE_URL}
-          externalAuth={{ accessToken: user.accessToken || null, onNeedRefresh }}
-        />
-      ) : (
-        <div className="p-8 text-center text-neutral-500 dark:text-neutral-400">
-          Für das Diskussionsforum ist noch kein Thema konfiguriert
-          (VITE_FORUM_ROOT_NODE_ID).
-        </div>
-      )}
+      {/* nodeId is optional: without VITE_FORUM_ROOT_NODE_ID (no fixed topic configured),
+          ForumThread shows its own Themen start page (list of all topics + a "+" button to
+          create the first/a new one) instead of a single thread - see ForumService.md,
+          "Frontend / Einbindung". */}
+      <ForumThread
+        nodeId={FORUM_ROOT_NODE_ID || undefined}
+        forumApiBaseUrl={FORUM_BASE_URL}
+        externalAuth={{ accessToken: user.accessToken || null, onNeedRefresh }}
+      />
     </div>
   );
 }

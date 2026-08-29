@@ -10,9 +10,9 @@ export const GIT_BASE_URL =
 export const FORUM_BASE_URL =
   import.meta.env.VITE_FORUM_BASE_URL || "https://forum.freischule.info";
 
-// Root "Thema" node shown by the site-wide discussion forum button. No default —
-// the topic has to be created in the ForumService first; until then the forum
-// button shows a placeholder instead of calling the API with an empty id.
+// Optional: pins the site-wide discussion forum button to one fixed root "Thema" node
+// (ForumService id). Unset by default — without it, ForumThread shows its own Themen
+// start page (every topic, plus a "+" button to create one) instead of a single thread.
 export const FORUM_ROOT_NODE_ID = import.meta.env.VITE_FORUM_ROOT_NODE_ID || "";
 
 // Fallback background for categories that have no own background_link. Upload an
