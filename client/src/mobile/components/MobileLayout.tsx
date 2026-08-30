@@ -1,10 +1,11 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import LoginSheet from "./LoginMenu";
 import ChatBubblesIcon from "../../shared/components/ChatBubblesIcon";
 import DiscussionForumOverlay from "../../shared/components/DiscussionForumOverlay";
+import { useForumOverlay } from "../../shared/hooks/useForumOverlay";
 
 export default function MobileLayout({ children }: { children: ReactNode }) {
-  const [forumOpen, setForumOpen] = useState(false);
+  const forum = useForumOverlay();
 
   return (
     <div className="min-h-full bg-neutral-900 text-neutral-100">
@@ -12,7 +13,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
         <span className="text-base font-semibold">FreeSchool</span>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setForumOpen(true)}
+            onClick={forum.open}
             title="Diskussionsforum"
             aria-label="Diskussionsforum öffnen"
             className="rounded px-1.5 py-1 hover:bg-neutral-700"
@@ -23,8 +24,8 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      {forumOpen ? (
-        <DiscussionForumOverlay onClose={() => setForumOpen(false)} topClassName="top-12" />
+      {forum.isOpen ? (
+        <DiscussionForumOverlay onClose={forum.close} topClassName="top-12" />
       ) : (
         <main className="px-3 pb-6 pt-16">{children}</main>
       )}

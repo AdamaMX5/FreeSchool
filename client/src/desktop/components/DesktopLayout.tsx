@@ -7,6 +7,7 @@
 // header/sidebar/main/toolbar can stay presentational.
 import { useEffect, useState } from "react";
 import { useContentBrowser } from "../../shared/hooks/useContentBrowser";
+import { useForumOverlay } from "../../shared/hooks/useForumOverlay";
 import { useAuth } from "../../shared/context/AuthContext";
 import CategoryCanvas from "../../shared/components/CategoryCanvas";
 import CategoryEditModal from "../../shared/components/CategoryEditModal";
@@ -33,7 +34,7 @@ export default function DesktopLayout() {
   const [creatingLesson, setCreatingLesson] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [improving, setImproving] = useState(false);
-  const [forumOpen, setForumOpen] = useState(false);
+  const forum = useForumOverlay();
 
   const current = b.currentCategory;
 
@@ -71,11 +72,11 @@ export default function DesktopLayout() {
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
         onHome={b.goHome}
         onGoToDepth={b.goToDepth}
-        onOpenForum={() => setForumOpen(true)}
+        onOpenForum={forum.open}
       />
 
-      {forumOpen ? (
-        <DiscussionForumOverlay onClose={() => setForumOpen(false)} />
+      {forum.isOpen ? (
+        <DiscussionForumOverlay onClose={forum.close} />
       ) : (
         <>
           {/* Left sidebar: the category menu (collapsible). */}
