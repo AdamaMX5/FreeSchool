@@ -10,6 +10,10 @@ import { useEffect, useRef, useState, type RefObject, type SyntheticEvent } from
 export interface CanvasLayout {
   /** Attach to the canvas container; its content box is the available area. */
   containerRef: RefObject<HTMLDivElement>;
+  /** Attach to the background <img> (in addition to onImageLoad) — lets the hook
+   *  detect an image that finished loading from the browser cache before onLoad
+   *  could be wired up (see the mount effect below). */
+  imgRef: RefObject<HTMLImageElement>;
   /** Pass to the background <img> onLoad to capture its natural dimensions. */
   onImageLoad: (e: SyntheticEvent<HTMLImageElement>) => void;
   scale: number;
@@ -35,11 +39,25 @@ export interface CanvasLayout {
  */
 export function useCanvasLayout(resetKey?: string): CanvasLayout {
   const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [container, setContainer] = useState({ w: 0, h: 0 });
   const [natural, setNatural] = useState({ w: 0, h: 0 });
 
+  // The background image is often already in the browser cache — e.g. the same
+  // URL was just shown as a CSS background-image thumbnail in the category menu
+  // (CategorySidebar/HomeView) — so by the time this effect runs after the <img>'s
+  // src was set, the image can already be fully loaded. A cached image may finish
+  // loading synchronously, before React had a chance to attach the onLoad handler,
+  // so the native "load" event never reaches it and the canvas would otherwise wait
+  // forever. Checking img.complete here (on mount and whenever resetKey changes,
+  // i.e. the background image changes) catches that case; onLoad still handles an
+  // actual network load.
   useEffect(() => {
     setNatural({ w: 0, h: 0 });
+    const img = imgRef.current;
+    if (img && img.complete && img.naturalWidth > 0) {
+      setNatural({ w: img.naturalWidth, h: img.naturalHeight });
+    }
   }, [resetKey]);
 
   useEffect(() => {
@@ -67,6 +85,7 @@ export function useCanvasLayout(resetKey?: string): CanvasLayout {
 
   return {
     containerRef,
+    imgRef,
     onImageLoad,
     scale,
     offsetX,

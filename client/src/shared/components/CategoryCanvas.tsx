@@ -91,6 +91,7 @@ export default function CategoryCanvas({
   return (
     <div ref={layout.containerRef} className="relative h-full w-full overflow-hidden">
       <img
+        ref={layout.imgRef}
         src={categoryBackgroundSrc(category.background_link)}
         alt={category.name}
         onLoad={layout.onImageLoad}
