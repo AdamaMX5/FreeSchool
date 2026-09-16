@@ -44,5 +44,10 @@ export function useForumOverlay() {
     setIsOpen(false);
   }, []);
 
-  return { isOpen, open, close };
+  const toggle = useCallback(() => {
+    if (isForumOpenInUrl()) close();
+    else open();
+  }, [open, close]);
+
+  return { isOpen, open, close, toggle };
 }

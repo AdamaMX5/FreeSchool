@@ -9,14 +9,16 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-full bg-neutral-900 text-neutral-100">
-      <header className="fixed inset-x-0 top-0 z-50 flex h-12 items-center justify-between border-b border-neutral-700 bg-neutral-800 px-4">
+      <header id="app-header" className="fixed inset-x-0 top-0 z-50 flex h-12 items-center justify-between border-b border-neutral-700 bg-neutral-800 px-4">
         <span className="text-base font-semibold">FreeSchool</span>
         <div className="flex items-center gap-2">
           <button
-            onClick={forum.open}
+            id="nav-forum-toggle"
+            onClick={forum.toggle}
             title="Diskussionsforum"
-            aria-label="Diskussionsforum öffnen"
-            className="rounded px-1.5 py-1 hover:bg-neutral-700"
+            aria-label={forum.isOpen ? "Diskussionsforum schließen" : "Diskussionsforum öffnen"}
+            aria-pressed={forum.isOpen}
+            className={`rounded px-1.5 py-1 ${forum.isOpen ? "bg-blue-600 text-white hover:bg-blue-500" : "hover:bg-neutral-700"}`}
           >
             <ChatBubblesIcon />
           </button>
@@ -25,7 +27,7 @@ export default function MobileLayout({ children }: { children: ReactNode }) {
       </header>
 
       {forum.isOpen ? (
-        <DiscussionForumOverlay onClose={forum.close} topClassName="top-12" />
+        <DiscussionForumOverlay topClassName="top-12" />
       ) : (
         <main className="px-3 pb-6 pt-16">{children}</main>
       )}

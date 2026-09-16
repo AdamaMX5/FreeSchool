@@ -11,7 +11,8 @@ interface Props {
   onToggleSidebar: () => void;
   onHome: () => void;
   onGoToDepth: (index: number) => void;
-  onOpenForum: () => void;
+  onToggleForum: () => void;
+  forumOpen: boolean;
 }
 
 export default function DesktopHeader({
@@ -19,11 +20,13 @@ export default function DesktopHeader({
   onToggleSidebar,
   onHome,
   onGoToDepth,
-  onOpenForum,
+  onToggleForum,
+  forumOpen,
 }: Props) {
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b border-neutral-700 bg-neutral-800 px-3">
+    <header id="app-header" className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-2 border-b border-neutral-700 bg-neutral-800 px-3">
       <button
+        id="nav-menu-toggle"
         onClick={onToggleSidebar}
         title="Menü ein-/ausblenden"
         aria-label="Menü ein-/ausblenden"
@@ -32,8 +35,14 @@ export default function DesktopHeader({
         ☰
       </button>
 
-      <nav className="flex min-w-0 flex-1 items-center gap-1 text-sm text-neutral-300">
-        <button onClick={onHome} title="Startseite" aria-label="Startseite" className="rounded px-1 hover:text-white">
+      <nav id="nav-breadcrumb" className="flex min-w-0 flex-1 items-center gap-1 text-sm text-neutral-300">
+        <button
+          id="nav-home-button"
+          onClick={onHome}
+          title="Startseite"
+          aria-label="Startseite"
+          className="rounded px-1 hover:text-white"
+        >
           🏠
         </button>
         {path.length === 0 ? (
@@ -55,10 +64,12 @@ export default function DesktopHeader({
       </nav>
 
       <button
-        onClick={onOpenForum}
+        id="nav-forum-toggle"
+        onClick={onToggleForum}
         title="Diskussionsforum"
-        aria-label="Diskussionsforum öffnen"
-        className="rounded px-2 py-1 hover:bg-neutral-700"
+        aria-label={forumOpen ? "Diskussionsforum schließen" : "Diskussionsforum öffnen"}
+        aria-pressed={forumOpen}
+        className={`rounded px-2 py-1 ${forumOpen ? "bg-blue-600 text-white hover:bg-blue-500" : "hover:bg-neutral-700"}`}
       >
         <ChatBubblesIcon />
       </button>

@@ -69,14 +69,24 @@ export default function DesktopLayout() {
     <div className="h-full bg-neutral-900 text-neutral-100">
       <DesktopHeader
         path={b.path}
-        onToggleSidebar={() => setSidebarOpen((o) => !o)}
-        onHome={b.goHome}
-        onGoToDepth={b.goToDepth}
-        onOpenForum={forum.open}
+        onToggleSidebar={() => {
+          forum.close();
+          setSidebarOpen((o) => !o);
+        }}
+        onHome={() => {
+          forum.close();
+          b.goHome();
+        }}
+        onGoToDepth={(i) => {
+          forum.close();
+          b.goToDepth(i);
+        }}
+        onToggleForum={forum.toggle}
+        forumOpen={forum.isOpen}
       />
 
       {forum.isOpen ? (
-        <DiscussionForumOverlay onClose={forum.close} />
+        <DiscussionForumOverlay />
       ) : (
         <>
           {/* Left sidebar: the category menu (collapsible). */}
