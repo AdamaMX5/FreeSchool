@@ -4,6 +4,7 @@
 import { OBJECT_BASE_URL } from "../config";
 import type { Category, Lesson, Content } from "../types";
 import { authFetch } from "./authFetch";
+import { youtubeId, normalizeYoutubeValue } from "../utils/video";
 
 interface ObjectDoc {
   _id?: string;
@@ -232,7 +233,8 @@ export interface ContentInput {
 /** Create a content for a lesson (lessonId = the lesson's legacyId, not its docId). */
 export async function createContent(lessonId: string, input: ContentInput): Promise<string> {
   const id = newId();
-  const { teacherId, ...data } = input;
+  const { teacherId, ...rest } = input;
+  const data = { ...rest, youtube_id: normalizeYoutubeValue(rest.youtube_id) };
   const refs: Record<string, string> = { selfId: id, lessonId };
   if (teacherId) refs.teacherId = teacherId;
   const res = await authFetch(`${OBJECT_BASE_URL}/objects/contents`, {
@@ -254,12 +256,16 @@ export interface ContentEdit {
 /** Update a content's editable fields (shallow merge). */
 export async function updateContent(docId: string, data: ContentEdit): Promise<void> {
   if (!docId) throw new Error("Content ohne docId kann nicht gespeichert werden.");
+  const payload =
+    data.youtube_id !== undefined
+      ? { ...data, youtube_id: normalizeYoutubeValue(data.youtube_id) }
+      : data;
   const res = await authFetch(
     `${OBJECT_BASE_URL}/objects/contents/${encodeURIComponent(docId)}`,
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data, merge: true }),
+      body: JSON.stringify({ data: payload, merge: true }),
     }
   );
   if (!res.ok) throw new Error(`ObjectService ${res.status}`);
@@ -363,16 +369,34 @@ function mapLesson(doc: ObjectDoc): Lesson {
 function mapContent(doc: ObjectDoc): Content {
   const d = (doc.data ?? {}) as Record<string, unknown>;
   const refs = (doc.refs ?? {}) as Record<string, unknown>;
+  const docId = String(doc._id ?? doc.id ?? "");
   return {
-    docId: String(doc._id ?? doc.id ?? ""),
+    docId,
     id: String(d.legacyId ?? ""),
     lessonId: refs.lessonId ? String(refs.lessonId) : "",
     language: String(d.language ?? ""),
     text: String(d.text ?? ""),
-    youtube_id: String(d.youtube_id ?? ""),
+    youtube_id: healYoutubeId(docId, String(d.youtube_id ?? "")),
     internal_video: String(d.internal_video ?? ""),
     teacherId: refs.teacherId ? String(refs.teacherId) : undefined,
   };
+}
+
+/**
+ * Older data (and a pre-fix client) could have a full share URL or an id still
+ * carrying its "?si=..." tracking suffix stored in youtube_id, which breaks the
+ * iframe embed (toYoutubeEmbed returns null for it). Detected on every read: the
+ * corrected id is returned immediately so the current view renders right away,
+ * and the fix is persisted fire-and-forget so future reads are already clean.
+ * Silently ignored when the caller has no write access (e.g. anonymous reads) —
+ * self-healing then simply waits for the next authenticated viewer.
+ */
+function healYoutubeId(docId: string, stored: string): string {
+  if (!stored) return stored;
+  const extracted = youtubeId(stored);
+  if (!extracted || extracted === stored) return stored;
+  if (docId) updateContent(docId, { youtube_id: extracted }).catch(() => {});
+  return extracted;
 }
 
 /** Lessons of a category, sorted by display_order (ObjectService has no native sort). */
